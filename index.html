@@ -4777,6 +4777,7 @@ async function _gdriveSaveData(){
   if(!_gdriveReady||!_gdriveToken||!_folderRootId) return;
   try{
     D.lastSaved=today();
+    localStorage.setItem('aercom-data',JSON.stringify(D));
     const body=JSON.stringify(D,null,2);
     if(_gdriveDataFileId){
       await fetch(`https://www.googleapis.com/upload/drive/v3/files/${_gdriveDataFileId}?uploadType=media`,{
@@ -4829,7 +4830,13 @@ async function _gdriveUploadFile(name, content, mimeType, folderId){
 
 // ── Parchear persist ──
 const _origPersist=persist;
-function persist(){_origPersist();_scheduleDriveSave();}
+let _inPersist=false;
+function persist(){
+  if(_inPersist) return;
+  _inPersist=true;
+  try{ _origPersist(); } finally { _inPersist=false; }
+  _scheduleDriveSave();
+}
 
 // ─── EXCEL: PLANTILLAS ────────────────────────────────────────────────────────
 const XLS_HEADERS = {
@@ -4850,10 +4857,7 @@ function xlsDownloadPlantilla(tipo){
 }
 
 // ─── EXCEL: IMPORTAR ─────────────────────────────────────────────────────────
-let _xlsImporting = false;
 function xlsImport(ev, tipo){
-  if(_xlsImporting){ev.target.value='';return;}
-  _xlsImporting = true;
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=e=>{
@@ -4941,7 +4945,6 @@ function xlsImport(ev, tipo){
     }catch(err){console.error(err);toast('⚠ Error al importar: '+err.message);}
     ev.target.value='';
   };
-  r.onloadend = () => { _xlsImporting = false; };
   r.readAsBinaryString(f);
 }
 
