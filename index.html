@@ -1647,7 +1647,11 @@ th[onclick]:active { background: var(--active); }
     </div>
   </div>
   <div class="sb-footer">
-    <button id="btn-guardar" class="btn btn-primary" onclick="saveDataAndMark()">
+    <button id="btn-drive" class="btn btn-primary" onclick="gdriveAuth()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <span id="btn-drive-text">Conectar Drive</span>
+    </button>
+    <button id="btn-guardar" class="btn btn-ghost" onclick="saveDataAndMark()" style="display:none">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="btn-guardar-text">Guardar JSON</span>
     </button>
@@ -4551,14 +4555,172 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ─── GOOGLE DRIVE INTEGRATION ────────────────────────────────────────────────
+const GDRIVE_CLIENT_ID = '300143180626-7hiucjehd9g69iqjhu8b71jfigavobed.apps.googleusercontent.com';
+const GDRIVE_SCOPES    = 'https://www.googleapis.com/auth/drive.appdata';
+const GDRIVE_FILE_NAME = 'aercom-data.json';
+let _gdriveToken  = null;
+let _gdriveFileId = null;
+let _gdriveReady  = false;
+let _gdriveSaveTimer = null;
+
+// ── Cargar Google Identity Services ──
+function _loadGIS(){
+  return new Promise(resolve=>{
+    if(window.google&&window.google.accounts){resolve();return;}
+    const s=document.createElement('script');
+    s.src='https://accounts.google.com/gsi/client';
+    s.onload=resolve;
+    document.head.appendChild(s);
+  });
+}
+
+// ── Autenticar con Google ──
+async function gdriveAuth(){
+  await _loadGIS();
+  google.accounts.oauth2.initTokenClient({
+    client_id: GDRIVE_CLIENT_ID,
+    scope: GDRIVE_SCOPES,
+    callback: async(resp)=>{
+      if(resp.error){toast('⚠ Error al conectar con Drive: '+resp.error);return;}
+      _gdriveToken=resp.access_token;
+      _gdriveReady=true;
+      _updateDriveBtn();
+      toast('✓ Conectado a Google Drive');
+      // Intentar cargar datos existentes de Drive
+      await _gdriveLoad();
+    }
+  }).requestAccessToken();
+}
+
+// ── Actualizar botón Drive ──
+function _updateDriveBtn(){
+  const btn=document.getElementById('btn-drive');
+  const txt=document.getElementById('btn-drive-text');
+  const btnGuardar=document.getElementById('btn-guardar');
+  if(!btn) return;
+  if(_gdriveReady){
+    btn.style.background='var(--ok-bg)';
+    btn.style.color='var(--ok)';
+    btn.style.borderColor='var(--ok)';
+    txt.textContent='✓ Drive conectado';
+    btn.onclick=null;
+    if(btnGuardar) btnGuardar.style.display='none';
+  }
+}
+
+// ── Buscar o crear archivo en Drive ──
+async function _gdriveGetFileId(){
+  if(_gdriveFileId) return _gdriveFileId;
+  // Buscar en appDataFolder
+  const res=await fetch(
+    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${GDRIVE_FILE_NAME}'&fields=files(id,name)`,
+    {headers:{Authorization:'Bearer '+_gdriveToken}}
+  );
+  const data=await res.json();
+  if(data.files&&data.files.length>0){
+    _gdriveFileId=data.files[0].id;
+  }
+  return _gdriveFileId;
+}
+
+// ── Cargar datos desde Drive ──
+async function _gdriveLoad(){
+  try{
+    const fileId=await _gdriveGetFileId();
+    if(!fileId){
+      // No existe aún, guardar datos actuales
+      toast('Drive conectado — guardando datos iniciales...');
+      await _gdriveSave();
+      return;
+    }
+    const res=await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      {headers:{Authorization:'Bearer '+_gdriveToken}}
+    );
+    const text=await res.text();
+    const parsed=JSON.parse(text);
+    // Si Drive tiene datos más recientes, preguntar
+    const driveDate=parsed.lastSaved||'';
+    const localDate=D.lastSaved||'';
+    if(driveDate>localDate){
+      D=parsed;
+      if(!D.facturacion_estados) D.facturacion_estados={};
+      if(!D.recordatorios) D.recordatorios=[];
+      localStorage.setItem('aercom-data',JSON.stringify(D));
+      renderModule();
+      toast('✓ Datos cargados desde Google Drive');
+    } else {
+      toast('Drive conectado — datos locales más recientes');
+      await _gdriveSave();
+    }
+  }catch(e){
+    console.error('Drive load error',e);
+    toast('⚠ No se pudo cargar desde Drive');
+  }
+}
+
+// ── Guardar datos en Drive ──
+async function _gdriveSave(){
+  if(!_gdriveReady||!_gdriveToken) return;
+  try{
+    D.lastSaved=today();
+    const body=JSON.stringify(D,null,2);
+    const fileId=await _gdriveGetFileId();
+    let url,method;
+    if(fileId){
+      url=`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`;
+      method='PATCH';
+    } else {
+      // Crear archivo nuevo en appDataFolder
+      const meta=await fetch('https://www.googleapis.com/drive/v3/files',{
+        method:'POST',
+        headers:{Authorization:'Bearer '+_gdriveToken,'Content-Type':'application/json'},
+        body:JSON.stringify({name:GDRIVE_FILE_NAME,parents:['appDataFolder']})
+      });
+      const metaData=await meta.json();
+      _gdriveFileId=metaData.id;
+      url=`https://www.googleapis.com/upload/drive/v3/files/${_gdriveFileId}?uploadType=media`;
+      method='PATCH';
+    }
+    await fetch(url,{
+      method,
+      headers:{Authorization:'Bearer '+_gdriveToken,'Content-Type':'application/json'},
+      body
+    });
+    document.getElementById('sb-saved').textContent='✓ Guardado en Drive '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    markSaved();
+  }catch(e){
+    console.error('Drive save error',e);
+    toast('⚠ No se pudo guardar en Drive');
+  }
+}
+
+// ── Autosave a Drive con debounce de 5 seg ──
+function _scheduleDriveSave(){
+  if(!_gdriveReady) return;
+  if(_gdriveSaveTimer) clearTimeout(_gdriveSaveTimer);
+  _gdriveSaveTimer=setTimeout(async()=>{
+    await _gdriveSave();
+  },5000);
+}
+
+// ── Parchear persist() para incluir Drive ──
+const _persistOriginal=persist;
+function persist(){
+  _persistOriginal&&_persistOriginal();
+  _scheduleDriveSave();
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 loadData();
 curMonth=nowMonthStr();
 renderDashboard();
 updateSidebarBadges();
 markSaved();
+// Intentar reconectar Drive si había token previo en sesión
 window.addEventListener('beforeunload',ev=>{
-  if(_unsaved){ev.preventDefault();ev.returnValue='Tenés cambios sin guardar. ¿Seguro que querés salir?';}
+  if(_unsaved&&!_gdriveReady){ev.preventDefault();ev.returnValue='Tenés cambios sin guardar. ¿Seguro que querés salir?';}
 });
 </script>
 </body>
