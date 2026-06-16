@@ -1820,7 +1820,7 @@ th[onclick]:active { background: var(--active); }
           <table>
             <thead>
               <tr>
-                <th>ID / Tipo</th><th>Cliente</th>
+                <th>ID / Tipo</th><th>Cliente</th><th>Marca</th><th>Ubicación</th>
                 <th>Última visita</th><th>Últ. Preventivo</th><th>Últ. Refrigerante</th><th>Últ. Batería</th>
                 <th>Estado</th><th>Acciones</th>
               </tr>
@@ -2906,6 +2906,8 @@ function renderEquipos(){
         <div style="font-size:11px;color:var(--t2)">${tipoAbrev}</div>
       </td>
       <td>${clientName(e.clienteId)}</td>
+      <td style="font-size:12.5px;color:var(--t2)">${e.marca||'—'}</td>
+      <td style="font-size:12.5px;color:var(--t2)">${e.ubicacion||'—'}</td>
       ${eqDateCell(e.id,'ultimaVisita',e.ultimaVisita,nextVisita)}
       ${eqDateCell(e.id,'ultimoPreventivo',e.ultimoPreventivo,e.proximoPreventivo)}
       ${eqDateCell(e.id,'ultimoAceite',e.ultimoAceite,nextAceite)}
@@ -3330,6 +3332,10 @@ function openEquipModal(eid){
     </div>
     <div class="fg"><label class="fl">Cliente *</label><select class="fc" id="e-cli">${cliOpts}</select></div>
     <div class="form-row">
+      <div class="fg"><label class="fl">Marca</label><input class="fc" id="e-marca" value="${eq?.marca||''}" placeholder="ej: Caterpillar, Cummins, Siemens"></div>
+      <div class="fg"><label class="fl">Ubicación</label><input class="fc" id="e-ubicacion" value="${eq?.ubicacion||''}" placeholder="ej: Sala de máquinas, Planta baja"></div>
+    </div>
+    <div class="form-row">
       <div class="fg"><label class="fl">Fecha del último preventivo realizado</label><input class="fc" type="date" id="e-uprev" value="${eq?.ultimoPreventivo||''}" oninput="autoNextPrev()"></div>
       <div class="fg"><label class="fl">Próximo preventivo</label><input class="fc" type="date" id="e-nprev" value="${eq?.proximoPreventivo||''}"></div>
     </div>
@@ -3382,6 +3388,8 @@ function saveEquip(){
   const id=document.getElementById('e-id').value.trim();
   const tipo=document.getElementById('e-tipo').value;
   const cliId=document.getElementById('e-cli').value;
+  const marca=(document.getElementById('e-marca')||{value:''}).value.trim();
+  const ubicacion=(document.getElementById('e-ubicacion')||{value:''}).value.trim();
   const uprev=document.getElementById('e-uprev').value;
   const nprev=document.getElementById('e-nprev').value;
   const ace=document.getElementById('e-ace').value;
@@ -3393,7 +3401,7 @@ function saveEquip(){
   const uvisita=(document.getElementById('e-uvisita')||{value:''}).value;
   const nvisita=(document.getElementById('e-nvisita')||{value:''}).value;
   if(!id||!cliId){toast('⚠ Completá ID y cliente');return;}
-  const obj={id,clienteId:cliId,tipo,ultimoPreventivo:uprev,proximoPreventivo:nprev,ultimoAceite:ace,proximoAceite:nace,ultimoBateria:bat,ultimoRefrigerante:ref,horometro:hor,observaciones:obs,ultimaVisita:uvisita,proximaVisita:nvisita};
+  const obj={id,clienteId:cliId,tipo,marca,ubicacion,ultimoPreventivo:uprev,proximoPreventivo:nprev,ultimoAceite:ace,proximoAceite:nace,ultimoBateria:bat,ultimoRefrigerante:ref,horometro:hor,observaciones:obs,ultimaVisita:uvisita,proximaVisita:nvisita};
   const i=D.equipos.findIndex(e=>e.id===id);
   if(i>-1) D.equipos[i]=obj; else D.equipos.push(obj);
   persist(); closeModal(); renderEquipos();
@@ -3749,7 +3757,7 @@ function fichaEquipos(c){
   const list=D.equipos.filter(e=>e.clienteId===c.id);
   if(!list.length) return `<div class="empty">Sin equipos asignados a este cliente</div>`;
   return `<div class="tbl-wrap"><table>
-    <thead><tr><th>ID</th><th>Tipo</th><th>Preventivo</th><th>Refrigerante</th><th>Visita</th><th>Batería</th><th>Horómetro</th><th>Estado</th><th>Observaciones</th></tr></thead>
+    <thead><tr><th>ID</th><th>Tipo</th><th>Marca</th><th>Ubicación</th><th>Preventivo</th><th>Refrigerante</th><th>Visita</th><th>Batería</th><th>Horómetro</th><th>Estado</th><th>Observaciones</th></tr></thead>
     <tbody>${list.map(e=>{
       const {st,nextAceite,nextBateria,nextVisita}=equipStatus(e);
       const rc=st==='rojo'?'row-err':st==='amarillo'?'row-warn':'';
@@ -3759,6 +3767,8 @@ function fichaEquipos(c){
       return `<tr class="${rc}">
         <td><strong>${e.id}</strong></td>
         <td><span class="badge b-gray">${e.tipo}</span></td>
+        <td style="font-size:12px;color:var(--t2)">${e.marca||'—'}</td>
+        <td style="font-size:12px;color:var(--t2)">${e.ubicacion||'—'}</td>
         ${eqDateCell(e.id,'ultimoPreventivo',e.ultimoPreventivo,e.proximoPreventivo)}
         ${eqDateCell(e.id,'ultimoAceite',e.ultimoAceite,nextAceite)}
         ${eqDateCell(e.id,'ultimaVisita',e.ultimaVisita,nextVisita)}
@@ -4844,7 +4854,7 @@ function persist(){
 // ─── EXCEL: PLANTILLAS ────────────────────────────────────────────────────────
 const XLS_HEADERS = {
   clientes:     ['ID','Nombre','Tipo','Ciudad','Contacto','Telefono','Email','Frecuencia Visita','Presupuesto Mensual','Ajuste','Requiere OC','Requiere HES','Facturacion','Estado'],
-  equipos:      ['ID','Cliente (nombre)','Tipo','Ultimo Preventivo','Proximo Preventivo','Ultimo Aceite','Ultima Bateria','Ultimo Refrigerante','Horometro','Observaciones'],
+  equipos:      ['ID','Cliente (nombre)','Tipo','Marca','Ubicacion','Ultimo Preventivo','Proximo Preventivo','Ultimo Aceite','Ultima Bateria','Ultimo Refrigerante','Horometro','Observaciones'],
   cotizaciones: ['ID','Cliente (nombre)','Descripcion','Monto','Fecha Envio','Fecha Followup','Responsable','Estado','Notas'],
   facturacion:  ['Cliente','Tipo','Ajuste','Requiere OC','Requiere HES','Facturacion','Estado Mes']
 };
@@ -4972,7 +4982,7 @@ async function xlsExport(tipo, destino){
       c.frecuenciaVisita,c.presupuesto,c.ajuste,c.requiereOC?'SI':'NO',c.requiereHES?'SI':'NO',c.facturacion,c.estadoCliente]);
     ws=XLSX.utils.aoa_to_sheet([XLS_HEADERS.clientes,...rows]);
   } else if(tipo==='equipos'){
-    const rows=(D.equipos||[]).map(e=>[e.id,clientName(e.clienteId),e.tipo,
+    const rows=(D.equipos||[]).map(e=>[e.id,clientName(e.clienteId),e.tipo,e.marca||'',e.ubicacion||'',
       e.ultimoPreventivo,e.proximoPreventivo,e.ultimoAceite,e.ultimoBateria,e.ultimoRefrigerante,e.horometro,e.observaciones]);
     ws=XLSX.utils.aoa_to_sheet([XLS_HEADERS.equipos,...rows]);
   } else if(tipo==='cotizaciones'){
