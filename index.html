@@ -1608,166 +1608,152 @@ th[onclick]:active { background: var(--active); }
   letter-spacing: -.3px;
 }
 
-/* ═══════════════════════════════════════════════
-   AERCOM — MEJORAS VISUALES v3.0
-   Sombras · Gradientes · Animaciones suaves
-═══════════════════════════════════════════════ */
-
-/* Sidebar — sombra lateral y nav activo azul */
-#sidebar {
-  border-right: none;
-  box-shadow: 2px 0 16px rgba(0,0,0,.07);
+/* ── CALENDARIO ──────────────────────────────── */
+.cal-grid-mes {
+  display: grid;
+  grid-template-columns: repeat(7,1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
 }
-
-.nav-item.active {
-  background: #eff6fd !important;
-  color: #1d6fa4 !important;
-  font-weight: 600;
+.cal-day-header {
+  background: var(--bg-soft);
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.cal-day {
+  background: var(--card);
+  min-height: 100px;
+  padding: 6px;
+  cursor: pointer;
+  transition: background 120ms;
   position: relative;
 }
-.nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: -6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 18px;
-  background: #1d6fa4;
-  border-radius: 0 3px 3px 0;
+.cal-day:hover { background: #f4f8fd; }
+.cal-day.cal-today { background: #eff6fd; }
+.cal-day.cal-today .cal-day-num { color:#1d6fa4; font-weight:700; }
+.cal-day.cal-other-month { background: var(--bg-soft); opacity:.6; }
+.cal-day-num {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t1);
+  margin-bottom: 4px;
+  line-height: 1;
 }
-.nav-item.active svg { opacity: 1 !important; color: #1d6fa4; }
-
-/* Stat cards — gradiente suave por tipo */
-.stat-card.c-err   { background: linear-gradient(160deg,#fdf0f0 0%,#fff 65%); }
-.stat-card.c-warn  { background: linear-gradient(160deg,#fef3e2 0%,#fff 65%); }
-.stat-card.c-ok    { background: linear-gradient(160deg,#ebf7f2 0%,#fff 65%); }
-.stat-card.c-info  { background: linear-gradient(160deg,#eff6fd 0%,#fff 65%); }
-.stat-card.c-purple{ background: linear-gradient(160deg,#f3f0ff 0%,#fff 65%); }
-
-/* Hover filas tabla */
-tr:hover td { background: #f4f8fd !important; }
-
-/* Cards — sombra y lift en hover */
-.card {
-  box-shadow: 0 1px 4px rgba(0,0,0,.05), 0 0 0 1px rgba(0,0,0,.03);
-  transition: box-shadow 200ms ease, transform 180ms ease;
-}
-.card:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
-  transform: translateY(-1px);
-}
-
-/* Page header — línea gradiente inferior azul Aercom */
-.page-header {
-  border-bottom: 1px solid transparent;
-  background:
-    linear-gradient(rgba(255,255,255,.92),rgba(255,255,255,.92)) padding-box,
-    linear-gradient(90deg,#1d6fa4 0%,#e8e6e1 35%) border-box;
-}
-
-/* Botón primario — azul Aercom con gradiente */
-.btn-primary {
-  background: linear-gradient(135deg,#1d6fa4 0%,#155a87 100%);
-  box-shadow: 0 2px 8px rgba(29,111,164,.22);
-}
-.btn-primary:hover {
-  background: linear-gradient(135deg,#1a6494 0%,#124f78 100%);
-  box-shadow: 0 4px 14px rgba(29,111,164,.32);
-  transform: translateY(-1px);
-}
-.btn-primary:active { transform: translateY(0); box-shadow: none; }
-
-/* Kanban cards — sombra mejorada */
-.k-card {
-  box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
-  transition: box-shadow 200ms ease, transform 160ms ease, border-color 150ms;
-}
-.k-card:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,.1), 0 1px 4px rgba(0,0,0,.04);
-  transform: translateY(-3px);
-}
-
-/* Modal — sombra profunda + borde azul superior */
-.modal {
-  box-shadow: 0 20px 60px rgba(0,0,0,.14), 0 4px 16px rgba(0,0,0,.07);
-}
-.modal-head {
-  border-top: 3px solid #1d6fa4;
-  border-radius: var(--r-lg) var(--r-lg) 0 0;
-}
-
-/* Ficha cliente — igual que modal */
-.ficha-modal {
-  box-shadow: 0 24px 64px rgba(0,0,0,.14), 0 4px 16px rgba(0,0,0,.07);
-}
-.ficha-head {
-  border-top: 3px solid #1d6fa4;
-  border-radius: var(--r-lg) var(--r-lg) 0 0;
-}
-
-/* Inputs — focus azul Aercom */
-.fc:focus {
-  border-color: #1d6fa4 !important;
-  box-shadow: 0 0 0 3px rgba(29,111,164,.12) !important;
-}
-
-/* Scrollbar azul Aercom */
-::-webkit-scrollbar-thumb { background: #c5d8e8; }
-::-webkit-scrollbar-thumb:hover { background: #1d6fa4; }
-
-/* Toast — gradiente oscuro + borde azul */
-#toast {
-  background: linear-gradient(135deg,#1a1916 0%,#2c2a26 100%);
-  box-shadow: 0 8px 24px rgba(0,0,0,.2), 0 2px 8px rgba(0,0,0,.1);
-  border-left: 3px solid #1d6fa4;
-}
-
-/* Animación de módulo más suave */
-@keyframes fadeIn {
-  from { opacity:0; transform:translateY(8px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-.module.active { animation: fadeIn 260ms cubic-bezier(.16,1,.3,1); }
-
-/* Dashboard urgent — hover con deslizamiento */
-.dash-urgent-item {
-  transition: background 150ms ease, padding-left 180ms ease;
-}
-.dash-urgent-item:hover {
-  background: #f4f8fd;
-  padding-left: 20px;
-}
-
-/* Dash metrics — gradiente suave */
-.dash-metric { transition: box-shadow 200ms ease, transform 180ms ease; }
-.dash-metric:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,.08);
-  transform: translateY(-1px);
-}
-
-/* Filter buttons activos — azul Aercom */
-.filter-btn.active {
-  background: #1d6fa4 !important;
-  border-color: #1d6fa4 !important;
-  box-shadow: 0 2px 8px rgba(29,111,164,.2);
-}
-
-/* Separador con gradiente en fichas */
-.fact-sec-title {
-  background: linear-gradient(90deg,rgba(29,111,164,.08) 0%,transparent 100%);
-  padding-left: 8px;
+.cal-event {
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 2px 5px;
   border-radius: 3px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: opacity 120ms;
+  line-height: 1.4;
+}
+.cal-event:hover { opacity: .8; }
+.cal-event.ev-equip-venc { background:#fdf0f0; color:#c73030; border-left:2px solid #c73030; }
+.cal-event.ev-equip-prox { background:#fffbeb; color:#b45309; border-left:2px solid #f59e0b; }
+.cal-event.ev-followup   { background:#fef3e2; color:#c4600a; border-left:2px solid #c4600a; }
+.cal-event.ev-recordatorio{ background:#eff6fd; color:#1d6fa4; border-left:2px solid #1d6fa4; }
+.cal-event.ev-pedido     { background:#f3f0ff; color:#6d40c4; border-left:2px solid #6d40c4; }
+.cal-event.ev-reunion    { background:#ebf7f2; color:#0a7c5c; border-left:2px solid #0a7c5c; }
+.cal-more {
+  font-size: 10px;
+  color: var(--t3);
+  padding: 1px 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.cal-more:hover { color: var(--info); }
+
+/* Vista semana */
+.cal-grid-sem {
+  display: grid;
+  grid-template-columns: 50px repeat(7,1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.cal-sem-header {
+  background: var(--bg-soft);
+  padding: 10px 4px;
+  text-align: center;
+}
+.cal-sem-header-day { font-size: 11px; font-weight: 700; color: var(--t3); text-transform: uppercase; }
+.cal-sem-header-num { font-size: 18px; font-weight: 600; color: var(--t1); line-height: 1.2; }
+.cal-sem-header-num.today { color: #1d6fa4; }
+.cal-sem-allday {
+  background: var(--card);
+  padding: 6px;
+  min-height: 60px;
+  border-top: 1px solid var(--border);
+}
+.cal-sem-allday.today-col { background: #f4f8fd; }
+.cal-sem-label {
+  background: var(--bg-soft);
+  font-size: 10px;
+  color: var(--t3);
+  padding: 6px 4px;
+  text-align: center;
+  font-weight: 600;
 }
 
-/* Badges — sutil brillo interior */
-.badge { box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+/* Modal evento */
+.cal-modal-dot {
+  width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0;
+}
 
-/* Progreso bar — azul Aercom */
-.pb-fill { background: linear-gradient(90deg,#1d6fa4,#2d8fd4); }
 
-/* Tabla header con separador más visible */
-th { border-bottom: 2px solid var(--border) !important; }
+/* ═══════════════════════════════════════════════
+   AERCOM — MEJORAS VISUALES v3.0
+═══════════════════════════════════════════════ */
+#sidebar { border-right:none; box-shadow:2px 0 16px rgba(0,0,0,.07); }
+.nav-item.active { background:#eff6fd !important; color:#1d6fa4 !important; font-weight:600; position:relative; }
+.nav-item.active::before { content:''; position:absolute; left:-6px; top:50%; transform:translateY(-50%); width:3px; height:18px; background:#1d6fa4; border-radius:0 3px 3px 0; }
+.nav-item.active svg { opacity:1 !important; color:#1d6fa4; }
+.stat-card.c-err   { background:linear-gradient(160deg,#fdf0f0 0%,#fff 65%); }
+.stat-card.c-warn  { background:linear-gradient(160deg,#fef3e2 0%,#fff 65%); }
+.stat-card.c-ok    { background:linear-gradient(160deg,#ebf7f2 0%,#fff 65%); }
+.stat-card.c-info  { background:linear-gradient(160deg,#eff6fd 0%,#fff 65%); }
+.stat-card.c-purple{ background:linear-gradient(160deg,#f3f0ff 0%,#fff 65%); }
+tr:hover td { background:#f4f8fd !important; }
+.card { box-shadow:0 1px 4px rgba(0,0,0,.05),0 0 0 1px rgba(0,0,0,.03); transition:box-shadow 200ms ease,transform 180ms ease; }
+.card:hover { box-shadow:0 6px 20px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04); transform:translateY(-1px); }
+.page-header { border-bottom:1px solid transparent; background:linear-gradient(rgba(255,255,255,.92),rgba(255,255,255,.92)) padding-box, linear-gradient(90deg,#1d6fa4 0%,#e8e6e1 35%) border-box; }
+.btn-primary { background:linear-gradient(135deg,#1d6fa4 0%,#155a87 100%); box-shadow:0 2px 8px rgba(29,111,164,.22); }
+.btn-primary:hover { background:linear-gradient(135deg,#1a6494 0%,#124f78 100%); box-shadow:0 4px 14px rgba(29,111,164,.32); transform:translateY(-1px); }
+.btn-primary:active { transform:translateY(0); box-shadow:none; }
+.k-card { box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04); }
+.k-card:hover { box-shadow:0 6px 20px rgba(0,0,0,.1),0 1px 4px rgba(0,0,0,.04); transform:translateY(-3px); }
+.modal { box-shadow:0 20px 60px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.07); }
+.modal-head { border-top:3px solid #1d6fa4; border-radius:var(--r-lg) var(--r-lg) 0 0; }
+.ficha-modal { box-shadow:0 24px 64px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.07); }
+.ficha-head { border-top:3px solid #1d6fa4; border-radius:var(--r-lg) var(--r-lg) 0 0; }
+.fc:focus { border-color:#1d6fa4 !important; box-shadow:0 0 0 3px rgba(29,111,164,.12) !important; }
+::-webkit-scrollbar-thumb { background:#c5d8e8; }
+::-webkit-scrollbar-thumb:hover { background:#1d6fa4; }
+#toast { background:linear-gradient(135deg,#1a1916 0%,#2c2a26 100%); box-shadow:0 8px 24px rgba(0,0,0,.2); border-left:3px solid #1d6fa4; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.module.active { animation:fadeIn 260ms cubic-bezier(.16,1,.3,1); }
+.dash-urgent-item { transition:background 150ms ease,padding-left 180ms ease; }
+.dash-urgent-item:hover { background:#f4f8fd; padding-left:20px; }
+.filter-btn.active { background:#1d6fa4 !important; border-color:#1d6fa4 !important; box-shadow:0 2px 8px rgba(29,111,164,.2); }
+.pb-fill { background:linear-gradient(90deg,#1d6fa4,#2d8fd4); }
+th { border-bottom:2px solid var(--border) !important; }
+.badge { box-shadow:inset 0 1px 0 rgba(255,255,255,.35); }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1792,6 +1778,10 @@ th { border-bottom: 2px solid var(--border) !important; }
     <div class="nav-item" id="nav-pipeline" onclick="showModule('pipeline')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
       Cotizaciones
+    </div>
+    <div class="nav-item" id="nav-calendario" onclick="showModule('calendario')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Calendario
     </div>
     <div class="nav-item" id="nav-pedidos" onclick="showModule('pedidos')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
@@ -2150,6 +2140,44 @@ th { border-bottom: 2px solid var(--border) !important; }
 
 </main>
 
+  <!-- CALENDARIO -->
+  <section id="module-calendario" class="module">
+    <div class="page-header">
+      <div>
+        <h2>Calendario</h2>
+        <div id="cal-sub" class="page-header-sub"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">
+          <button id="cal-btn-mes" onclick="calSetVista('mes')" style="padding:5px 14px;font-size:12px;font-weight:500;background:var(--t1);color:#fff;border:none;cursor:pointer;font-family:inherit;transition:all 150ms">Mes</button>
+          <button id="cal-btn-sem" onclick="calSetVista('semana')" style="padding:5px 14px;font-size:12px;font-weight:500;background:transparent;color:var(--t2);border:none;cursor:pointer;font-family:inherit;transition:all 150ms">Semana</button>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openCalEventModal(null)">+ Evento</button>
+      </div>
+    </div>
+    <div class="page-content" style="padding:20px 28px">
+      <!-- Nav mes -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button onclick="calPrev()" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 12px;cursor:pointer;font-size:15px;transition:background 120ms" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='var(--card)'">‹</button>
+          <h3 id="cal-title" style="font-size:16px;font-weight:600;color:var(--t1);min-width:200px;text-align:center"></h3>
+          <button onclick="calNext()" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 12px;cursor:pointer;font-size:15px;transition:background 120ms" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='var(--card)'">›</button>
+        </div>
+        <button onclick="calGoToday()" style="background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;color:var(--t2);font-family:inherit;transition:all 150ms" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='transparent'">Hoy</button>
+      </div>
+      <!-- Leyenda -->
+      <div style="display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t2)"><span style="width:10px;height:10px;border-radius:3px;background:#c73030;display:inline-block"></span>Equipo vencido</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t2)"><span style="width:10px;height:10px;border-radius:3px;background:#f59e0b;display:inline-block"></span>Equipo próximo</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t2)"><span style="width:10px;height:10px;border-radius:3px;background:#c4600a;display:inline-block"></span>Follow-up</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t2)"><span style="width:10px;height:10px;border-radius:3px;background:#1d6fa4;display:inline-block"></span>Recordatorio</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t2)"><span style="width:10px;height:10px;border-radius:3px;background:#6d40c4;display:inline-block"></span>Pedido</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t2)"><span style="width:10px;height:10px;border-radius:3px;background:#0a7c5c;display:inline-block"></span>Reunión</span>
+      </div>
+      <!-- Grid -->
+      <div id="cal-grid"></div>
+    </div>
+  </section>
 <!-- FICHA CLIENTE -->
 <div id="ficha-overlay">
   <div class="ficha-modal">
@@ -2430,6 +2458,7 @@ function loadData(){
   const _sm={'Borrador':'Solicitud','Enviada':'Enviar'};
   D.cotizaciones.forEach(c=>{if(_sm[c.estado])c.estado=_sm[c.estado];});
   if(!D.pedidos) D.pedidos=[];
+  if(!D.eventos) D.eventos=[];
 }
 
 function _updateSaveBtn(){
@@ -2523,6 +2552,7 @@ function renderModule(){
   else if(curModule==='facturacion') renderFacturacion();
   else if(curModule==='recordatorios') renderRecordatorios();
   else if(curModule==='clientes') renderClientes();
+  else if(curModule==='calendario') renderCalendario();
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
@@ -5161,6 +5191,338 @@ async function xlsExport(tipo, destino){
     if(ok) toast(`✓ ${nombre} guardado en Drive/Aercom Gestion/Reportes/`);
     else toast('⚠ No se pudo subir a Drive');
   }
+}
+
+
+// ─── CALENDARIO ──────────────────────────────────────────────────────────────
+let calVista = 'mes';
+let calFecha = new Date();
+
+const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MESES_CAL   = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function calSetVista(v){
+  calVista = v;
+  document.getElementById('cal-btn-mes').style.cssText = v==='mes'
+    ? 'padding:5px 14px;font-size:12px;font-weight:500;background:var(--t1);color:#fff;border:none;cursor:pointer;font-family:inherit;transition:all 150ms'
+    : 'padding:5px 14px;font-size:12px;font-weight:500;background:transparent;color:var(--t2);border:none;cursor:pointer;font-family:inherit;transition:all 150ms';
+  document.getElementById('cal-btn-sem').style.cssText = v==='semana'
+    ? 'padding:5px 14px;font-size:12px;font-weight:500;background:var(--t1);color:#fff;border:none;cursor:pointer;font-family:inherit;transition:all 150ms'
+    : 'padding:5px 14px;font-size:12px;font-weight:500;background:transparent;color:var(--t2);border:none;cursor:pointer;font-family:inherit;transition:all 150ms';
+  renderCalendario();
+}
+
+function calPrev(){
+  if(calVista==='mes'){
+    calFecha.setMonth(calFecha.getMonth()-1);
+  } else {
+    calFecha.setDate(calFecha.getDate()-7);
+  }
+  renderCalendario();
+}
+function calNext(){
+  if(calVista==='mes'){
+    calFecha.setMonth(calFecha.getMonth()+1);
+  } else {
+    calFecha.setDate(calFecha.getDate()+7);
+  }
+  renderCalendario();
+}
+function calGoToday(){
+  calFecha = new Date();
+  renderCalendario();
+}
+
+function _calGetEventos(){
+  const events = {};
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  function addEvent(dateStr, ev){
+    if(!dateStr) return;
+    const d = dateStr.split('T')[0];
+    if(!events[d]) events[d] = [];
+    events[d].push(ev);
+  }
+
+  // Equipos — preventivo, refrigerante, batería, visita
+  D.equipos.forEach(e=>{
+    const cn = clientName(e.clienteId);
+    const label = `${e.id} · ${cn.split(' ')[0]}`;
+    const checks = [
+      { date: e.proximoPreventivo, tipo: 'Prev.' },
+      { date: e.proximoBateria || (e.ultimoBateria ? addDays(e.ultimoBateria,730) : null), tipo: 'Bat.' },
+      { date: e.proximoAceite   || (e.ultimoAceite  ? addDays(e.ultimoAceite,730)  : null), tipo: 'Ref.' },
+      { date: e.proximaVisita   || (()=>{
+          if(!e.ultimaVisita) return null;
+          const cli=D.clientes.find(c=>c.id===e.clienteId);
+          const FD={'Semanal':7,'Quincenal':15,'Mensual':30,'Bimestral':60,'Trimestral':90,'Semestral':180,'Anual':365};
+          const d=FD[cli?.frecuenciaVisita||''];
+          return d?addDays(e.ultimaVisita,d):null;
+        })(), tipo: 'Visita' }
+    ];
+    checks.forEach(({date,tipo})=>{
+      if(!date) return;
+      const diff = daysDiff(date);
+      const cls  = diff < 0 ? 'ev-equip-venc' : 'ev-equip-prox';
+      addEvent(date, {cls, label:`${tipo} · ${label}`, title:`${tipo}: ${e.id}`, detail:`Cliente: ${cn}`, tipo:'equipo'});
+    });
+  });
+
+  // Follow-ups de cotizaciones
+  D.cotizaciones.forEach(c=>{
+    if(!c.fechaFollowup) return;
+    if(['Facturada','Ejecutada','Rechazada'].includes(c.estado)) return;
+    addEvent(c.fechaFollowup, {
+      cls:'ev-followup',
+      label:`${c.id} · ${toTitleCase(clientName(c.clienteId)).split(' ')[0]}`,
+      title:`Follow-up: ${c.id}`,
+      detail:`${clientName(c.clienteId)} — ${c.estado}`,
+      tipo:'followup', ref: c.id
+    });
+  });
+
+  // Recordatorios
+  D.recordatorios.forEach(r=>{
+    if(r.estado==='Hecho') return;
+    const d = r.fechaHora ? r.fechaHora.split('T')[0] : null;
+    if(!d) return;
+    addEvent(d, {
+      cls:'ev-recordatorio',
+      label: r.titulo,
+      title: r.titulo,
+      detail: r.clienteId ? clientName(r.clienteId) : '',
+      tipo:'recordatorio', ref: r.id
+    });
+  });
+
+  // Pedidos
+  (D.pedidos||[]).forEach(p=>{
+    if(p.estado==='Realizado') return;
+    if(!p.fechaARealizar) return;
+    addEvent(p.fechaARealizar, {
+      cls:'ev-pedido',
+      label:`${p.id} · ${toTitleCase(clientName(p.clienteId)).split(' ')[0]}`,
+      title:`Pedido: ${p.id}`,
+      detail:`${clientName(p.clienteId)}${p.detalle?' — '+p.detalle.slice(0,40):''}`,
+      tipo:'pedido', ref: p.id
+    });
+  });
+
+  // Reuniones/eventos propios
+  (D.eventos||[]).forEach(ev=>{
+    addEvent(ev.fecha, {
+      cls:'ev-reunion',
+      label: ev.titulo,
+      title: ev.titulo,
+      detail: ev.descripcion||'',
+      tipo:'reunion', ref: ev.id
+    });
+  });
+
+  return events;
+}
+
+function renderCalendario(){
+  const grid = document.getElementById('cal-grid');
+  if(!grid) return;
+
+  const events = _calGetEventos();
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Total eventos del mes visible
+  const totalEv = Object.values(events).reduce((s,a)=>s+a.length,0);
+  const sub = document.getElementById('cal-sub');
+  if(sub) sub.textContent = `${totalEv} evento${totalEv!==1?'s':''} este período`;
+
+  if(calVista==='mes'){
+    _renderCalMes(grid, events, todayStr);
+  } else {
+    _renderCalSemana(grid, events, todayStr);
+  }
+
+  const t = calVista==='mes'
+    ? `${MESES_CAL[calFecha.getMonth()]} ${calFecha.getFullYear()}`
+    : _semanaLabel();
+  document.getElementById('cal-title').textContent = t;
+}
+
+function _semanaLabel(){
+  const d = new Date(calFecha);
+  const dow = d.getDay();
+  const lun = new Date(d); lun.setDate(d.getDate() - dow + (dow===0?-6:1));
+  const dom = new Date(lun); dom.setDate(lun.getDate()+6);
+  const fmtShort = dd => `${dd.getDate()} ${MESES_CAL[dd.getMonth()].slice(0,3)}`;
+  return `${fmtShort(lun)} — ${fmtShort(dom)} ${dom.getFullYear()}`;
+}
+
+function _renderCalMes(grid, events, todayStr){
+  const año  = calFecha.getFullYear();
+  const mes  = calFecha.getMonth();
+  const pDay = new Date(año, mes, 1).getDay(); // 0=Dom
+  const dias = new Date(año, mes+1, 0).getDate();
+
+  let html = '<div class="cal-grid-mes">';
+  DIAS_SEMANA.forEach(d => {
+    html += `<div class="cal-day-header">${d}</div>`;
+  });
+
+  const offset = pDay; // días vacíos al inicio
+  const prevDias = new Date(año, mes, 0).getDate();
+
+  for(let i=0; i<42; i++){
+    let dayNum, isCurrentMonth=true, dateStr='';
+    if(i < offset){
+      dayNum = prevDias - offset + i + 1;
+      isCurrentMonth = false;
+      const d = new Date(año, mes-1, dayNum);
+      dateStr = d.toISOString().split('T')[0];
+    } else if(i - offset < dias){
+      dayNum = i - offset + 1;
+      const d = new Date(año, mes, dayNum);
+      dateStr = d.toISOString().split('T')[0];
+    } else {
+      dayNum = i - offset - dias + 1;
+      isCurrentMonth = false;
+      const d = new Date(año, mes+1, dayNum);
+      dateStr = d.toISOString().split('T')[0];
+    }
+
+    const isToday = dateStr === todayStr;
+    const dayEvents = events[dateStr]||[];
+    const MAX_SHOW = 3;
+    const shown = dayEvents.slice(0,MAX_SHOW);
+    const extra = dayEvents.length - MAX_SHOW;
+
+    let evHtml = shown.map(ev=>
+      `<div class="cal-event ${ev.cls}" onclick="event.stopPropagation();calShowEventDetail('${dateStr}',${JSON.stringify(ev.title).replace(/'/g,"\'")},'${ev.cls}','${ev.detail.replace(/'/g,"\'").replace(/"/g,'\"')}')" title="${ev.title}">${ev.label}</div>`
+    ).join('');
+    if(extra>0) evHtml += `<div class="cal-more" onclick="event.stopPropagation();calShowDay('${dateStr}')">+${extra} más</div>`;
+
+    html += `<div class="cal-day${isToday?' cal-today':''}${!isCurrentMonth?' cal-other-month':''}" onclick="openCalEventModal('${dateStr}')">
+      <div class="cal-day-num">${dayNum}</div>
+      ${evHtml}
+    </div>`;
+  }
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function _renderCalSemana(grid, events, todayStr){
+  const d = new Date(calFecha);
+  const dow = d.getDay();
+  const lun = new Date(d); lun.setDate(d.getDate() - dow + (dow===0?-6:1));
+
+  const dias = [];
+  for(let i=0;i<7;i++){
+    const dd = new Date(lun); dd.setDate(lun.getDate()+i);
+    dias.push(dd);
+  }
+
+  let html = '<div class="cal-grid-sem">';
+
+  // Header vacío para la columna de etiqueta
+  html += '<div class="cal-day-header" style="background:var(--bg-soft)"></div>';
+  dias.forEach(dd=>{
+    const ds = dd.toISOString().split('T')[0];
+    const isToday = ds===todayStr;
+    html += `<div class="cal-sem-header">
+      <div class="cal-sem-header-day">${DIAS_SEMANA[dd.getDay()]}</div>
+      <div class="cal-sem-header-num${isToday?' today':''}">${dd.getDate()}</div>
+    </div>`;
+  });
+
+  // Fila "Todo el día"
+  html += '<div class="cal-sem-label">Todo<br>el día</div>';
+  dias.forEach(dd=>{
+    const ds = dd.toISOString().split('T')[0];
+    const isToday = ds===todayStr;
+    const dayEvents = events[ds]||[];
+    let evHtml = dayEvents.map(ev=>
+      `<div class="cal-event ${ev.cls}" onclick="calShowEventDetail('${ds}',${JSON.stringify(ev.title).replace(/'/g,"\'")},'${ev.cls}','${ev.detail.replace(/'/g,"\'").replace(/"/g,'\"')}')" title="${ev.title}" style="margin-bottom:3px">${ev.label}</div>`
+    ).join('');
+    html += `<div class="cal-sem-allday${isToday?' today-col':''}" onclick="openCalEventModal('${ds}')">${evHtml}</div>`;
+  });
+
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function calShowDay(dateStr){
+  const events = _calGetEventos();
+  const evs = events[dateStr]||[];
+  const [y,m,d] = dateStr.split('-');
+  document.getElementById('modal-title').textContent = `${parseInt(d)} de ${MESES_CAL[parseInt(m)-1]} ${y}`;
+  document.getElementById('modal-body').innerHTML = evs.length
+    ? evs.map(ev=>`
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+          <div style="width:10px;height:10px;border-radius:3px;flex-shrink:0;margin-top:3px" class="${ev.cls}" style="background:currentColor"></div>
+          <div>
+            <div style="font-weight:600;font-size:13.5px">${ev.title}</div>
+            ${ev.detail?`<div style="font-size:12px;color:var(--t2);margin-top:2px">${ev.detail}</div>`:''}
+          </div>
+        </div>`).join('')
+    : '<div class="empty">Sin eventos este día</div>';
+  document.getElementById('modal-foot').innerHTML = `
+    <button class="btn btn-outline" onclick="closeModal()">Cerrar</button>
+    <button class="btn btn-primary" onclick="closeModal();openCalEventModal('${dateStr}')">+ Agregar evento</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function calShowEventDetail(dateStr, title, cls, detail){
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <div class="cal-modal-dot ${cls}"></div>
+      <span style="font-size:12px;color:var(--t2)">${dateStr.split('-').reverse().join('/')}</span>
+    </div>
+    ${detail?`<p style="font-size:13.5px;color:var(--t1);line-height:1.6">${detail}</p>`:''}`;
+  document.getElementById('modal-foot').innerHTML = `<button class="btn btn-outline" onclick="closeModal()">Cerrar</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openCalEventModal(fechaPrefill){
+  if(!D.eventos) D.eventos = [];
+  const cliOpts = '<option value="">— Sin cliente —</option>' +
+    D.clientes.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  document.getElementById('modal-title').textContent = 'Nueva reunión / evento';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="fg"><label class="fl">Título *</label>
+      <input class="fc" id="cal-ev-titulo" placeholder="Ej: Reunión con Molinos Agro, Capacitación técnica..."></div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Fecha *</label>
+        <input class="fc" type="date" id="cal-ev-fecha" value="${fechaPrefill||today()}"></div>
+      <div class="fg"><label class="fl">Hora</label>
+        <input class="fc" type="time" id="cal-ev-hora" value="09:00"></div>
+    </div>
+    <div class="fg"><label class="fl">Cliente (opcional)</label>
+      <select class="fc" id="cal-ev-cli">${cliOpts}</select></div>
+    <div class="fg"><label class="fl">Descripción</label>
+      <textarea class="fc" id="cal-ev-desc" rows="2" placeholder="Notas del evento..."></textarea></div>`;
+  document.getElementById('modal-foot').innerHTML = `
+    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveCalEvento()">Guardar evento</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('cal-ev-titulo')?.focus(), 80);
+}
+
+function saveCalEvento(){
+  const titulo = (document.getElementById('cal-ev-titulo')?.value||'').trim();
+  const fecha  = document.getElementById('cal-ev-fecha')?.value||'';
+  if(!titulo||!fecha){ toast('⚠ Completá título y fecha'); return; }
+  if(!D.eventos) D.eventos=[];
+  const id = `EV-${Date.now()}`;
+  D.eventos.push({
+    id,
+    titulo,
+    fecha,
+    hora:  document.getElementById('cal-ev-hora')?.value||'',
+    clienteId: document.getElementById('cal-ev-cli')?.value||'',
+    descripcion: document.getElementById('cal-ev-desc')?.value.trim()||''
+  });
+  persist();
+  closeModal();
+  renderCalendario();
+  toast(`✓ Evento "${titulo}" agregado`);
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
