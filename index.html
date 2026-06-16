@@ -2363,6 +2363,7 @@ function renderModule(){
   else if(curModule==='facturacion') renderFacturacion();
   else if(curModule==='recordatorios') renderRecordatorios();
   else if(curModule==='clientes') renderClientes();
+  else if(curModule==='excel') updateExcelCounts();
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
@@ -4940,7 +4941,6 @@ function xlsImport(ev, tipo){
       }
       _origPersist();
       renderModule();
-      updateExcelCounts();
       toast(`✓ ${importados} registros importados correctamente`);
     }catch(err){console.error(err);toast('⚠ Error al importar: '+err.message);}
     ev.target.value='';
@@ -5001,6 +5001,16 @@ async function xlsExport(tipo, destino){
     if(ok) toast(`✓ ${nombre} guardado en Drive/Aercom Gestion/Reportes/`);
     else toast('⚠ No se pudo subir a Drive');
   }
+}
+
+// ─── EXCEL COUNTS ────────────────────────────────────────────────────────────
+function updateExcelCounts(){
+  const ec=document.getElementById('excel-count-clientes');
+  const ee=document.getElementById('excel-count-equipos');
+  const eq=document.getElementById('excel-count-cotizaciones');
+  if(ec) ec.textContent=(D.clientes.length||0)+' registros';
+  if(ee) ee.textContent=(D.equipos.length||0)+' registros';
+  if(eq) eq.textContent=(D.cotizaciones.length||0)+' registros';
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
