@@ -1634,9 +1634,11 @@ th[onclick]:active { background: var(--active); }
 
 .excel-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
+@media(max-width:900px){ .excel-cards-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:600px){ .excel-cards-grid { grid-template-columns: 1fr; } }
 
 .excel-card {
   background: var(--card);
@@ -1703,6 +1705,10 @@ th[onclick]:active { background: var(--active); }
 .excel-btn--primary:hover { background: #2c2a26; }
 .excel-btn--drive   { background: #e8f4fd; border-color: #b8d9f3; color: var(--info); }
 .excel-btn--drive:hover { background: #d4ecfa; border-color: var(--info); }
+
+#module-excel .page-content {
+  max-width: 100%;
+}
 
 .excel-divider { display: flex; align-items: center; gap: 12px; margin: 28px 0 24px; }
 .excel-divider__line  { flex: 1; height: 1px; background: var(--border); }
