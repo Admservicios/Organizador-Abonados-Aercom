@@ -1603,6 +1603,113 @@ th[onclick]:active { background: var(--active); }
   font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
   letter-spacing: -.3px;
 }
+
+/* ── Excel / Drive Module ─────────────── */
+.excel-drive-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid;
+  margin-bottom: 28px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.excel-drive-banner--warn { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
+.excel-drive-banner--ok   { background: var(--ok-bg);   border-color: var(--ok);   color: var(--ok); }
+.excel-drive-banner__icon { flex-shrink: 0; display: flex; align-items: center; }
+
+.excel-section { margin-bottom: 32px; }
+.excel-section__header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.excel-section__icon {
+  width: 34px; height: 34px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.excel-section__icon--import { background: var(--info-bg); color: var(--info); }
+.excel-section__icon--export { background: var(--ok-bg);   color: var(--ok); }
+.excel-section__title { font-size: 14px; font-weight: 600; color: var(--t1); margin-bottom: 2px; }
+.excel-section__desc  { font-size: 12.5px; color: var(--t2); }
+
+.excel-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.excel-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: box-shadow 180ms ease, transform 150ms ease;
+}
+.excel-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,.07); transform: translateY(-1px); }
+.excel-card__top   { display: flex; align-items: center; justify-content: space-between; }
+.excel-card__badge {
+  font-size: 11.5px; font-weight: 600;
+  padding: 3px 9px; border-radius: var(--r-sm);
+}
+.excel-card__badge--blue   { background: var(--info-bg);   color: var(--info); }
+.excel-card__badge--orange { background: var(--warn-bg);   color: var(--warn); }
+.excel-card__badge--purple { background: var(--purple-bg); color: var(--purple); }
+.excel-card__count  { font-size: 11px; color: var(--t3); font-weight: 500; }
+.excel-card__fields { font-size: 11.5px; color: var(--t2); line-height: 1.5; }
+.excel-card__actions { display: flex; gap: 7px; margin-top: 2px; }
+
+.excel-export-grid {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.excel-export-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  transition: background 120ms;
+}
+.excel-export-row:last-child { border-bottom: none; }
+.excel-export-row:hover { background: var(--bg-soft); }
+.excel-export-info  { flex: 1; min-width: 0; }
+.excel-export-name  { font-size: 13.5px; font-weight: 600; color: var(--t1); margin-bottom: 2px; }
+.excel-export-desc  { font-size: 12px; color: var(--t2); }
+.excel-export-btns  { display: flex; gap: 7px; flex-shrink: 0; }
+
+.excel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 150ms ease;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.excel-btn--ghost   { background: transparent; border-color: var(--border); color: var(--t2); }
+.excel-btn--ghost:hover { background: var(--hover); color: var(--t1); border-color: var(--border-strong); }
+.excel-btn--primary { background: var(--t1); border-color: var(--t1); color: #fff; }
+.excel-btn--primary:hover { background: #2c2a26; }
+.excel-btn--drive   { background: #e8f4fd; border-color: #b8d9f3; color: var(--info); }
+.excel-btn--drive:hover { background: #d4ecfa; border-color: var(--info); }
+
+.excel-divider { display: flex; align-items: center; gap: 12px; margin: 28px 0 24px; }
+.excel-divider__line  { flex: 1; height: 1px; background: var(--border); }
+.excel-divider__label {
+  font-size: 11px; font-weight: 700; color: var(--t4);
+  text-transform: uppercase; letter-spacing: .6px; white-space: nowrap;
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2010,86 +2117,160 @@ th[onclick]:active { background: var(--active); }
   <div class="page-header">
     <div>
       <h2>Excel &amp; Google Drive</h2>
-      <div class="page-header-sub">Importá datos en masa o exportá reportes a tu Drive y PC</div>
+      <div class="page-header-sub" id="excel-sub">Importá datos en masa o exportá reportes a tu Drive y PC</div>
     </div>
   </div>
   <div class="page-content">
-    <div id="excel-drive-status" style="background:var(--warn-bg);border:1px solid var(--warn);border-radius:var(--r-md);padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span id="excel-drive-msg" style="color:var(--warn);font-size:13px;font-weight:500">Drive no conectado — conectate desde el sidebar para guardar reportes en la nube</span>
-      <button class="btn btn-outline" style="margin-left:auto;font-size:12px" onclick="gdriveAuth()">Conectar Drive</button>
+
+    <!-- Banner de estado Drive -->
+    <div id="excel-drive-status" class="excel-drive-banner excel-drive-banner--warn">
+      <div class="excel-drive-banner__icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <span id="excel-drive-msg">Drive no conectado — conectate desde el sidebar para guardar reportes en la nube</span>
+      <button class="btn btn-outline btn-sm" style="margin-left:auto;flex-shrink:0" onclick="gdriveAuth()">Conectar Drive</button>
     </div>
-    <div style="margin-bottom:32px">
-      <h3 style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px">📥 Importar datos</h3>
-      <p style="font-size:13px;color:var(--t2);margin-bottom:16px">Descargá la plantilla, completála en Excel y volvé a importarla.</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
-        <div style="border:1px solid var(--border);border-radius:var(--r-md);padding:16px;background:var(--card)">
-          <div style="font-weight:600;font-size:13px;margin-bottom:4px">👥 Clientes</div>
-          <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Nombre, tipo, contacto, email, ciudad, ajuste, OC/HES</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsDownloadPlantilla('clientes')">⬇ Plantilla</button>
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="document.getElementById('xls-import-clientes').click()">⬆ Importar</button>
+
+    <!-- Sección Importar -->
+    <div class="excel-section">
+      <div class="excel-section__header">
+        <div class="excel-section__icon excel-section__icon--import">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <div>
+          <div class="excel-section__title">Importar datos</div>
+          <div class="excel-section__desc">Descargá la plantilla, completála en Excel y volvé a importarla.</div>
+        </div>
+      </div>
+      <div class="excel-cards-grid">
+
+        <div class="excel-card">
+          <div class="excel-card__top">
+            <div class="excel-card__badge excel-card__badge--blue">Clientes</div>
+            <div class="excel-card__count" id="excel-count-clientes">— registros</div>
+          </div>
+          <div class="excel-card__fields">Nombre · Tipo · Email · Teléfono · Ciudad · Ajuste</div>
+          <div class="excel-card__actions">
+            <button class="excel-btn excel-btn--ghost" onclick="xlsDownloadPlantilla('clientes')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Plantilla
+            </button>
+            <button class="excel-btn excel-btn--primary" onclick="document.getElementById('xls-import-clientes').click()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Importar
+            </button>
             <input type="file" id="xls-import-clientes" accept=".xlsx,.xls,.csv" style="display:none" onchange="xlsImport(event,'clientes')">
           </div>
         </div>
-        <div style="border:1px solid var(--border);border-radius:var(--r-md);padding:16px;background:var(--card)">
-          <div style="font-weight:600;font-size:13px;margin-bottom:4px">⚙️ Equipos</div>
-          <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Cliente, tipo, fechas de mantenimiento, horómetro</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsDownloadPlantilla('equipos')">⬇ Plantilla</button>
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="document.getElementById('xls-import-equipos').click()">⬆ Importar</button>
+
+        <div class="excel-card">
+          <div class="excel-card__top">
+            <div class="excel-card__badge excel-card__badge--orange">Equipos</div>
+            <div class="excel-card__count" id="excel-count-equipos">— registros</div>
+          </div>
+          <div class="excel-card__fields">ID · Cliente · Tipo · Últ. preventivo · Batería · Refrigerante</div>
+          <div class="excel-card__actions">
+            <button class="excel-btn excel-btn--ghost" onclick="xlsDownloadPlantilla('equipos')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Plantilla
+            </button>
+            <button class="excel-btn excel-btn--primary" onclick="document.getElementById('xls-import-equipos').click()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Importar
+            </button>
             <input type="file" id="xls-import-equipos" accept=".xlsx,.xls,.csv" style="display:none" onchange="xlsImport(event,'equipos')">
           </div>
         </div>
-        <div style="border:1px solid var(--border);border-radius:var(--r-md);padding:16px;background:var(--card)">
-          <div style="font-weight:600;font-size:13px;margin-bottom:4px">📋 Cotizaciones</div>
-          <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Cliente, descripción, monto, responsable, estado</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsDownloadPlantilla('cotizaciones')">⬇ Plantilla</button>
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="document.getElementById('xls-import-cotizaciones').click()">⬆ Importar</button>
+
+        <div class="excel-card">
+          <div class="excel-card__top">
+            <div class="excel-card__badge excel-card__badge--purple">Cotizaciones</div>
+            <div class="excel-card__count" id="excel-count-cotizaciones">— registros</div>
+          </div>
+          <div class="excel-card__fields">N° · Cliente · Descripción · Monto · Responsable · Estado</div>
+          <div class="excel-card__actions">
+            <button class="excel-btn excel-btn--ghost" onclick="xlsDownloadPlantilla('cotizaciones')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Plantilla
+            </button>
+            <button class="excel-btn excel-btn--primary" onclick="document.getElementById('xls-import-cotizaciones').click()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Importar
+            </button>
             <input type="file" id="xls-import-cotizaciones" accept=".xlsx,.xls,.csv" style="display:none" onchange="xlsImport(event,'cotizaciones')">
           </div>
         </div>
+
       </div>
     </div>
-    <div>
-      <h3 style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px">📤 Exportar reportes</h3>
-      <p style="font-size:13px;color:var(--t2);margin-bottom:16px">Cada reporte se puede descargar a tu PC o guardar en <strong>Aercom Gestion/Reportes/</strong> en Drive.</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
-        <div style="border:1px solid var(--border);border-radius:var(--r-md);padding:16px;background:var(--card)">
-          <div style="font-weight:600;font-size:13px;margin-bottom:4px">👥 Reporte de Clientes</div>
-          <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Listado completo con contactos, ajuste y configuración de facturación</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsExport('clientes','download')">⬇ Descargar</button>
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsExport('clientes','drive')">☁ Drive</button>
-          </div>
+
+    <!-- Divider -->
+    <div class="excel-divider">
+      <div class="excel-divider__line"></div>
+      <span class="excel-divider__label">Exportar reportes</span>
+      <div class="excel-divider__line"></div>
+    </div>
+
+    <!-- Sección Exportar -->
+    <div class="excel-section">
+      <div class="excel-section__header">
+        <div class="excel-section__icon excel-section__icon--export">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </div>
-        <div style="border:1px solid var(--border);border-radius:var(--r-md);padding:16px;background:var(--card)">
-          <div style="font-weight:600;font-size:13px;margin-bottom:4px">⚙️ Reporte de Equipos</div>
-          <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Estado de vencimientos, horómetro y próximos mantenimientos</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsExport('equipos','download')">⬇ Descargar</button>
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsExport('equipos','drive')">☁ Drive</button>
-          </div>
-        </div>
-        <div style="border:1px solid var(--border);border-radius:var(--r-md);padding:16px;background:var(--card)">
-          <div style="font-weight:600;font-size:13px;margin-bottom:4px">📋 Reporte de Cotizaciones</div>
-          <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Pipeline completo con estados, montos y responsables</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsExport('cotizaciones','download')">⬇ Descargar</button>
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsExport('cotizaciones','drive')">☁ Drive</button>
-          </div>
-        </div>
-        <div style="border:1px solid var(--border);border-radius:var(--r-md);padding:16px;background:var(--card)">
-          <div style="font-weight:600;font-size:13px;margin-bottom:4px">🧾 Reporte de Facturación</div>
-          <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Estado de facturación del mes actual por cliente</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsExport('facturacion','download')">⬇ Descargar</button>
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsExport('facturacion','drive')">☁ Drive</button>
-          </div>
+        <div>
+          <div class="excel-section__title">Exportar reportes</div>
+          <div class="excel-section__desc">Descargá a tu PC o guardá directo en <strong>Aercom Gestion/Reportes/</strong> en Drive.</div>
         </div>
       </div>
+      <div class="excel-export-grid">
+
+        <div class="excel-export-row">
+          <div class="excel-export-info">
+            <div class="excel-export-name">Clientes</div>
+            <div class="excel-export-desc">Listado completo con contactos y configuración de facturación</div>
+          </div>
+          <div class="excel-export-btns">
+            <button class="excel-btn excel-btn--ghost" onclick="xlsExport('clientes','download')">⬇ PC</button>
+            <button class="excel-btn excel-btn--drive" onclick="xlsExport('clientes','drive')">☁ Drive</button>
+          </div>
+        </div>
+
+        <div class="excel-export-row">
+          <div class="excel-export-info">
+            <div class="excel-export-name">Equipos</div>
+            <div class="excel-export-desc">Vencimientos, horómetro y próximos mantenimientos</div>
+          </div>
+          <div class="excel-export-btns">
+            <button class="excel-btn excel-btn--ghost" onclick="xlsExport('equipos','download')">⬇ PC</button>
+            <button class="excel-btn excel-btn--drive" onclick="xlsExport('equipos','drive')">☁ Drive</button>
+          </div>
+        </div>
+
+        <div class="excel-export-row">
+          <div class="excel-export-info">
+            <div class="excel-export-name">Cotizaciones</div>
+            <div class="excel-export-desc">Pipeline completo con estados, montos y responsables</div>
+          </div>
+          <div class="excel-export-btns">
+            <button class="excel-btn excel-btn--ghost" onclick="xlsExport('cotizaciones','download')">⬇ PC</button>
+            <button class="excel-btn excel-btn--drive" onclick="xlsExport('cotizaciones','drive')">☁ Drive</button>
+          </div>
+        </div>
+
+        <div class="excel-export-row">
+          <div class="excel-export-info">
+            <div class="excel-export-name">Facturación mensual</div>
+            <div class="excel-export-desc">Estado del mes actual por cliente con tipo de ajuste</div>
+          </div>
+          <div class="excel-export-btns">
+            <button class="excel-btn excel-btn--ghost" onclick="xlsExport('facturacion','download')">⬇ PC</button>
+            <button class="excel-btn excel-btn--drive" onclick="xlsExport('facturacion','drive')">☁ Drive</button>
+          </div>
+        </div>
+
+      </div>
     </div>
+
   </div>
 </section>
 
@@ -2359,6 +2540,7 @@ function renderModule(){
   else if(curModule==='facturacion') renderFacturacion();
   else if(curModule==='recordatorios') renderRecordatorios();
   else if(curModule==='clientes') renderClientes();
+  else if(curModule==='excel') updateExcelCounts();
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
@@ -4690,7 +4872,6 @@ async function gdriveAuth(){
 }
 
 function _updateDriveUI(){
-  // Sidebar button
   const btn=document.getElementById('btn-drive');
   const txt=document.getElementById('btn-drive-text');
   if(btn&&txt){
@@ -4698,17 +4879,23 @@ function _updateDriveUI(){
     txt.textContent='✓ Drive conectado';
     btn.onclick=null;
   }
-  // Excel module status
   const status=document.getElementById('excel-drive-status');
   const msg=document.getElementById('excel-drive-msg');
   if(status&&msg){
-    status.style.background='var(--ok-bg)';
-    status.style.borderColor='var(--ok)';
-    msg.style.color='var(--ok)';
+    status.className='excel-drive-banner excel-drive-banner--ok';
     msg.textContent='✓ Drive conectado — los reportes se guardarán en Aercom Gestion/Reportes/';
     const btn2=status.querySelector('button');
     if(btn2) btn2.style.display='none';
   }
+}
+
+function updateExcelCounts(){
+  const ec=document.getElementById('excel-count-clientes');
+  const ee=document.getElementById('excel-count-equipos');
+  const eq=document.getElementById('excel-count-cotizaciones');
+  if(ec) ec.textContent=(D.clientes.length||0)+' registros';
+  if(ee) ee.textContent=(D.equipos.length||0)+' registros';
+  if(eq) eq.textContent=(D.cotizaciones.length||0)+' registros';
 }
 
 // ── Crear estructura de carpetas ──
