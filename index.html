@@ -216,12 +216,16 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--bg);
+  min-height: 0;
 }
 
 .module { display: none; }
 
 .module.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   animation: fadeIn 200ms var(--ease);
 }
 
