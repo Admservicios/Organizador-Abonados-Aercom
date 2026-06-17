@@ -2820,7 +2820,7 @@ tr:hover td {
           <div style="font-weight:600;font-size:13px;margin-bottom:4px">👥 Clientes</div>
           <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Nombre, tipo, contacto, email, ciudad, ajuste, OC/HES</div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsDownloadPlantilla('clientes')">⬇ Plantilla</button>
+            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsDownloadPlantilla('clientes')">⬇ Exportar / Plantilla</button>
             <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="document.getElementById('xls-import-clientes').click()">⬆ Importar</button>
             <input type="file" id="xls-import-clientes" accept=".xlsx,.xls,.csv" style="display:none" onchange="xlsImport(event,'clientes')">
           </div>
@@ -2829,7 +2829,7 @@ tr:hover td {
           <div style="font-weight:600;font-size:13px;margin-bottom:4px">⚙️ Equipos</div>
           <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Cliente, tipo, fechas de mantenimiento, horómetro</div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsDownloadPlantilla('equipos')">⬇ Plantilla</button>
+            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsDownloadPlantilla('equipos')">⬇ Exportar / Plantilla</button>
             <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="document.getElementById('xls-import-equipos').click()">⬆ Importar</button>
             <input type="file" id="xls-import-equipos" accept=".xlsx,.xls,.csv" style="display:none" onchange="xlsImport(event,'equipos')">
           </div>
@@ -2838,7 +2838,7 @@ tr:hover td {
           <div style="font-weight:600;font-size:13px;margin-bottom:4px">📋 Cotizaciones</div>
           <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Cliente, descripción, monto, responsable, estado</div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsDownloadPlantilla('cotizaciones')">⬇ Plantilla</button>
+            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="xlsDownloadPlantilla('cotizaciones')">⬇ Exportar / Plantilla</button>
             <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="document.getElementById('xls-import-cotizaciones').click()">⬆ Importar</button>
             <input type="file" id="xls-import-cotizaciones" accept=".xlsx,.xls,.csv" style="display:none" onchange="xlsImport(event,'cotizaciones')">
           </div>
@@ -5839,27 +5839,92 @@ const XLS_HEADERS = {
 };
 
 function xlsDownloadPlantilla(tipo){
-  const wb=XLSX.utils.book_new();
-  let rows=[XLS_HEADERS[tipo]];
-  // Para equipos: agregar hoja de referencia con IDs de clientes
-  if(tipo==='equipos'){
-    ws2=XLSX.utils.aoa_to_sheet([
-      ['REFERENCIA DE CLIENTES — usá el ID en la columna "Cliente ID"'],
-      ['Cliente ID','Nombre del cliente','Tipo'],
+  const wb = XLSX.utils.book_new();
+  const hoy = today();
+  let dataRows = [];
+
+  if(tipo==='clientes'){
+    // Exportar todos los clientes cargados
+    dataRows = D.clientes.map(c=>[
+      c.id, c.nombre, c.tipo||'', c.ciudad||'', c.contacto||'',
+      c.telefono||'', c.email||'', c.frecuenciaVisita||'',
+      c.presupuesto||0, c.ajuste||'IPC',
+      c.requiereOC?'SI':'NO', c.requiereHES?'SI':'NO',
+      c.facturacion||'Manual', c.estadoCliente||'Activo'
+    ]);
+    // Hoja principal con datos
+    const ws = XLSX.utils.aoa_to_sheet([XLS_HEADERS.clientes, ...dataRows]);
+    ws['!cols'] = XLS_HEADERS.clientes.map(()=>({wch:22}));
+    // Resaltar header
+    XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+    // Hoja de instrucciones
+    const wi = XLSX.utils.aoa_to_sheet([
+      ['INSTRUCCIONES DE IMPORTACIÓN'],
+      [''],
+      ['• El campo ID puede dejarse en blanco — la app lo genera automáticamente'],
+      ['• Si ya tiene ID asignado, respetalo para que no se duplique'],
+      ['• Columnas obligatorias: Nombre'],
+      ['• Tipos válidos: Sanatorio/Clínica · Industria · Comercio · Edificio · Otro'],
+      ['• Estado: Activo · Inactivo · Suspendido'],
+      ['• Ajuste: IPC · Dólar divisa · Dólar billete · Fijo pesos'],
+      ['• Requiere OC / HES: escribir SI o NO'],
+      [''],
+      [`Exportado el: ${hoy} · ${D.clientes.length} clientes`]
+    ]);
+    XLSX.utils.book_append_sheet(wb, wi, 'Instrucciones');
+    XLSX.writeFile(wb, `clientes-aercom-${hoy}.xlsx`);
+    toast(`✓ ${D.clientes.length} clientes exportados`);
+
+  } else if(tipo==='equipos'){
+    // Exportar todos los equipos con Cliente ID ya cargado
+    dataRows = D.equipos.map(e=>[
+      e.id, e.clienteId, clientName(e.clienteId),
+      e.tipo||'', e.marca||'', e.ubicacion||'',
+      e.ultimoPreventivo||'', e.proximoPreventivo||'',
+      e.ultimoAceite||'', e.ultimoBateria||'',
+      e.ultimoRefrigerante||'', e.horometro||0, e.observaciones||''
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([XLS_HEADERS.equipos, ...dataRows]);
+    ws['!cols'] = XLS_HEADERS.equipos.map(()=>({wch:22}));
+    XLSX.utils.book_append_sheet(wb, ws, 'Equipos');
+    // Hoja referencia clientes
+    const wref = XLSX.utils.aoa_to_sheet([
+      ['REFERENCIA DE CLIENTES'],
+      ['Cliente ID', 'Nombre', 'Tipo'],
       ...D.clientes.map(c=>[c.id, c.nombre, c.tipo||''])
     ]);
-    ws2['!cols']=[{wch:16},{wch:40},{wch:20}];
-    XLSX.utils.book_append_sheet(wb,ws2,'IDs de Clientes');
+    wref['!cols'] = [{wch:14},{wch:40},{wch:20}];
+    XLSX.utils.book_append_sheet(wb, wref, 'IDs de Clientes');
+    // Instrucciones
+    const wi = XLSX.utils.aoa_to_sheet([
+      ['INSTRUCCIONES'],
+      [''],
+      ['• Usá la hoja "IDs de Clientes" para copiar el Cliente ID correcto'],
+      ['• El ID del equipo identifica el registro — no lo cambies si ya existe'],
+      ['• Para equipos nuevos podés dejar el ID vacío o poner uno nuevo'],
+      ['• Fechas en formato AAAA-MM-DD (ej: 2025-07-23)'],
+      ['• Preventivo: se renueva cada 1 año (365 días)'],
+      ['• Batería y Refrigerante: cada 2 años (730 días)'],
+      [''],
+      [`Exportado el: ${hoy} · ${D.equipos.length} equipos`]
+    ]);
+    XLSX.utils.book_append_sheet(wb, wi, 'Instrucciones');
+    XLSX.writeFile(wb, `equipos-aercom-${hoy}.xlsx`);
+    toast(`✓ ${D.equipos.length} equipos exportados`);
+
+  } else if(tipo==='cotizaciones'){
+    dataRows = D.cotizaciones.map(c=>[
+      c.id, c.clienteId, clientName(c.clienteId),
+      c.descripcion||'', c.monto||0,
+      c.fechaEnvio||'', c.fechaFollowup||'',
+      c.responsable||'', c.estado||'Solicitud', c.notas||''
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([XLS_HEADERS.cotizaciones, ...dataRows]);
+    ws['!cols'] = XLS_HEADERS.cotizaciones.map(()=>({wch:22}));
+    XLSX.utils.book_append_sheet(wb, ws, 'Cotizaciones');
+    XLSX.writeFile(wb, `cotizaciones-aercom-${hoy}.xlsx`);
+    toast(`✓ ${D.cotizaciones.length} cotizaciones exportadas`);
   }
-  // Para clientes: agregar nota de que el ID puede estar en blanco
-  if(tipo==='clientes'){
-    rows.push(['(dejar en blanco para generar automáticamente)','Nombre del cliente','Tipo','Ciudad','Contacto','Telefono','Email','Frecuencia Visita','Presupuesto Mensual','Ajuste','Requiere OC','Requiere HES','Facturacion','Estado']);
-  }
-  const ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=XLS_HEADERS[tipo].map(()=>({wch:22}));
-  XLSX.utils.book_append_sheet(wb,ws,'Plantilla');
-  XLSX.writeFile(wb,`plantilla-${tipo}.xlsx`);
-  toast(`✓ Plantilla de ${tipo} descargada`);
 }
 
 // ─── EXCEL: IMPORTAR ─────────────────────────────────────────────────────────
