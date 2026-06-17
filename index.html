@@ -486,8 +486,8 @@ body {
    TABLES
 ══════════════════════════════════ */
 .tbl-wrap { overflow-x: auto; }
-#equip-tbody td { white-space: nowrap; }
-#module-equipos .tbl-wrap { font-size: 12.5px; }
+#module-equipos .tbl-wrap { font-size: 13px; }
+.equip-date-cell { min-width: 110px; }
 
 table {
   width: 100%;
@@ -2584,16 +2584,14 @@ tr:hover td {
           <table>
             <thead>
               <tr>
-                <th style="min-width:130px">ID / Tipo</th>
-                <th style="min-width:150px">Cliente</th>
-                <th style="min-width:100px">Marca</th>
-                <th style="min-width:110px">Ubicación</th>
-                <th style="min-width:120px">Últ. Visita</th>
-                <th style="min-width:130px">Últ. Preventivo</th>
-                <th style="min-width:120px">Últ. Batería</th>
-                <th style="min-width:130px">Últ. Refrigerante</th>
-                <th style="min-width:90px">Estado</th>
-                <th style="min-width:80px">Acciones</th>
+                <th>ID / Tipo</th>
+                <th>Cliente</th>
+                <th>Últ. Preventivo</th>
+                <th>Últ. Batería</th>
+                <th>Últ. Refrigerante</th>
+                <th>Últ. Visita</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="equip-tbody"></tbody>
@@ -3079,17 +3077,21 @@ function equipStatus(e){
     return d?addDays(e.ultimaVisita,d):null;
   })();
   const dates=[e.proximoPreventivo,nextAceite,nextBateria,nextRefrig].filter(Boolean);
-  let st='verde';
-  for(const d of dates){
-    const diff=daysDiff(d);
-    if(diff<0){st='rojo';break;}
-    if(diff<=30&&st!=='rojo') st='amarillo';
+  // Si no tiene NINGUNA fecha cargada → estado "gris" (sin datos)
+  const sinFechas = !e.proximoPreventivo && !e.ultimoPreventivo && !e.ultimoBateria && !e.ultimoAceite;
+  let st = sinFechas ? 'gris' : 'verde';
+  if(!sinFechas){
+    for(const d of dates){
+      const diff=daysDiff(d);
+      if(diff<0){st='rojo';break;}
+      if(diff<=30&&st!=='rojo') st='amarillo';
+    }
+    if(nextVisita&&daysDiff(nextVisita)<0){
+      if(st==='verde') st='amarillo';
+      else if(st==='amarillo') st='rojo';
+    }
   }
-  if(nextVisita&&daysDiff(nextVisita)<0){
-    if(st==='verde') st='amarillo';
-    else if(st==='amarillo') st='rojo';
-  }
-  return {st,nextAceite,nextBateria,nextRefrig,nextVisita};
+  return {st,sinFechas,nextAceite,nextBateria,nextRefrig,nextVisita};
 }
 
 function clientName(id){
@@ -3253,15 +3255,18 @@ function _dashItemHtml(it){
     'FOLLOW-UP':'background:var(--warn-bg);color:var(--warn)',
     'RECORDATORIO':'background:var(--info-bg);color:var(--info)',
     'EQ.PROX':'background:var(--warn-bg);color:var(--warn)',
+    'S/FECHA':'background:var(--card-alt);color:var(--t3);border:1px solid var(--border)',
     'PS.VENC':'background:var(--info-bg);color:var(--info)',
     'A.FACT':'background:var(--purple-bg);color:var(--purple)',
     'BATERÍA':'background:var(--warn-bg);color:var(--warn)',
     'REFRIG.':'background:var(--info-bg);color:var(--info)'
   };
-  const dot=it.color==='err'?'var(--err)':it.color==='afact'?'var(--purple)':'var(--warn)';
+  const dot=it.color==='err'?'var(--err)':it.color==='afact'?'var(--purple)':it.color==='gris'?'var(--t4)':'var(--warn)';
   const d=it.days;
   const dHtml=d===null
     ?`<span class="dash-urgent-days" style="color:var(--purple);background:var(--purple-bg)">${fmtMoney(it.monto||0)}</span>`
+    :d>=9000
+    ?`<span class="dash-urgent-days" style="color:var(--t3);background:var(--bg-soft);font-weight:500">Sin fecha</span>`
     :d<0
     ?`<span class="dash-urgent-days red">${d} d.</span>`
     :d===0
@@ -3288,8 +3293,9 @@ function showDashAlerts(){
 function renderDashboard(){
   const now=new Date();
 
-  const equipVenc=D.equipos.filter(e=>equipStatus(e).st==='rojo');
-  const equipProx=D.equipos.filter(e=>equipStatus(e).st==='amarillo');
+  const equipVenc=D.equipos.filter(e=>{ const s=equipStatus(e); return s.st==='rojo' && !s.sinFechas; });
+  const equipProx=D.equipos.filter(e=>{ const s=equipStatus(e); return s.st==='amarillo' && !s.sinFechas; });
+  const equipSinFecha=D.equipos.filter(e=>equipStatus(e).sinFechas);
   const cotActivas=D.cotizaciones.filter(c=>!['Facturada','Ejecutada','Rechazada'].includes(c.estado));
   const cotFollowVenc=cotActivas.filter(c=>c.fechaFollowup&&daysDiff(c.fechaFollowup)<0);
   const mStr=curMonth||nowMonthStr();
@@ -3310,6 +3316,7 @@ function renderDashboard(){
   document.getElementById('dash-date').textContent=
     now.toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const totalUrgent=equipVenc.length+cotFollowVenc.length+remAlerta.length+pedVenc.length+cotAFacturar.length;
+  // equipSinFecha no cuenta como urgente
   document.getElementById('dash-summary').textContent=
     totalUrgent>0
       ?`Tenés ${totalUrgent} alerta${totalUrgent>1?'s':''} que requieren atención`
@@ -3329,6 +3336,10 @@ function renderDashboard(){
   });
   equipVenc.filter(e=>!clientCritical(e.clienteId)).forEach(e=>{
     items.push({type:'EQ.VENC',color:'err',main:e.id,client:clientName(e.clienteId),crit:false,days:daysDiff(e.proximoPreventivo)});
+  });
+  // Equipos sin fechas cargadas → "A consultar" en gris
+  equipSinFecha.forEach(e=>{
+    items.push({type:'S/FECHA',color:'gris',main:e.id,client:clientName(e.clienteId),crit:false,days:9999});
   });
 
   // Baterías vencidas
@@ -3766,15 +3777,15 @@ function renderEquipos(){
   const filtered=D.equipos.filter(e=>equipFilter==='todos'||equipStatus(e).st===equipFilter);
   const tbody=document.getElementById('equip-tbody');
   if(!filtered.length){
-    tbody.innerHTML=`<tr><td colspan="10"><div class="empty">No hay equipos para mostrar</div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty">No hay equipos para mostrar</div></td></tr>`;
     return;
   }
   tbody.innerHTML=filtered.map(e=>{
     const {st,nextAceite,nextBateria,nextVisita}=equipStatus(e);
     const rc=st==='rojo'?'row-err':st==='amarillo'?'row-warn':'';
-    const dot=st==='rojo'?'dot-err':st==='amarillo'?'dot-warn':'dot-ok';
-    const badg=st==='rojo'?'b-err':st==='amarillo'?'b-warn':'b-ok';
-    const lbl=st==='rojo'?'Vencido':st==='amarillo'?'Próximo':'Al día';
+    const dot=st==='rojo'?'dot-err':st==='amarillo'?'dot-warn':st==='gris'?'':'dot-ok';
+    const badg=st==='rojo'?'b-err':st==='amarillo'?'b-warn':st==='gris'?'b-gray':'b-ok';
+    const lbl=st==='rojo'?'Vencido':st==='amarillo'?'Próximo':st==='gris'?'Sin fecha':'Al día';
     const crit=clientCritical(e.clienteId);
 
     const tipoAbrev=e.tipo==='Grupo Electrógeno'?'G. Electrógeno':e.tipo;
@@ -3783,11 +3794,11 @@ function renderEquipos(){
         <div style="font-size:13px;font-weight:600">${e.id}</div>
         <div style="font-size:11px;color:var(--t2)">${tipoAbrev}</div>
       </td>
-      <td>${clientName(e.clienteId)}</td>
-      ${eqDateCell(e.id,'ultimaVisita',e.ultimaVisita,nextVisita)}
+      <td style="font-size:13px">${clientName(e.clienteId)}${e.marca||e.ubicacion?`<div style="font-size:10.5px;color:var(--t3);margin-top:1px">${[e.marca,e.ubicacion].filter(Boolean).join(' · ')}</div>`:''}</td>
       ${eqDateCell(e.id,'ultimoPreventivo',e.ultimoPreventivo,e.proximoPreventivo)}
-      ${eqDateCell(e.id,'ultimoAceite',e.ultimoAceite,nextAceite)}
       ${eqDateCell(e.id,'ultimoBateria',e.ultimoBateria,nextBateria)}
+      ${eqDateCell(e.id,'ultimoAceite',e.ultimoAceite,nextAceite)}
+      ${eqDateCell(e.id,'ultimaVisita',e.ultimaVisita,nextVisita)}
       <td><span class="dot ${dot}"></span><span class="badge ${badg}">${lbl}</span></td>
       <td style="white-space:nowrap">
         <div style="display:flex;gap:6px">
