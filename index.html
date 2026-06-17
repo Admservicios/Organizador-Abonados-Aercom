@@ -2366,6 +2366,43 @@ tr:hover td {
     page-break-after: auto;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   AERCOM — MEJORAS VISUALES v3.0
+═══════════════════════════════════════════════ */
+#sidebar { border-right:none; box-shadow:2px 0 16px rgba(0,0,0,.07); }
+.nav-item.active { background:#eff6fd !important; color:#1d6fa4 !important; font-weight:600; position:relative; }
+.nav-item.active::before { content:''; position:absolute; left:-6px; top:50%; transform:translateY(-50%); width:3px; height:18px; background:#1d6fa4; border-radius:0 3px 3px 0; }
+.nav-item.active svg { opacity:1 !important; color:#1d6fa4; }
+.stat-card.c-err   { background:linear-gradient(160deg,#fdf0f0 0%,#fff 65%); }
+.stat-card.c-warn  { background:linear-gradient(160deg,#fef3e2 0%,#fff 65%); }
+.stat-card.c-ok    { background:linear-gradient(160deg,#ebf7f2 0%,#fff 65%); }
+.stat-card.c-info  { background:linear-gradient(160deg,#eff6fd 0%,#fff 65%); }
+.stat-card.c-purple{ background:linear-gradient(160deg,#f3f0ff 0%,#fff 65%); }
+tr:hover td { background:#f4f8fd !important; }
+.card { box-shadow:0 1px 4px rgba(0,0,0,.05),0 0 0 1px rgba(0,0,0,.03); transition:box-shadow 200ms ease,transform 180ms ease; }
+.card:hover { box-shadow:0 6px 20px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04); transform:translateY(-1px); }
+.page-header { border-bottom:1px solid transparent; background:linear-gradient(rgba(255,255,255,.92),rgba(255,255,255,.92)) padding-box,linear-gradient(90deg,#1d6fa4 0%,#e8e6e1 35%) border-box; }
+.btn-primary { background:linear-gradient(135deg,#1d6fa4 0%,#155a87 100%); box-shadow:0 2px 8px rgba(29,111,164,.22); }
+.btn-primary:hover { background:linear-gradient(135deg,#1a6494 0%,#124f78 100%); box-shadow:0 4px 14px rgba(29,111,164,.32); transform:translateY(-1px); }
+.btn-primary:active { transform:translateY(0); box-shadow:none; }
+.k-card { box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04); }
+.k-card:hover { box-shadow:0 6px 20px rgba(0,0,0,.1),0 1px 4px rgba(0,0,0,.04); transform:translateY(-3px); }
+.modal { box-shadow:0 20px 60px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.07); }
+.modal-head { border-top:3px solid #1d6fa4; border-radius:var(--r-lg) var(--r-lg) 0 0; }
+.ficha-modal { box-shadow:0 24px 64px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.07); }
+.ficha-head { border-top:3px solid #1d6fa4; border-radius:var(--r-lg) var(--r-lg) 0 0; }
+.fc:focus { border-color:#1d6fa4 !important; box-shadow:0 0 0 3px rgba(29,111,164,.12) !important; }
+::-webkit-scrollbar-thumb { background:#c5d8e8; }
+::-webkit-scrollbar-thumb:hover { background:#1d6fa4; }
+#toast { background:linear-gradient(135deg,#1a1916 0%,#2c2a26 100%); box-shadow:0 8px 24px rgba(0,0,0,.2); border-left:3px solid #1d6fa4; }
+.dash-urgent-item { transition:background 150ms ease,padding-left 180ms ease; }
+.dash-urgent-item:hover { background:#f4f8fd; padding-left:20px; }
+.filter-btn.active { background:#1d6fa4 !important; border-color:#1d6fa4 !important; box-shadow:0 2px 8px rgba(29,111,164,.2); }
+.pb-fill { background:linear-gradient(90deg,#1d6fa4,#2d8fd4); }
+th { border-bottom:2px solid var(--border) !important; }
+.badge { box-shadow:inset 0 1px 0 rgba(255,255,255,.35); }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2796,14 +2833,14 @@ tr:hover td {
   <div class="page-header">
     <div>
       <h2>Excel &amp; Google Drive</h2>
-      <div class="page-header-sub">Importá datos en masa o exportá reportes a tu Drive y PC</div>
+      <div class="page-header-sub" id="excel-sub">Importá datos en masa o exportá reportes a tu Drive y PC</div>
     </div>
   </div>
   <div class="page-content">
-    <div id="excel-drive-status" style="background:var(--warn-bg);border:1px solid var(--warn);border-radius:var(--r-md);padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span id="excel-drive-msg" style="color:var(--warn);font-size:13px;font-weight:500">Drive no conectado — conectate desde el sidebar para guardar reportes en la nube</span>
-      <button class="btn btn-outline" style="margin-left:auto;font-size:12px" onclick="gdriveAuth()">Conectar Drive</button>
+    <div id="excel-drive-status" style="background:var(--warn-bg);border:1px solid var(--warn);border-radius:var(--r-md);padding:13px 18px;margin-bottom:28px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:500;color:var(--warn)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="excel-drive-msg">Drive no conectado — conectate desde el sidebar para guardar reportes en la nube</span>
+      <button class="btn btn-outline btn-sm" style="margin-left:auto;flex-shrink:0" onclick="gdriveAuth()">Conectar Drive</button>
     </div>
     <div style="margin-bottom:32px">
       <h3 style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px">📥 Importar datos</h3>
@@ -3235,6 +3272,7 @@ function renderModule(){
   else if(curModule==='recordatorios') renderRecordatorios();
   else if(curModule==='clientes') renderClientes();
   else if(curModule==='calendario') renderCalendario();
+  else if(curModule==='excel') updateExcelCounts();
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
@@ -5639,9 +5677,7 @@ function _updateDriveUI(){
   const status=document.getElementById('excel-drive-status');
   const msg=document.getElementById('excel-drive-msg');
   if(status&&msg){
-    status.style.background='var(--ok-bg)';
-    status.style.borderColor='var(--ok)';
-    msg.style.color='var(--ok)';
+    status.style.cssText='background:var(--ok-bg);border:1px solid var(--ok);border-radius:var(--r-md);padding:13px 18px;margin-bottom:28px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:500;color:var(--ok)';
     msg.textContent='✓ Drive conectado — los reportes se guardarán en Aercom Gestion/Reportes/';
     const btn2=status.querySelector('button');
     if(btn2) btn2.style.display='none';
@@ -6432,6 +6468,15 @@ new Chart(document.getElementById('c2'),{type:'bar',data:{labels:${tLabels},data
   win.document.close();
   win.focus();
   toast('✓ Reporte generado — Ctrl+P para imprimir o guardar como PDF');
+}
+
+function updateExcelCounts(){
+  const ec=document.getElementById('excel-count-clientes');
+  const ee=document.getElementById('excel-count-equipos');
+  const eq=document.getElementById('excel-count-cotizaciones');
+  if(ec) ec.textContent=(D.clientes.length||0)+' registros';
+  if(ee) ee.textContent=(D.equipos.length||0)+' registros';
+  if(eq) eq.textContent=(D.cotizaciones.length||0)+' registros';
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
