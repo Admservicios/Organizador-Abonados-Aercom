@@ -486,6 +486,8 @@ body {
    TABLES
 ══════════════════════════════════ */
 .tbl-wrap { overflow-x: auto; }
+#equip-tbody td { white-space: nowrap; }
+#module-equipos .tbl-wrap { font-size: 12.5px; }
 
 table {
   width: 100%;
@@ -2566,7 +2568,7 @@ tr:hover td {
         <select class="srch-select" id="equip-f-tipo" onchange="applyEquipFilter()">
           <option value="">Tipo: Todos</option>
           <option>Grupo Electrógeno</option><option>Electrocompresor</option>
-          <option>Motocompresor</option><option>Motobomba</option><option>Secadora</option>
+          <option>Motocompresor</option><option>Motobomba</option><option>Secadora de Aire</option>
         </select>
         <select class="srch-select" id="equip-f-est" onchange="applyEquipFilter()">
           <option value="">Estado: Todos</option>
@@ -2582,9 +2584,16 @@ tr:hover td {
           <table>
             <thead>
               <tr>
-                <th>ID / Tipo</th><th>Cliente</th>
-                <th>Última visita</th><th>Últ. Preventivo</th><th>Últ. Refrigerante</th><th>Últ. Batería</th>
-                <th>Estado</th><th>Acciones</th>
+                <th style="min-width:130px">ID / Tipo</th>
+                <th style="min-width:150px">Cliente</th>
+                <th style="min-width:100px">Marca</th>
+                <th style="min-width:110px">Ubicación</th>
+                <th style="min-width:120px">Últ. Visita</th>
+                <th style="min-width:130px">Últ. Preventivo</th>
+                <th style="min-width:120px">Últ. Batería</th>
+                <th style="min-width:130px">Últ. Refrigerante</th>
+                <th style="min-width:90px">Estado</th>
+                <th style="min-width:80px">Acciones</th>
               </tr>
             </thead>
             <tbody id="equip-tbody"></tbody>
@@ -3757,7 +3766,7 @@ function renderEquipos(){
   const filtered=D.equipos.filter(e=>equipFilter==='todos'||equipStatus(e).st===equipFilter);
   const tbody=document.getElementById('equip-tbody');
   if(!filtered.length){
-    tbody.innerHTML=`<tr><td colspan="8"><div class="empty">No hay equipos para mostrar</div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="10"><div class="empty">No hay equipos para mostrar</div></td></tr>`;
     return;
   }
   tbody.innerHTML=filtered.map(e=>{
@@ -4185,12 +4194,17 @@ function deleteQuote(id){
 function openEquipModal(eid){
   const eq=eid?D.equipos.find(e=>e.id===eid):null;
   document.getElementById('modal-title').textContent=eq?`Editar Equipo — ${eid}`:'Nuevo Equipo';
-  const tipos=['Grupo Electrógeno','Electrocompresor','Motocompresor','Motobomba','Secadora'];
+  const tipos=['Grupo Electrógeno','Electrocompresor','Motocompresor','Motobomba','Secadora de Aire'];
   const tipoOpts=tipos.map(t=>`<option ${eq?.tipo===t?'selected':''}>${t}</option>`).join('');
   const cliOpts=D.clientes.map(c=>`<option value="${c.id}" ${eq?.clienteId===c.id?'selected':''}>${c.nombre}</option>`).join('');
   const _vfd={'Semanal':7,'Quincenal':15,'Mensual':30,'Bimestral':60,'Trimestral':90,'Semestral':180,'Anual':365};
   const _vcli=D.clientes.find(c=>c.id===(eq?.clienteId||''));
   const _nvisita=eq?.proximaVisita||(eq?.ultimaVisita&&_vfd[_vcli?.frecuenciaVisita||'']?addDays(eq.ultimaVisita,_vfd[_vcli?.frecuenciaVisita||'']):'' );
+
+  // Calcular próximas fechas automáticamente
+  const _nextPrev  = eq?.proximoPreventivo || (eq?.ultimoPreventivo ? addDays(eq.ultimoPreventivo,365) : '');
+  const _nextBat   = eq?.proximoBateria    || (eq?.ultimoBateria    ? addDays(eq.ultimoBateria,730)    : '');
+  const _nextRef   = eq?.proximoAceite     || (eq?.ultimoAceite     ? addDays(eq.ultimoAceite,730)     : '');
 
   document.getElementById('modal-body').innerHTML=`
     <div class="form-row">
@@ -4199,26 +4213,37 @@ function openEquipModal(eid){
     </div>
     <div class="fg"><label class="fl">Cliente *</label><select class="fc" id="e-cli">${cliOpts}</select></div>
     <div class="form-row">
-      <div class="fg"><label class="fl">Fecha del último preventivo realizado</label><input class="fc" type="date" id="e-uprev" value="${eq?.ultimoPreventivo||''}" oninput="autoNextPrev()"></div>
-      <div class="fg"><label class="fl">Próximo preventivo</label><input class="fc" type="date" id="e-nprev" value="${eq?.proximoPreventivo||''}"></div>
+      <div class="fg"><label class="fl">Marca</label><input class="fc" id="e-marca" value="${eq?.marca||''}" placeholder="ej: Caterpillar, Cummins"></div>
+      <div class="fg"><label class="fl">Ubicación</label><input class="fc" id="e-ubicacion" value="${eq?.ubicacion||''}" placeholder="ej: Sala de máquinas"></div>
     </div>
-    <div class="form-row">
-      <div class="fg"><label class="fl">Fecha del último cambio de refrigerante</label><input class="fc" type="date" id="e-ace" value="${eq?.ultimoAceite||''}" oninput="autoNextAceite()"></div>
-      <div class="fg"><label class="fl">Próximo refrigerante</label><input class="fc" type="date" id="e-nace" value="${eq?.proximoAceite||(eq?.ultimoAceite?addDays(eq.ultimoAceite,730):'')}" ></div>
+    <div style="background:var(--bg-soft);border-radius:var(--r-md);padding:14px 16px;margin-bottom:4px">
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Fechas de mantenimiento — el próximo se calcula automáticamente</div>
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="fg" style="margin:0">
+          <label class="fl">Última visita <span style="color:var(--t4);font-weight:400">(próxima: +1 mes)</span></label>
+          <input class="fc" type="date" id="e-uvisita" value="${eq?.ultimaVisita||''}" oninput="autoNextVisita()">
+          <div id="e-uvisita-next" style="font-size:11px;color:var(--ok);margin-top:3px">${_nvisita?'Próxima: '+fmtDate(_nvisita):''}</div>
+        </div>
+        <div class="fg" style="margin:0">
+          <label class="fl">Último preventivo <span style="color:var(--t4);font-weight:400">(próximo: +1 año)</span></label>
+          <input class="fc" type="date" id="e-uprev" value="${eq?.ultimoPreventivo||''}" oninput="autoNextPrev()">
+          <div id="e-uprev-next" style="font-size:11px;color:var(--ok);margin-top:3px">${_nextPrev?'Próximo: '+fmtDate(_nextPrev):''}</div>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <div class="fg" style="margin:0">
+          <label class="fl">Último cambio de batería <span style="color:var(--t4);font-weight:400">(próximo: +2 años)</span></label>
+          <input class="fc" type="date" id="e-bat" value="${eq?.ultimoBateria||''}" oninput="autoNextBat()">
+          <div id="e-bat-next" style="font-size:11px;color:var(--ok);margin-top:3px">${_nextBat?'Próximo: '+fmtDate(_nextBat):''}</div>
+        </div>
+        <div class="fg" style="margin:0">
+          <label class="fl">Último cambio de refrigerante <span style="color:var(--t4);font-weight:400">(próximo: +2 años)</span></label>
+          <input class="fc" type="date" id="e-ace" value="${eq?.ultimoAceite||''}" oninput="autoNextAceite()">
+          <div id="e-ace-next" style="font-size:11px;color:var(--ok);margin-top:3px">${_nextRef?'Próximo: '+fmtDate(_nextRef):''}</div>
+        </div>
+      </div>
     </div>
-    <div class="form-row">
-      <div class="fg"><label class="fl">Fecha del último cambio de batería</label><input class="fc" type="date" id="e-bat" value="${eq?.ultimoBateria||''}"></div>
-      <div class="fg"><label class="fl">Último refrigerante (gas)</label><input class="fc" type="date" id="e-ref" value="${eq?.ultimoRefrigerante||''}"></div>
-    </div>
-    <div class="form-row">
-      <div class="fg"><label class="fl">Horómetro (hs)</label><input class="fc" type="number" id="e-hor" value="${eq?.horometro||''}"></div>
-      <div class="fg"></div>
-    </div>
-    <div class="form-row">
-      <div class="fg"><label class="fl">Fecha de la última visita</label><input class="fc" type="date" id="e-uvisita" value="${eq?.ultimaVisita||''}" oninput="autoNextVisita()"></div>
-      <div class="fg"><label class="fl">Próxima visita</label><input class="fc" type="date" id="e-nvisita" value="${_nvisita}"></div>
-    </div>
-    <div class="fg"><label class="fl">Observaciones</label><textarea class="fc" id="e-obs">${eq?.observaciones||''}</textarea></div>
+    <div class="fg"><label class="fl">Observaciones</label><textarea class="fc" id="e-obs" rows="2">${eq?.observaciones||''}</textarea></div>
   `;
   document.getElementById('modal-foot').innerHTML=`
     ${eq?`<button class="btn" style="background:#fef2f2;color:var(--err);border:1px solid #fecaca" onclick="deleteEquip('${eid}')">Eliminar</button>`:''}
@@ -4230,39 +4255,62 @@ function openEquipModal(eid){
 
 function autoNextPrev(){
   const v=document.getElementById('e-uprev').value;
-  if(v) document.getElementById('e-nprev').value=addDays(v,365);
+  const hint=document.getElementById('e-uprev-next');
+  if(v){ const next=addDays(v,365); if(hint) hint.textContent='Próximo: '+fmtDate(next); }
+  else { if(hint) hint.textContent=''; }
 }
 
 function autoNextAceite(){
   const v=document.getElementById('e-ace').value;
-  if(v) document.getElementById('e-nace').value=addDays(v,730);
+  const hint=document.getElementById('e-ace-next');
+  if(v){ const next=addDays(v,730); if(hint) hint.textContent='Próximo: '+fmtDate(next); }
+  else { if(hint) hint.textContent=''; }
+}
+
+function autoNextBat(){
+  const v=document.getElementById('e-bat').value;
+  const hint=document.getElementById('e-bat-next');
+  if(v){ const next=addDays(v,730); if(hint) hint.textContent='Próximo: '+fmtDate(next); }
+  else { if(hint) hint.textContent=''; }
 }
 
 function autoNextVisita(){
   const v=document.getElementById('e-uvisita').value;
-  if(!v) return;
+  const hint=document.getElementById('e-uvisita-next');
+  if(!v){ if(hint) hint.textContent=''; return; }
   const cli=D.clientes.find(c=>c.id===document.getElementById('e-cli').value);
   const FDAYS={'Semanal':7,'Quincenal':15,'Mensual':30,'Bimestral':60,'Trimestral':90,'Semestral':180,'Anual':365};
-  const d=FDAYS[cli?.frecuenciaVisita||''];
-  if(d) document.getElementById('e-nvisita').value=addDays(v,d);
+  const d=FDAYS[cli?.frecuenciaVisita||'']||30;
+  const next=addDays(v,d);
+  if(hint) hint.textContent='Próxima: '+fmtDate(next);
 }
 
 function saveEquip(){
   const id=document.getElementById('e-id').value.trim();
   const tipo=document.getElementById('e-tipo').value;
   const cliId=document.getElementById('e-cli').value;
-  const uprev=document.getElementById('e-uprev').value;
-  const nprev=document.getElementById('e-nprev').value;
-  const ace=document.getElementById('e-ace').value;
-  const nace=document.getElementById('e-nace').value;
-  const bat=document.getElementById('e-bat').value;
-  const ref=document.getElementById('e-ref').value;
-  const hor=parseInt(document.getElementById('e-hor').value)||0;
-  const obs=document.getElementById('e-obs').value.trim();
+  const marca=(document.getElementById('e-marca')||{value:''}).value.trim();
+  const ubicacion=(document.getElementById('e-ubicacion')||{value:''}).value.trim();
+  const uprev=(document.getElementById('e-uprev')||{value:''}).value;
+  const ace=(document.getElementById('e-ace')||{value:''}).value;
+  const bat=(document.getElementById('e-bat')||{value:''}).value;
   const uvisita=(document.getElementById('e-uvisita')||{value:''}).value;
-  const nvisita=(document.getElementById('e-nvisita')||{value:''}).value;
+  const obs=(document.getElementById('e-obs')||{value:''}).value.trim();
+  // Calcular próximas fechas automáticamente
+  const nprev  = uprev  ? addDays(uprev,365)  : '';
+  const nace   = ace    ? addDays(ace,730)     : '';
+  const nbat   = bat    ? addDays(bat,730)     : '';
+  const cli    = D.clientes.find(c=>c.id===cliId);
+  const FDAYS  = {'Semanal':7,'Quincenal':15,'Mensual':30,'Bimestral':60,'Trimestral':90,'Semestral':180,'Anual':365};
+  const fDays  = FDAYS[cli?.frecuenciaVisita||'']||30;
+  const nvisita = uvisita ? addDays(uvisita,fDays) : '';
   if(!id||!cliId){toast('⚠ Completá ID y cliente');return;}
-  const obj={id,clienteId:cliId,tipo,ultimoPreventivo:uprev,proximoPreventivo:nprev,ultimoAceite:ace,proximoAceite:nace,ultimoBateria:bat,ultimoRefrigerante:ref,horometro:hor,observaciones:obs,ultimaVisita:uvisita,proximaVisita:nvisita};
+  const obj={id,clienteId:cliId,tipo,marca,ubicacion,
+    ultimoPreventivo:uprev, proximoPreventivo:nprev,
+    ultimoAceite:ace,       proximoAceite:nace,
+    ultimoBateria:bat,      proximoBateria:nbat,
+    ultimoRefrigerante:'',  horometro:0,
+    observaciones:obs,      ultimaVisita:uvisita, proximaVisita:nvisita};
   const i=D.equipos.findIndex(e=>e.id===id);
   if(i>-1) D.equipos[i]=obj; else D.equipos.push(obj);
   persist(); closeModal(); renderEquipos();
