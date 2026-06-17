@@ -2366,43 +2366,6 @@ tr:hover td {
     page-break-after: auto;
   }
 }
-
-/* ═══════════════════════════════════════════════
-   AERCOM — MEJORAS VISUALES v3.0
-═══════════════════════════════════════════════ */
-#sidebar { border-right:none; box-shadow:2px 0 16px rgba(0,0,0,.07); }
-.nav-item.active { background:#eff6fd !important; color:#1d6fa4 !important; font-weight:600; position:relative; }
-.nav-item.active::before { content:''; position:absolute; left:-6px; top:50%; transform:translateY(-50%); width:3px; height:18px; background:#1d6fa4; border-radius:0 3px 3px 0; }
-.nav-item.active svg { opacity:1 !important; color:#1d6fa4; }
-.stat-card.c-err   { background:linear-gradient(160deg,#fdf0f0 0%,#fff 65%); }
-.stat-card.c-warn  { background:linear-gradient(160deg,#fef3e2 0%,#fff 65%); }
-.stat-card.c-ok    { background:linear-gradient(160deg,#ebf7f2 0%,#fff 65%); }
-.stat-card.c-info  { background:linear-gradient(160deg,#eff6fd 0%,#fff 65%); }
-.stat-card.c-purple{ background:linear-gradient(160deg,#f3f0ff 0%,#fff 65%); }
-tr:hover td { background:#f4f8fd !important; }
-.card { box-shadow:0 1px 4px rgba(0,0,0,.05),0 0 0 1px rgba(0,0,0,.03); transition:box-shadow 200ms ease,transform 180ms ease; }
-.card:hover { box-shadow:0 6px 20px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04); transform:translateY(-1px); }
-.page-header { border-bottom:1px solid transparent; background:linear-gradient(rgba(255,255,255,.92),rgba(255,255,255,.92)) padding-box,linear-gradient(90deg,#1d6fa4 0%,#e8e6e1 35%) border-box; }
-.btn-primary { background:linear-gradient(135deg,#1d6fa4 0%,#155a87 100%); box-shadow:0 2px 8px rgba(29,111,164,.22); }
-.btn-primary:hover { background:linear-gradient(135deg,#1a6494 0%,#124f78 100%); box-shadow:0 4px 14px rgba(29,111,164,.32); transform:translateY(-1px); }
-.btn-primary:active { transform:translateY(0); box-shadow:none; }
-.k-card { box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04); }
-.k-card:hover { box-shadow:0 6px 20px rgba(0,0,0,.1),0 1px 4px rgba(0,0,0,.04); transform:translateY(-3px); }
-.modal { box-shadow:0 20px 60px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.07); }
-.modal-head { border-top:3px solid #1d6fa4; border-radius:var(--r-lg) var(--r-lg) 0 0; }
-.ficha-modal { box-shadow:0 24px 64px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.07); }
-.ficha-head { border-top:3px solid #1d6fa4; border-radius:var(--r-lg) var(--r-lg) 0 0; }
-.fc:focus { border-color:#1d6fa4 !important; box-shadow:0 0 0 3px rgba(29,111,164,.12) !important; }
-::-webkit-scrollbar-thumb { background:#c5d8e8; }
-::-webkit-scrollbar-thumb:hover { background:#1d6fa4; }
-#toast { background:linear-gradient(135deg,#1a1916 0%,#2c2a26 100%); box-shadow:0 8px 24px rgba(0,0,0,.2); border-left:3px solid #1d6fa4; }
-.dash-urgent-item { transition:background 150ms ease,padding-left 180ms ease; }
-.dash-urgent-item:hover { background:#f4f8fd; padding-left:20px; }
-.filter-btn.active { background:#1d6fa4 !important; border-color:#1d6fa4 !important; box-shadow:0 2px 8px rgba(29,111,164,.2); }
-.pb-fill { background:linear-gradient(90deg,#1d6fa4,#2d8fd4); }
-th { border-bottom:2px solid var(--border) !important; }
-.badge { box-shadow:inset 0 1px 0 rgba(255,255,255,.35); }
-
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2833,14 +2796,14 @@ th { border-bottom:2px solid var(--border) !important; }
   <div class="page-header">
     <div>
       <h2>Excel &amp; Google Drive</h2>
-      <div class="page-header-sub" id="excel-sub">Importá datos en masa o exportá reportes a tu Drive y PC</div>
+      <div class="page-header-sub">Importá datos en masa o exportá reportes a tu Drive y PC</div>
     </div>
   </div>
   <div class="page-content">
-    <div id="excel-drive-status" style="background:var(--warn-bg);border:1px solid var(--warn);border-radius:var(--r-md);padding:13px 18px;margin-bottom:28px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:500;color:var(--warn)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span id="excel-drive-msg">Drive no conectado — conectate desde el sidebar para guardar reportes en la nube</span>
-      <button class="btn btn-outline btn-sm" style="margin-left:auto;flex-shrink:0" onclick="gdriveAuth()">Conectar Drive</button>
+    <div id="excel-drive-status" style="background:var(--warn-bg);border:1px solid var(--warn);border-radius:var(--r-md);padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="excel-drive-msg" style="color:var(--warn);font-size:13px;font-weight:500">Drive no conectado — conectate desde el sidebar para guardar reportes en la nube</span>
+      <button class="btn btn-outline" style="margin-left:auto;font-size:12px" onclick="gdriveAuth()">Conectar Drive</button>
     </div>
     <div style="margin-bottom:32px">
       <h3 style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px">📥 Importar datos</h3>
@@ -3272,7 +3235,6 @@ function renderModule(){
   else if(curModule==='recordatorios') renderRecordatorios();
   else if(curModule==='clientes') renderClientes();
   else if(curModule==='calendario') renderCalendario();
-  else if(curModule==='excel') updateExcelCounts();
 }
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
@@ -5677,7 +5639,9 @@ function _updateDriveUI(){
   const status=document.getElementById('excel-drive-status');
   const msg=document.getElementById('excel-drive-msg');
   if(status&&msg){
-    status.style.cssText='background:var(--ok-bg);border:1px solid var(--ok);border-radius:var(--r-md);padding:13px 18px;margin-bottom:28px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:500;color:var(--ok)';
+    status.style.background='var(--ok-bg)';
+    status.style.borderColor='var(--ok)';
+    msg.style.color='var(--ok)';
     msg.textContent='✓ Drive conectado — los reportes se guardarán en Aercom Gestion/Reportes/';
     const btn2=status.querySelector('button');
     if(btn2) btn2.style.display='none';
@@ -5810,15 +5774,29 @@ function persist(){
 // ─── EXCEL: PLANTILLAS ────────────────────────────────────────────────────────
 const XLS_HEADERS = {
   clientes:     ['ID','Nombre','Tipo','Ciudad','Contacto','Telefono','Email','Frecuencia Visita','Presupuesto Mensual','Ajuste','Requiere OC','Requiere HES','Facturacion','Estado'],
-  equipos:      ['ID','Cliente (nombre)','Tipo','Ultimo Preventivo','Proximo Preventivo','Ultimo Aceite','Ultima Bateria','Ultimo Refrigerante','Horometro','Observaciones'],
+  equipos:      ['ID','Cliente ID','Cliente (nombre)','Tipo','Marca','Ubicacion','Ultimo Preventivo','Proximo Preventivo','Ultimo Aceite','Ultima Bateria','Ultimo Refrigerante','Horometro','Observaciones'],
   cotizaciones: ['ID','Cliente (nombre)','Descripcion','Monto','Fecha Envio','Fecha Followup','Responsable','Estado','Notas'],
   facturacion:  ['Cliente','Tipo','Ajuste','Requiere OC','Requiere HES','Facturacion','Estado Mes']
 };
 
 function xlsDownloadPlantilla(tipo){
   const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet([XLS_HEADERS[tipo]]);
-  // Ancho de columnas
+  let rows=[XLS_HEADERS[tipo]];
+  // Para equipos: agregar hoja de referencia con IDs de clientes
+  if(tipo==='equipos'){
+    ws2=XLSX.utils.aoa_to_sheet([
+      ['REFERENCIA DE CLIENTES — usá el ID en la columna "Cliente ID"'],
+      ['Cliente ID','Nombre del cliente','Tipo'],
+      ...D.clientes.map(c=>[c.id, c.nombre, c.tipo||''])
+    ]);
+    ws2['!cols']=[{wch:16},{wch:40},{wch:20}];
+    XLSX.utils.book_append_sheet(wb,ws2,'IDs de Clientes');
+  }
+  // Para clientes: agregar nota de que el ID puede estar en blanco
+  if(tipo==='clientes'){
+    rows.push(['(dejar en blanco para generar automáticamente)','Nombre del cliente','Tipo','Ciudad','Contacto','Telefono','Email','Frecuencia Visita','Presupuesto Mensual','Ajuste','Requiere OC','Requiere HES','Facturacion','Estado']);
+  }
+  const ws=XLSX.utils.aoa_to_sheet(rows);
   ws['!cols']=XLS_HEADERS[tipo].map(()=>({wch:22}));
   XLSX.utils.book_append_sheet(wb,ws,'Plantilla');
   XLSX.writeFile(wb,`plantilla-${tipo}.xlsx`);
@@ -5841,7 +5819,7 @@ function xlsImport(ev, tipo){
           if(!r['Nombre']) return;
           const existe=D.clientes.find(c=>c.nombre===r['Nombre']);
           const obj={
-            id: existe?existe.id:'C'+String(Date.now()).slice(-6),
+            id: existe?existe.id:(String(r['ID']||'').trim()||null)||(()=>{ const nums=D.clientes.map(c=>parseInt((c.id||'').replace(/\D/g,''))||0); return 'C'+String((nums.length?Math.max(...nums):0)+1).padStart(3,'0'); })(),
             nombre: r['Nombre']||'',
             tipo: r['Tipo']||'Otro',
             ciudad: r['Ciudad']||'',
@@ -5862,28 +5840,64 @@ function xlsImport(ev, tipo){
           importados++;
         });
       } else if(tipo==='equipos'){
+        // Normalización de tipos
+        const TIPO_MAP={
+          'GRUPO ELECTROGENO':'Grupo Electrógeno','GRUPO ELECTRÓGENO':'Grupo Electrógeno',
+          'ELECTROCOMPRESOR':'Electrocompresor','MOTOCOMPRESOR':'Motocompresor',
+          'MOTOBOMBA':'Motobomba','SECADORA DE AIRE':'Secadora de Aire','SECADORA':'Secadora de Aire',
+          'TABLERO ELECTRICO':'Tablero Electrico'
+        };
+        // Función de match fuzzy por nombre
+        function _normStr(s){ return (s||'').toUpperCase().replace(/[ÁÀÂÄ]/g,'A').replace(/[ÉÈÊË]/g,'E').replace(/[ÍÌÎÏ]/g,'I').replace(/[ÓÒÔÖ]/g,'O').replace(/[ÚÙÛÜ]/g,'U').replace(/\s+/g,' ').trim(); }
+        function _findCliente(row){
+          // 1. Por Cliente ID exacto
+          const byId = row['Cliente ID'] ? D.clientes.find(c=>c.id===String(row['Cliente ID']).trim()) : null;
+          if(byId) return byId;
+          // 2. Por nombre exacto
+          const nombre = (row['Cliente (nombre)']||'').trim();
+          if(!nombre) return null;
+          const byName = D.clientes.find(c=>c.nombre===nombre);
+          if(byName) return byName;
+          // 3. Fuzzy: normalizar y comparar
+          const normNombre = _normStr(nombre);
+          const byFuzzy = D.clientes.find(c=>_normStr(c.nombre)===normNombre);
+          if(byFuzzy) return byFuzzy;
+          // 4. Fuzzy parcial: el nombre del Excel está contenido en el de la app o viceversa
+          const byPartial = D.clientes.find(c=>{
+            const cn=_normStr(c.nombre), rn=_normStr(nombre);
+            return cn.includes(rn)||rn.includes(cn);
+          });
+          return byPartial||null;
+        }
+        let sinMatch=[];
         rows.forEach(r=>{
-          if(!r['Cliente (nombre)']) return;
-          const cli=D.clientes.find(c=>c.nombre===r['Cliente (nombre)']);
-          if(!cli){return;}
-          const existe=D.equipos&&D.equipos.find(e=>e.id===r['ID']);
+          const cli=_findCliente(r);
+          if(!cli){ sinMatch.push(r['Cliente (nombre)']||r['Cliente ID']||'?'); return; }
+          const existe=D.equipos&&D.equipos.find(e=>e.id===String(r['ID']||'').trim());
+          const tipoRaw=(r['Tipo']||'').trim();
+          const tipo=TIPO_MAP[tipoRaw.toUpperCase()]||tipoRaw||'Grupo Electrógeno';
           const obj={
-            id: existe?existe.id:(r['ID']||'EQ'+String(Date.now()).slice(-6)),
+            id: existe?existe.id:(String(r['ID']||'').trim()||'EQ'+String(Date.now()).slice(-6)),
             clienteId: cli.id,
-            tipo: r['Tipo']||'Grupo Electrógeno',
-            ultimoPreventivo: _xlsDate(r['Ultimo Preventivo']),
-            proximoPreventivo: _xlsDate(r['Proximo Preventivo']),
-            ultimoAceite: _xlsDate(r['Ultimo Aceite']),
-            ultimoBateria: _xlsDate(r['Ultima Bateria']),
-            ultimoRefrigerante: _xlsDate(r['Ultimo Refrigerante']),
-            horometro: Number(r['Horometro'])||0,
-            observaciones: r['Observaciones']||''
+            tipo,
+            marca: r['Marca']||existe?.marca||'',
+            ubicacion: r['Ubicacion']||existe?.ubicacion||'',
+            ultimoPreventivo: _xlsDate(r['Ultimo Preventivo'])||existe?.ultimoPreventivo||'',
+            proximoPreventivo: _xlsDate(r['Proximo Preventivo'])||existe?.proximoPreventivo||'',
+            ultimoAceite: _xlsDate(r['Ultimo Aceite'])||existe?.ultimoAceite||'',
+            ultimoBateria: _xlsDate(r['Ultima Bateria'])||existe?.ultimoBateria||'',
+            ultimoRefrigerante: _xlsDate(r['Ultimo Refrigerante'])||existe?.ultimoRefrigerante||'',
+            horometro: Number(r['Horometro'])||existe?.horometro||0,
+            observaciones: r['Observaciones']||existe?.observaciones||'',
+            ultimaVisita: existe?.ultimaVisita||'',
+            proximaVisita: existe?.proximaVisita||''
           };
           if(!D.equipos) D.equipos=[];
-          if(existe) Object.assign(existe,obj);
+          if(existe){ const i=D.equipos.indexOf(existe); D.equipos[i]=obj; }
           else D.equipos.push(obj);
           importados++;
         });
+        if(sinMatch.length) console.warn('Equipos sin cliente match:',sinMatch);
       } else if(tipo==='cotizaciones'){
         rows.forEach(r=>{
           if(!r['Cliente (nombre)']) return;
@@ -5939,8 +5953,11 @@ async function xlsExport(tipo, destino){
       c.frecuenciaVisita,c.presupuesto,c.ajuste,c.requiereOC?'SI':'NO',c.requiereHES?'SI':'NO',c.facturacion,c.estadoCliente]);
     ws=XLSX.utils.aoa_to_sheet([XLS_HEADERS.clientes,...rows]);
   } else if(tipo==='equipos'){
-    const rows=(D.equipos||[]).map(e=>[e.id,clientName(e.clienteId),e.tipo,
-      e.ultimoPreventivo,e.proximoPreventivo,e.ultimoAceite,e.ultimoBateria,e.ultimoRefrigerante,e.horometro,e.observaciones]);
+    const rows=(D.equipos||[]).map(e=>[
+      e.id, e.clienteId, clientName(e.clienteId), e.tipo, e.marca||'', e.ubicacion||'',
+      e.ultimoPreventivo, e.proximoPreventivo, e.ultimoAceite,
+      e.ultimoBateria, e.ultimoRefrigerante, e.horometro, e.observaciones
+    ]);
     ws=XLSX.utils.aoa_to_sheet([XLS_HEADERS.equipos,...rows]);
   } else if(tipo==='cotizaciones'){
     const rows=(D.cotizaciones||[]).map(c=>[c.id,clientName(c.clienteId),c.descripcion,
@@ -6468,15 +6485,6 @@ new Chart(document.getElementById('c2'),{type:'bar',data:{labels:${tLabels},data
   win.document.close();
   win.focus();
   toast('✓ Reporte generado — Ctrl+P para imprimir o guardar como PDF');
-}
-
-function updateExcelCounts(){
-  const ec=document.getElementById('excel-count-clientes');
-  const ee=document.getElementById('excel-count-equipos');
-  const eq=document.getElementById('excel-count-cotizaciones');
-  if(ec) ec.textContent=(D.clientes.length||0)+' registros';
-  if(ee) ee.textContent=(D.equipos.length||0)+' registros';
-  if(eq) eq.textContent=(D.cotizaciones.length||0)+' registros';
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
