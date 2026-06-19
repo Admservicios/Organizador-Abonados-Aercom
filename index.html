@@ -1320,17 +1320,17 @@ textarea.fc {
 .ficha-modal {
   background: var(--card);
   border-radius: var(--r-lg);
-  width: 1080px;
+  width: 1120px;
   max-width: 98vw;
   max-height: 96vh;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 24px 64px rgba(0,0,0,.15), 0 4px 16px rgba(0,0,0,.08);
 }
 
 .ficha-head {
-  padding: 22px 28px 20px;
+  padding: 28px 36px 24px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: flex-start;
@@ -1341,7 +1341,7 @@ textarea.fc {
 .ficha-tabs {
   display: flex;
   border-bottom: 1px solid var(--border);
-  padding: 0 28px;
+  padding: 0 36px;
   flex-shrink: 0;
   overflow-x: auto;
   gap: 0;
@@ -1373,7 +1373,7 @@ textarea.fc {
 }
 
 .ficha-body {
-  padding: 24px 28px;
+  padding: 28px 36px;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -1410,7 +1410,7 @@ textarea.fc {
 /* ══════════════════════════════════
    EQUIPMENT DATE CELLS
 ══════════════════════════════════ */
-.equip-date-cell { vertical-align: middle; padding: 6px 10px; }
+.equip-date-cell { vertical-align: middle; padding: 10px 14px; }
 
 .equip-date-last {
   font-size: 12.5px;
@@ -2021,19 +2021,8 @@ tr:hover td {
   backdrop-filter: blur(4px);
   transition: opacity 0.2s var(--ease);
 }
-.modal, .ficha-modal {
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-xl);
-  animation: modalEntry 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.modal-head, .ficha-head {
-  border-bottom: 1px solid var(--border);
-  border-top: none !important;
-  border-radius: var(--r-lg) var(--r-lg) 0 0;
-  padding: 16px 24px;
-}
+.modal, /* ficha-modal v4 override: neutralizado para no pisar dimensiones base */
+.modal-head, /* ficha-head v4 override: neutralizado — padding en bloque base */
 .modal-head h3, .ficha-head h3 {
   color: var(--t1);
   font-weight: 600;
@@ -2385,7 +2374,7 @@ tr:hover td { background:#f4f8fd !important; }
 .modal { box-shadow:0 20px 60px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.07); }
 .modal-head { border-top:3px solid #1d6fa4; border-radius:var(--r-lg) var(--r-lg) 0 0; }
 .ficha-modal { box-shadow:0 24px 64px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.07); }
-.ficha-head { border-top:3px solid #1d6fa4; border-radius:var(--r-lg) var(--r-lg) 0 0; }
+.ficha-head { border-top:3px solid #1d6fa4; border-radius:0; }
 .fc:focus { border-color:#1d6fa4 !important; box-shadow:0 0 0 3px rgba(29,111,164,.12) !important; }
 #toast { background:linear-gradient(135deg,#1a1916 0%,#2c2a26 100%); box-shadow:0 8px 24px rgba(0,0,0,.2); border-left:3px solid #1d6fa4; color:#fff; }
 .dash-urgent-item { transition:background 150ms ease,padding-left 180ms ease; }
@@ -2396,6 +2385,15 @@ th { border-bottom:2px solid var(--border) !important; }
 #module-equipos .tbl-wrap { font-size: 13px; }
 .equip-date-cell { min-width: 110px; }
 #btn-undo:not([disabled]), #btn-redo:not([disabled]) { opacity:1 !important; }
+
+
+/* ── FICHA CLIENTE: espaciado mejorado ─────────────────────────────────── */
+.ficha-modal { border-top: 3px solid #1d6fa4 !important; }
+.ficha-tab:hover { color: var(--t1); background: var(--hover); border-radius: var(--r-sm) var(--r-sm) 0 0; }
+.ficha-tab.active { color: var(--info) !important; border-bottom-color: var(--info) !important; font-weight: 600; }
+.ficha-chk-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 48px; }
+.equip-date-last { font-size: 13px; }
+.equip-date-next { font-size: 11.5px; margin-top: 4px; }
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -4603,11 +4601,11 @@ function openFicha(id){
   document.getElementById('ficha-title').innerHTML=`
     <div style="width:100%">
       <!-- Banda de color por tipo -->
-      <div style="height:4px;background:${tipoColor};border-radius:3px 3px 0 0;margin:-22px -28px 18px;width:calc(100% + 56px)"></div>
+      <div style="height:4px;background:${tipoColor};border-radius:3px 3px 0 0;margin:-28px -36px 20px;width:calc(100% + 72px)"></div>
       <!-- Nombre y tipo -->
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:20px;font-weight:700;color:var(--t1);line-height:1.2;margin-bottom:8px">${c.nombre}</div>
+          <div style="font-size:22px;font-weight:700;color:var(--t1);line-height:1.2;margin-bottom:10px">${c.nombre}</div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:${tipoColor};font-weight:600;background:${tipoColor}18;padding:2px 8px;border-radius:4px">
               ${c.tipo||'Sin tipo'}
@@ -4631,30 +4629,30 @@ function openFicha(id){
 
   // Stats row — más visual y con contexto
   document.getElementById('ficha-subtitle').innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:14px -28px 0">
-      <div style="background:var(--card);padding:18px 20px;text-align:center">
-        <div style="font-size:26px;font-weight:700;line-height:1;${equipVenc?'color:var(--err)':equipProx?'color:#b45309':'color:var(--t1)'}">${equipN}</div>
-        <div style="font-size:10.5px;color:var(--t3);margin-top:6px;text-transform:uppercase;letter-spacing:.4px;font-weight:600">Equipos</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:18px -36px 0">
+      <div style="background:var(--card);padding:22px 24px;text-align:center">
+        <div style="font-size:30px;font-weight:700;line-height:1;letter-spacing:-1px;${equipVenc?'color:var(--err)':equipProx?'color:#b45309':'color:var(--t1)'}">${equipN}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:7px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Equipos</div>
         ${equipVenc?`<div style="font-size:10px;color:var(--err);margin-top:2px;font-weight:600">${equipVenc} vencido${equipVenc!==1?'s':''}</div>`:equipProx?`<div style="font-size:10px;color:#b45309;margin-top:2px">${equipProx} próximo${equipProx!==1?'s':''}</div>`:'<div style="font-size:10px;color:var(--ok);margin-top:2px">Al día ✓</div>'}
       </div>
-      <div style="background:var(--card);padding:18px 20px;text-align:center">
-        <div style="font-size:26px;font-weight:700;line-height:1;${cotActN?'color:var(--info)':'color:var(--t1)'}">${cotN}</div>
-        <div style="font-size:10.5px;color:var(--t3);margin-top:6px;text-transform:uppercase;letter-spacing:.4px;font-weight:600">Cotizaciones</div>
+      <div style="background:var(--card);padding:22px 24px;text-align:center">
+        <div style="font-size:30px;font-weight:700;line-height:1;letter-spacing:-1px;${cotActN?'color:var(--info)':'color:var(--t1)'}">${cotN}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:7px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Cotizaciones</div>
         ${cotActN?`<div style="font-size:10px;color:var(--info);margin-top:2px">${cotActN} activa${cotActN!==1?'s':''}</div>`:'<div style="font-size:10px;color:var(--t4);margin-top:2px">Sin activas</div>'}
       </div>
-      <div style="background:var(--card);padding:18px 20px;text-align:center">
-        <div style="font-size:26px;font-weight:700;line-height:1;${cotAFact?'color:#d9730d':'color:var(--t1)'}">${cotAFact}</div>
-        <div style="font-size:10.5px;color:var(--t3);margin-top:6px;text-transform:uppercase;letter-spacing:.4px;font-weight:600">A facturar</div>
+      <div style="background:var(--card);padding:22px 24px;text-align:center">
+        <div style="font-size:30px;font-weight:700;line-height:1;letter-spacing:-1px;${cotAFact?'color:#d9730d':'color:var(--t1)'}">${cotAFact}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:7px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">A facturar</div>
         ${cotAFact?`<div style="font-size:10px;color:#d9730d;margin-top:2px;font-weight:600">Pendiente</div>`:'<div style="font-size:10px;color:var(--t4);margin-top:2px">Sin pendiente</div>'}
       </div>
-      <div style="background:var(--card);padding:18px 20px;text-align:center">
-        <div style="font-size:26px;font-weight:700;line-height:1;${pedActN?'color:var(--warn)':'color:var(--t1)'}">${pedN}</div>
-        <div style="font-size:10.5px;color:var(--t3);margin-top:6px;text-transform:uppercase;letter-spacing:.4px;font-weight:600">Pedidos</div>
+      <div style="background:var(--card);padding:22px 24px;text-align:center">
+        <div style="font-size:30px;font-weight:700;line-height:1;letter-spacing:-1px;${pedActN?'color:var(--warn)':'color:var(--t1)'}">${pedN}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:7px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Pedidos</div>
         ${pedActN?`<div style="font-size:10px;color:var(--warn);margin-top:2px">${pedActN} activo${pedActN!==1?'s':''}</div>`:'<div style="font-size:10px;color:var(--t4);margin-top:2px">Sin activos</div>'}
       </div>
-      <div style="background:var(--card);padding:18px 20px;text-align:center">
-        <div style="font-size:26px;font-weight:700;line-height:1;color:var(--t1)">${c.presupuesto?'$'+Math.round(Number(c.presupuesto)/1000)+'k':'—'}</div>
-        <div style="font-size:10.5px;color:var(--t3);margin-top:6px;text-transform:uppercase;letter-spacing:.4px;font-weight:600">Presupuesto</div>
+      <div style="background:var(--card);padding:22px 24px;text-align:center">
+        <div style="font-size:30px;font-weight:700;line-height:1;letter-spacing:-1px;color:var(--t1)">${c.presupuesto?'$'+Math.round(Number(c.presupuesto)/1000)+'k':'—'}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:7px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">Presupuesto</div>
         <div style="font-size:10px;color:var(--t4);margin-top:2px">${c.ajuste||'IPC'}</div>
       </div>
     </div>`;
@@ -4754,8 +4752,20 @@ function fichaGeneral(c){
 function fichaEquipos(c){
   const list=D.equipos.filter(e=>e.clienteId===c.id);
   if(!list.length) return `<div class="empty">Sin equipos asignados a este cliente</div>`;
-  return `<div class="tbl-wrap"><table>
-    <thead><tr><th>ID / Equipo</th><th>Tipo</th><th>Último preventivo</th><th>Últ. batería</th><th>Últ. refrigerante</th><th>Últ. visita</th><th>Estado</th></tr></thead>
+  // Acciones rápidas encima de la tabla
+  const addBtn=`<div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+    <button class="btn btn-primary btn-sm" onclick="closeModal();openEquipModal(null)">+ Nuevo equipo</button>
+  </div>`;
+  return addBtn+`<div class="tbl-wrap" style="border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden"><table style="font-size:13.5px">
+    <thead><tr>
+      <th style="min-width:140px;padding:12px 16px">ID / Equipo</th>
+      <th style="min-width:130px;padding:12px 16px">Tipo</th>
+      <th style="min-width:130px;padding:12px 16px">Preventivo</th>
+      <th style="min-width:120px;padding:12px 16px">Batería</th>
+      <th style="min-width:120px;padding:12px 16px">Refrigerante</th>
+      <th style="min-width:120px;padding:12px 16px">Visita</th>
+      <th style="min-width:90px;padding:12px 16px">Estado</th>
+    </tr></thead>
     <tbody>${list.map(e=>{
       const {st,nextAceite,nextBateria,nextVisita}=equipStatus(e);
       const rc=st==='rojo'?'row-err':st==='amarillo'?'row-warn':'';
@@ -4763,8 +4773,8 @@ function fichaEquipos(c){
       const badg=st==='rojo'?'b-err':st==='amarillo'?'b-warn':'b-ok';
       const lbl=st==='rojo'?'Vencido':st==='amarillo'?'Próximo':'Al día';
       return `<tr class="${rc}">
-        <td><strong>${e.id}</strong></td>
-        <td><span class="badge b-gray">${e.tipo}</span></td>
+        <td style="padding:14px 16px"><strong style="font-size:13.5px">${e.id}</strong>${e.marca?`<div style="font-size:11px;color:var(--t3);margin-top:2px">${e.marca}</div>`:''}</td>
+        <td style="padding:14px 16px"><span class="badge b-gray" style="font-size:12px;white-space:nowrap">${e.tipo}</span></td>
         ${eqDateCell(e.id,'ultimoPreventivo',e.ultimoPreventivo,e.proximoPreventivo)}
         ${eqDateCell(e.id,'ultimoBateria',e.ultimoBateria,nextBateria)}
         ${eqDateCell(e.id,'ultimoAceite',e.ultimoAceite,nextAceite)}
