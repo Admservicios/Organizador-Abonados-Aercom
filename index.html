@@ -4444,6 +4444,14 @@ function renderClientes(){
           <div>
             <div style="font-weight:600;font-size:13.5px">${_esc(c.nombre)}${crit?`<span class="badge b-err" style="font-size:9px;padding:1px 5px;margin-left:6px;vertical-align:middle">CRÍTICO</span>`:''}</div>
             <div style="font-size:11px;color:var(--t3);margin-top:1px">${equipN} equipo${equipN!==1?'s':''}${pedN?` · <span style="color:var(--warn);font-weight:600">${pedN} pedido${pedN!==1?'s':''} activo${pedN!==1?'s':''}</span>`:''}</div>
+            ${(c.incluyeNS||c.incluyePreventivo||c.incluyeCombustible||c.incluyePlataforma||c.incluyeBateria||c.incluyeOtro)?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">
+              ${c.incluyeNS?'<span style="font-size:10px;background:var(--ok-bg);color:var(--ok);padding:1px 5px;border-radius:3px;font-weight:600">NS</span>':''}
+              ${c.incluyePreventivo?'<span style="font-size:10px;background:var(--ok-bg);color:var(--ok);padding:1px 5px;border-radius:3px;font-weight:600">Prev.</span>':''}
+              ${c.incluyeCombustible?'<span style="font-size:10px;background:var(--ok-bg);color:var(--ok);padding:1px 5px;border-radius:3px;font-weight:600">Comb.</span>':''}
+              ${c.incluyePlataforma?'<span style="font-size:10px;background:var(--ok-bg);color:var(--ok);padding:1px 5px;border-radius:3px;font-weight:600">Plat.</span>':''}
+              ${c.incluyeBateria?'<span style="font-size:10px;background:var(--ok-bg);color:var(--ok);padding:1px 5px;border-radius:3px;font-weight:600">Bat.</span>':''}
+              ${c.incluyeOtro?`<span style="font-size:10px;background:var(--info-bg);color:var(--info);padding:1px 5px;border-radius:3px;font-weight:600" title="${_esc(c.incluyeOtro)}">+ Otro</span>`:''}
+            </div>`:''}
           </div>
         </div>
       </td>
@@ -4520,6 +4528,37 @@ function openClientModal(id){
           <label for="cli-hes" style="margin:0;font-size:13px;cursor:pointer;color:var(--t1)">Requiere HES</label>
         </div>
       </div>
+    </div>
+    <!-- ¿Qué incluye el abono? -->
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">¿Qué incluye el abono?</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:14px">Servicios y componentes incluidos en el abono mensual del cliente</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px">
+        <label style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:background 120ms" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background=''">
+          <input type="checkbox" id="cli-inc-ns" ${c?.incluyeNS?'checked':''} style="width:15px;height:15px;accent-color:#1d6fa4;cursor:pointer;flex-shrink:0">
+          <div><div style="font-size:13px;font-weight:600;color:var(--t1)">NS (Nota de Servicio)</div><div style="font-size:11px;color:var(--t3);margin-top:1px">Requiere NS para facturar</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:background 120ms" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background=''">
+          <input type="checkbox" id="cli-inc-prev" ${c?.incluyePreventivo?'checked':''} style="width:15px;height:15px;accent-color:#1d6fa4;cursor:pointer;flex-shrink:0">
+          <div><div style="font-size:13px;font-weight:600;color:var(--t1)">Preventivo anual</div><div style="font-size:11px;color:var(--t3);margin-top:1px">Incluido en el abono</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:background 120ms" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background=''">
+          <input type="checkbox" id="cli-inc-comb" ${c?.incluyeCombustible?'checked':''} style="width:15px;height:15px;accent-color:#1d6fa4;cursor:pointer;flex-shrink:0">
+          <div><div style="font-size:13px;font-weight:600;color:var(--t1)">Carga de combustible</div><div style="font-size:11px;color:var(--t3);margin-top:1px">Incluida en el abono</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:background 120ms" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background=''">
+          <input type="checkbox" id="cli-inc-plat" ${c?.incluyePlataforma?'checked':''} style="width:15px;height:15px;accent-color:#1d6fa4;cursor:pointer;flex-shrink:0">
+          <div><div style="font-size:13px;font-weight:600;color:var(--t1)">Plataforma digital</div><div style="font-size:11px;color:var(--t3);margin-top:1px">Acceso a plataforma incluido</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:background 120ms" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background=''">
+          <input type="checkbox" id="cli-inc-bat" ${c?.incluyeBateria?'checked':''} style="width:15px;height:15px;accent-color:#1d6fa4;cursor:pointer;flex-shrink:0">
+          <div><div style="font-size:13px;font-weight:600;color:var(--t1)">Cambio de batería</div><div style="font-size:11px;color:var(--t3);margin-top:1px">Incluido en el abono</div></div>
+        </label>
+        <div style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Otro componente u operación</div>
+          <input class="fc" id="cli-inc-otro" value="${c?.incluyeOtro||''}" placeholder="Ej: Banco resistivo, Inspección termográfica..." style="font-size:12.5px;padding:6px 10px">
+        </div>
+      </div>
     </div>`;
   document.getElementById('modal-foot').innerHTML=`
     <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
@@ -4551,7 +4590,14 @@ function saveClient(id,nextId){
     ajuste:document.getElementById('cli-ajuste').value,
     requiereOC:document.getElementById('cli-oc').checked,
     requiereHES:document.getElementById('cli-hes').checked,
-    facturacion:document.getElementById('cli-facturacion').value
+    facturacion:document.getElementById('cli-facturacion').value,
+    // Incluidos en el abono
+    incluyeNS:          (document.getElementById('cli-inc-ns')  ||{checked:false}).checked,
+    incluyePreventivo:  (document.getElementById('cli-inc-prev')||{checked:false}).checked,
+    incluyeCombustible: (document.getElementById('cli-inc-comb')||{checked:false}).checked,
+    incluyePlataforma:  (document.getElementById('cli-inc-plat')||{checked:false}).checked,
+    incluyeBateria:     (document.getElementById('cli-inc-bat') ||{checked:false}).checked,
+    incluyeOtro:        ((document.getElementById('cli-inc-otro')||{value:''}).value||'').trim()
   };
   const i=D.clientes.findIndex(x=>x.id===id);
   if(i>-1) D.clientes[i]=obj; else D.clientes.push(obj);
@@ -4704,7 +4750,7 @@ function fichaGeneral(c){
   const TIPO_B={'Sanatorio':'b-err','Clínica':'b-err','Sanatorio/Clínica':'b-err','Industrial':'b-info','Industria':'b-info','Comercial':'b-purple','Comercio':'b-purple','Edificio':'b-ok','Otro':'b-gray'};
   const EST_B={'Activo':'b-ok','Inactivo':'b-gray','Suspendido':'b-warn'};
 
-  // Próximo vencimiento más urgente de equipos de este cliente
+  // Próximo vencimiento más urgente
   const misEquipos = D.equipos.filter(e=>e.clienteId===c.id);
   const vencimientos = misEquipos.map(e=>{
     const {st,nextAceite,nextBateria} = equipStatus(e);
@@ -4724,6 +4770,35 @@ function fichaGeneral(c){
         </div>
       </div>`
     : '';
+
+  // Sección abono
+  const abonoItems=[
+    {key:'incluyeNS',          lbl:'NS',                  icon:'📋'},
+    {key:'incluyePreventivo',  lbl:'Preventivo anual',    icon:'🔧'},
+    {key:'incluyeCombustible', lbl:'Carga de combustible', icon:'⛽'},
+    {key:'incluyePlataforma',  lbl:'Plataforma digital',   icon:'💻'},
+    {key:'incluyeBateria',     lbl:'Cambio de batería',    icon:'🔋'},
+  ];
+  const abonoActivos = abonoItems.filter(i=>c[i.key]);
+  const abonoOtro = c.incluyeOtro||'';
+  const abonoSection = (abonoActivos.length||abonoOtro) ? `
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">Incluido en el abono</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${abonoActivos.map(i=>`
+          <div style="display:inline-flex;align-items:center;gap:6px;background:var(--ok-bg);color:var(--ok);padding:6px 12px;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;border:1px solid #b8e5da">
+            <span>${i.icon}</span><span>${i.lbl}</span>
+          </div>`).join('')}
+        ${abonoOtro?`
+          <div style="display:inline-flex;align-items:center;gap:6px;background:var(--info-bg);color:var(--info);padding:6px 12px;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;border:1px solid #b8d4f5">
+            <span>⚙️</span><span>${_esc(abonoOtro)}</span>
+          </div>`:''}
+      </div>
+    </div>` : `
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Incluido en el abono</div>
+      <div style="font-size:13px;color:var(--t4);font-style:italic">No hay servicios configurados — editá el cliente para cargarlos</div>
+    </div>`;
 
   return `
     ${alertaEquipo}
@@ -4746,8 +4821,10 @@ function fichaGeneral(c){
     <div class="ficha-row">
       ${_ff('Presupuesto mensual', c.presupuesto?'$ '+Number(c.presupuesto).toLocaleString('es-AR'):'')}
       <div></div>
-    </div>`;
+    </div>
+    ${abonoSection}`;
 }
+
 
 function fichaEquipos(c){
   const list=D.equipos.filter(e=>e.clienteId===c.id);
@@ -5869,7 +5946,7 @@ function persist(){
 
 // ─── EXCEL: PLANTILLAS ────────────────────────────────────────────────────────
 const XLS_HEADERS = {
-  clientes:     ['ID','Nombre','Tipo','Ciudad','Contacto','Telefono','Email','Frecuencia Visita','Presupuesto Mensual','Ajuste','Requiere OC','Requiere HES','Facturacion','Estado'],
+  clientes:     ['ID','Nombre','Tipo','Ciudad','Contacto','Telefono','Email','Frecuencia Visita','Presupuesto Mensual','Ajuste','Requiere OC','Requiere HES','Facturacion','Estado','Incluye NS','Incluye Preventivo','Incluye Combustible','Incluye Plataforma','Incluye Bateria','Incluye Otro'],
   equipos:      ['ID','Cliente ID','Cliente (nombre)','Tipo','Marca','Ubicacion','Ultimo Preventivo','Proximo Preventivo','Ultimo Aceite','Ultima Bateria','Ultimo Refrigerante','Horometro','Observaciones'],
   cotizaciones: ['ID','Cliente (nombre)','Descripcion','Monto','Fecha Envio','Fecha Followup','Responsable','Estado','Notas'],
   facturacion:  ['Cliente','Tipo','Ajuste','Requiere OC','Requiere HES','Facturacion','Estado Mes']
@@ -5885,7 +5962,10 @@ function xlsDownloadPlantilla(tipo){
       c.telefono||'', c.email||'', c.frecuenciaVisita||'',
       c.presupuesto||0, c.ajuste||'IPC',
       c.requiereOC?'SI':'NO', c.requiereHES?'SI':'NO',
-      c.facturacion||'Manual', c.estadoCliente||'Activo'
+      c.facturacion||'Manual', c.estadoCliente||'Activo',
+      c.incluyeNS?'SI':'NO', c.incluyePreventivo?'SI':'NO',
+      c.incluyeCombustible?'SI':'NO', c.incluyePlataforma?'SI':'NO',
+      c.incluyeBateria?'SI':'NO', c.incluyeOtro||''
     ]);
     const ws = XLSX.utils.aoa_to_sheet([XLS_HEADERS.clientes, ...rows]);
     ws['!cols'] = XLS_HEADERS.clientes.map(()=>({wch:22}));
