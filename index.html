@@ -4468,7 +4468,23 @@ function openClientModal(id){
   const nextId=`C${String(D.clientes.length+1).padStart(3,'0')}`;
   document.getElementById('modal-title').textContent=c?'Editar cliente':'Nuevo cliente';
   document.getElementById('modal-body').innerHTML=`
-    <div class="fg"><label class="fl">Nombre *</label><input class="fc" id="cli-nombre" value="${c?c.nombre.replace(/"/g,'&quot;'):''}" placeholder="Nombre del cliente"></div>
+    <div class="form-row" style="align-items:flex-end;gap:12px">
+      <div class="fg" style="max-width:160px;flex:0 0 auto">
+        <label class="fl">Código ID
+          <span style="font-size:10px;font-weight:400;color:var(--t3);margin-left:4px">(único)</span>
+        </label>
+        <input class="fc" id="cli-id-edit"
+          value="${c?c.id:nextId}"
+          placeholder="${nextId}"
+          style="font-family:monospace;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-_]/g,'')">
+        <div style="font-size:10.5px;color:var(--t3);margin-top:3px">Solo letras, números y guiones</div>
+      </div>
+      <div class="fg">
+        <label class="fl">Nombre *</label>
+        <input class="fc" id="cli-nombre" value="${c?c.nombre.replace(/"/g,'&quot;'):''}" placeholder="Nombre del cliente">
+      </div>
+    </div>
     <div class="form-row">
       <div class="fg"><label class="fl">Tipo</label>
         <select class="fc" id="cli-tipo" onchange="onCliTipoChange()">
@@ -4551,9 +4567,36 @@ function saveClient(id,nextId){
     return;
   }
   if(nombreEl) nombreEl.style.borderColor='';
+  // Leer y validar el ID editado
+  const idEditEl=document.getElementById('cli-id-edit');
+  const nuevoId=(idEditEl?.value||'').trim().toUpperCase()||nextId;
+  // Verificar que el ID no esté en uso por OTRO cliente
+  const idEnUso=D.clientes.find(x=>x.id===nuevoId && x.id!==id);
+  if(idEnUso){
+    if(idEditEl){idEditEl.style.borderColor='var(--err)';idEditEl.focus();}
+    toast(`⚠ El código "${nuevoId}" ya está en uso por "${idEnUso.nombre}"`);
+    return;
+  }
+  if(idEditEl) idEditEl.style.borderColor='';
+  // Si el ID cambió, actualizar referencias en equipos, cotizaciones, etc.
+  const idAnterior=id||null;
+  const idFinal=nuevoId;
+  if(idAnterior && idAnterior!==idFinal){
+    D.equipos.forEach(e=>{ if(e.clienteId===idAnterior) e.clienteId=idFinal; });
+    D.cotizaciones.forEach(c=>{ if(c.clienteId===idAnterior) c.clienteId=idFinal; });
+    (D.pedidos||[]).forEach(p=>{ if(p.clienteId===idAnterior) p.clienteId=idFinal; });
+    D.recordatorios.forEach(r=>{ if(r.clienteId===idAnterior) r.clienteId=idFinal; });
+    // Actualizar facturación estados
+    Object.keys(D.facturacion_estados).forEach(mes=>{
+      if(D.facturacion_estados[mes][idAnterior]!==undefined){
+        D.facturacion_estados[mes][idFinal]=D.facturacion_estados[mes][idAnterior];
+        delete D.facturacion_estados[mes][idAnterior];
+      }
+    });
+  }
   const tipo=document.getElementById('cli-tipo').value;
   const obj={
-    id:id||nextId, nombre, tipo, prioridad:'Normal',
+    id:idFinal, nombre, tipo, prioridad:'Normal',
     ciudad:document.getElementById('cli-ciudad').value.trim(),
     estadoCliente:document.getElementById('cli-estado').value,
     contacto:document.getElementById('cli-contacto').value.trim(),
