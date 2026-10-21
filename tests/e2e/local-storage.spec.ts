@@ -1,0 +1,204 @@
+import { test, expect, type Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { initialCustomers, initialServices, initialVehicles } from '../../src/lib/demo';
+import {
+  DATABASE_KEY,
+  SAFETY_COPY_KEY,
+  emptyData,
+  makeBackup,
+  newDatabase,
+} from '../../src/lib/localDatabase';
+
+const sample = {
+  ...emptyData(),
+  customers: initialCustomers,
+  vehicles: initialVehicles,
+  services: initialServices,
+};
+async function seed(page: Page) {
+  await page.addInitScript(
+    ({ key, data }) => {
+      if (!localStorage.getItem(key)) localStorage.setItem(key, data);
+    },
+    { key: DATABASE_KEY, data: JSON.stringify(newDatabase(sample)) },
+  );
+}
+async function addCustomer(page: Page, name: string) {
+  await page.goto('/clientes');
+  await page.getByRole('button', { name: 'Nuevo cliente', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Nuevo cliente' });
+  await dialog.getByLabel(/Nombre y apellido/).fill(name);
+  await dialog.getByRole('button', { name: 'Guardar cliente', exact: true }).click();
+}
+async function dataFromBrowser(page: Page) {
+  return page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).data, DATABASE_KEY);
+}
+test('base vacía, persistencia de cliente y aislamiento entre navegadores', async ({
+  page,
+  browser,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('.demo-banner')).toContainText('Base local');
+  await expect(page.locator('body')).not.toContainText('NaN');
+  await page.goto('/clientes');
+  await expect(page.getByText('No encontramos clientes')).toBeVisible();
+  await addCustomer(page, 'Cliente local de prueba');
+  await page.reload();
+  await expect(page.getByRole('button', { name: /^Cliente local de prueba/ })).toBeVisible();
+  const data = await dataFromBrowser(page);
+  expect(data.customers).toHaveLength(1);
+  expect(data.customers[0].name).toBe('Cliente local de prueba');
+  const other = await browser.newContext({ baseURL: 'http://127.0.0.1:4173' });
+  try {
+    const secondPage = await other.newPage();
+    await secondPage.goto('/clientes');
+    await expect(secondPage.getByText('No encontramos clientes')).toBeVisible();
+  } finally {
+    await other.close();
+  }
+});
+
+test('demo separada y vista pública sin datos locales', async ({ page }) => {
+  await addCustomer(page, 'Persona privada local');
+  await page.getByRole('button', { name: 'Explorar demo', exact: true }).click();
+  await expect(page.locator('.demo-banner')).toContainText('Vista de demostración');
+  await page.goto('/clientes');
+  await expect(page.getByRole('button', { name: /^Juan Pérez/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Persona privada local/ })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Volver a mis datos' }).click();
+  await page.goto('/clientes');
+  await expect(page.getByRole('button', { name: /^Persona privada local/ })).toBeVisible();
+  expect((await dataFromBrowser(page)).customers).toHaveLength(1);
+  await page.goto('/publico/demo/v2');
+  await expect(page.locator('body')).not.toContainText('Persona privada local');
+});
+
+test('mantenimiento y kilometraje sobreviven a una recarga; el QR local no expone registros', async ({
+  page,
+}) => {
+  await seed(page);
+  await page.goto('/mantenimientos/nuevo?vehiculo=v2');
+  await page.getByLabel(/Trabajos realizados/).fill('Mantenimiento local persistente');
+  await page.getByLabel(/Importe total/).fill('120000');
+  await page.getByLabel(/Kilometraje actual/).fill('113000');
+  await page.getByLabel(/Kilometraje objetivo/).fill('123000');
+  await page.getByRole('button', { name: 'Guardar mantenimiento', exact: true }).click();
+  await expect(page).toHaveURL(/vehiculos\/v2$/);
+  await page.reload();
+  await expect(page.getByText('Mantenimiento local persistente', { exact: true })).toBeVisible();
+  const data = await dataFromBrowser(page);
+  expect(data.services).toHaveLength(9);
+  expect(data.vehicles.find((v: { id: string }) => v.id === 'v2').km).toBe(113000);
+  await expect(page.getByRole('link', { name: 'Descargar QR demo' })).toHaveCount(0);
+  await page.goto('/publico/demo/v2');
+  await expect(page.locator('body')).not.toContainText('Mantenimiento local persistente');
+});
+
+test('crear un vehículo nuevo y actualizar el taller en la base local', async ({ page }) => {
+  await addCustomer(page, 'Propietario de prueba');
+  await page.goto('/vehiculos');
+  await page.getByRole('button', { name: 'Nuevo vehículo' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel(/Patente/).fill('AE 100 ZZ');
+  await dialog.getByLabel(/^Marca/).fill('Toyota');
+  await dialog.getByLabel(/^Modelo/).fill('Corolla');
+  await dialog.getByLabel(/Kilometraje registrado/).fill('25000');
+  await dialog.getByRole('button', { name: 'Guardar vehículo' }).click();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Toyota Corolla' })).toBeVisible();
+  await page.goto('/ajustes');
+  await page.getByLabel(/Nombre del taller/).fill('Taller de prueba local');
+  await page.getByRole('button', { name: 'Guardar taller' }).click();
+  await page.reload();
+  await expect(page.getByLabel(/Nombre del taller/)).toHaveValue('Taller de prueba local');
+  await expect(page.locator('.profile-button')).toContainText('Taller de prueba local');
+});
+
+test('exportar y restaurar con confirmación y copia previa', async ({ page }) => {
+  await seed(page);
+  await page.goto('/backups');
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Descargar', exact: true }).first().click();
+  const content = await readFile((await (await pending).path())!, 'utf8');
+  const backup = JSON.parse(content);
+  expect(backup.format).toBe('motortrack-backup');
+  await addCustomer(page, 'Cliente agregado después del respaldo');
+  expect((await dataFromBrowser(page)).customers).toHaveLength(9);
+  await page.goto('/backups');
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'respaldo.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(content),
+  });
+  await page.getByRole('button', { name: 'Revisar y restaurar' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancelar', exact: true }).click();
+  expect((await dataFromBrowser(page)).customers).toHaveLength(9);
+  await page.getByRole('button', { name: 'Revisar y restaurar' }).click();
+  await page.getByRole('dialog').getByRole('checkbox').check();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar y restaurar' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(await dataFromBrowser(page)).toEqual(backup.data);
+  expect(
+    await page.evaluate(
+      (key) => JSON.parse(localStorage.getItem(key)!).data.customers.length,
+      SAFETY_COPY_KEY,
+    ),
+  ).toBe(9);
+  await page.reload();
+  expect(await dataFromBrowser(page)).toEqual(backup.data);
+});
+
+test('respaldo inválido y almacenamiento lleno no destruyen registros', async ({ page }) => {
+  await seed(page);
+  await page.goto('/backups');
+  const before = await page.evaluate((key) => localStorage.getItem(key), DATABASE_KEY);
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'invalido.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"version":99}'),
+  });
+  await expect(page.getByRole('alert')).toContainText('Respaldo inválido');
+  expect(await page.evaluate((key) => localStorage.getItem(key), DATABASE_KEY)).toBe(before);
+  await page.goto('/clientes');
+  await page.evaluate((key) => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k: string, value: string) {
+      if (k === key) throw new DOMException('Storage full', 'QuotaExceededError');
+      return original.call(this, k, value);
+    };
+  }, DATABASE_KEY);
+  await page.getByRole('button', { name: 'Nuevo cliente', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByLabel(/Nombre y apellido/)
+    .fill('No debe guardarse');
+  await page.getByRole('dialog').getByRole('button', { name: 'Guardar cliente' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('status')).toContainText('No se pudo guardar');
+  expect(await page.evaluate((key) => localStorage.getItem(key), DATABASE_KEY)).toBe(before);
+});
+
+test('base dañada: se conserva hasta restaurar un respaldo validado', async ({ page }) => {
+  await page.addInitScript((key) => {
+    if (!localStorage.getItem(key)) localStorage.setItem(key, '{datos incompletos');
+  }, DATABASE_KEY);
+  await page.goto('/clientes');
+  await expect(page.getByRole('alert')).toContainText('No se puede usar la base local');
+  expect(await page.evaluate((key) => localStorage.getItem(key), DATABASE_KEY)).toBe(
+    '{datos incompletos',
+  );
+  await page.goto('/backups');
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'valido.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(makeBackup(sample))),
+  });
+  await page.getByRole('button', { name: 'Revisar y restaurar' }).click();
+  await page.getByRole('dialog').getByRole('checkbox').check();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar y restaurar' }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  expect((await dataFromBrowser(page)).customers).toHaveLength(8);
+  expect(await page.evaluate((key) => localStorage.getItem(key), SAFETY_COPY_KEY)).toBe(
+    '{datos incompletos',
+  );
+});

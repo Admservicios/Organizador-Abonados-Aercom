@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+playwright-report/
+test-results/
+motortrack-respaldo-*.json
+motortrack-copia-local-*.json
+motortrack-clientes*.csv
+backups/
