@@ -4,3 +4,7 @@ package-lock.json
 test-results
 playwright-report
 *.tsbuildinfo
+
+# Salida compilada para GitHub Pages desde main
+index.html
+site-assets

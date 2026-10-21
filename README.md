@@ -40,6 +40,7 @@ En tu computadora, ejecutar desde la carpeta del proyecto; omitir la opción de 
 npm run build
 npm test
 npm run test:e2e
+npm run test:publication
 npm run format:check
 ```
 
@@ -65,11 +66,15 @@ Ver [datos locales y recuperación](docs/DATOS-LOCALES.md).
 
 El código se prepara para un alojamiento estático: `npm run build` genera `dist`. La compilación usa rutas con `#` y recursos relativos para funcionar también dentro de una carpeta de GitHub Pages. Por ejemplo, la sección Clientes se abre con `#/clientes`.
 
+**El HTML editable está en `app.html`.** `index.html` y `site-assets/` son salidas compiladas versionadas para que también funcione Pages cuando está configurado para servir la raíz de `main`. No editar esos archivos generados a mano.
+
+Antes de subir cambios de interfaz, ejecutar `npm run publish:static`: compila la aplicación, prepara `dist` y actualiza la copia estática de la raíz. Después ejecutar `npm run test:publication`, que abre ambas variantes en un navegador con un servidor estático sin Vite y comprueba rutas, recursos y persistencia. El comando se puede repetir; conserva recursos con hash anteriores para no romper pestañas que tienen HTML en caché.
+
 Para comprobar la compilación: `npm run preview -- --port 5173 --strictPort`. El desarrollo usa rutas normales; la distribución usa rutas con `#` para evitar errores al recargar en servidores estáticos.
 
 El workflow **Verificar y publicar Taller Calamante** ejecuta compilación, pruebas y formato en GitHub Actions. También genera el artefacto descargable `taller-calamante-web`. Después de una verificación exitosa en `main`, publica **solo `dist`** en GitHub Pages mediante las acciones oficiales de Pages. Las solicitudes de cambios ejecutan verificaciones sin publicar.
 
-La dirección del sitio es `https://admservicios.github.io/Organizador-Abonados-Aercom/`. Pages debe usar **GitHub Actions** como origen de publicación; servir directamente la raíz de `main` entrega el HTML fuente y provoca una pantalla en blanco, porque el navegador no puede ejecutar `/src/main.tsx`. El paso de publicación intenta actualizar esta configuración con el token automático del workflow. Si las políticas del repositorio lo impiden, un administrador debe elegir **Settings → Pages → Build and deployment → Source → GitHub Actions** y volver a ejecutar el workflow desde Actions.
+La dirección del sitio es `https://admservicios.github.io/Organizador-Abonados-Aercom/`. Se recomienda **GitHub Actions** como origen de publicación. La raíz de `main` también contiene ahora una compilación lista para servir, con `.nojekyll`, de modo que una publicación desde la rama no vuelva a sustituir el sitio por código TypeScript sin compilar. El paso de publicación intenta actualizar la configuración con el token automático del workflow; si GitHub lo impide, el sitio seguirá funcionando desde la raíz de `main`. Para unificar los despliegues, el propietario puede elegir **Settings → Pages → Build and deployment → Source → GitHub Actions**.
 
 El despliegue mantiene el origen web y conserva el almacenamiento local de los usuarios. No borra datos del navegador ni sube respaldos al repositorio. Los errores y estados del despliegue se consultan en la pestaña Actions.
 
@@ -99,6 +104,10 @@ src/styles.css          Diseño y adaptación móvil
 tests/unit/             Reglas de negocio y recuperación
 tests/e2e/              Recorridos de navegador y persistencia
 .github/workflows/      Verificaciones en GitHub
+app.html                Entrada HTML editable de Vite
+index.html              HTML compilado para Pages desde main
+site-assets/            Recursos compilados con hash
+scripts/                Preparación y prueba de publicación estática
 docs/                   Plan y decisiones de arquitectura
 ```
 
