@@ -47,9 +47,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Configurar Pages para publicar desde GitHub Actions
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" -f build_type=workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.request('PUT /repos/{owner}/{repo}/pages', {
+                ...context.repo,
+                build_type: 'workflow'
+              });
+            } catch (error) {
+              core.warning(`No se pudo cambiar el origen de Pages (${error.status}): ${error.message}. Si falla el despliegue, elegir Settings > Pages > Source > GitHub Actions y volver a ejecutar este workflow.`);
+            }
       - name: Comprobar configuración de Pages
         uses: actions/configure-pages@v5
       - name: Publicar la versión compilada
