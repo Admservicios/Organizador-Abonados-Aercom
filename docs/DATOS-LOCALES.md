@@ -2,11 +2,11 @@
 
 ## Ubicación y alcance
 
-MotorTrack usa la clave `motortrack-local-database-v1` en `localStorage`, dentro del perfil y origen web del navegador. No genera una base en el servidor ni en GitHub. La aplicación descargada sigue necesitando un servidor estático para abrirse; una PWA instalable es un paso futuro.
+Taller Calamante usa la clave `motortrack-local-database-v1` en `localStorage`, dentro del perfil y origen web del navegador. No genera una base en el servidor ni en GitHub. La aplicación descargada sigue necesitando un servidor estático para abrirse; una PWA instalable es un paso futuro.
 
 La base es un documento JSON validado con Zod, no una base SQL. Clientes, vehículos, servicios y datos del taller se escriben juntos con una sola operación de almacenamiento. No se muestra un guardado exitoso hasta que esa operación termina.
 
-El modo demo usa otra colección en memoria y no copia ejemplos a la base real. La preferencia local/demo se guarda en `motortrack-view-mode`. Las claves de MotorTrack son distintas de `aercom-data`; no se lee ni modifica esa base del CRM anterior.
+El modo demo usa otra colección en memoria y no copia ejemplos a la base real. La preferencia local/demo se guarda en `motortrack-view-mode`. Las claves de Taller Calamante son distintas de `aercom-data`; no se lee ni modifica esa base del CRM anterior.
 
 ## Esquema interno v1
 
@@ -55,7 +55,7 @@ Las copias internas previas válidas se pueden descargar y restaurar desde la mi
 
 Exportar desde el origen anterior. Abrir la aplicación en el destino y restaurar el JSON. Una copia del código del repositorio no incluye los datos del navegador anterior.
 
-Un sitio servido con otra combinación de protocolo, hostname o puerto usa un almacenamiento diferente. Las actualizaciones deben conservar una dirección estable. Todos los caminos del mismo origen comparten `localStorage`; las claves están prefijadas para MotorTrack, pero no deben utilizarse para aislar usuarios o talleres.
+Un sitio servido con otra combinación de protocolo, hostname o puerto usa un almacenamiento diferente. Las actualizaciones deben conservar una dirección estable. Todos los caminos del mismo origen comparten `localStorage`; las claves están prefijadas para Taller Calamante, pero no deben utilizarse para aislar usuarios o talleres.
 
 ## Capacidad y concurrencia
 

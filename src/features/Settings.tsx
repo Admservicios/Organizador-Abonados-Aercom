@@ -64,8 +64,8 @@ export function Backups() {
         : makeBackup(localData);
     download(
       mode === 'demo'
-        ? 'motortrack-datos-demo.json'
-        : `motortrack-respaldo-${new Date().toISOString().slice(0, 10)}.json`,
+        ? 'taller-calamante-datos-demo.json'
+        : `taller-calamante-respaldo-${new Date().toISOString().slice(0, 10)}.json`,
       JSON.stringify(data, null, 2),
       'application/json',
     );
@@ -83,7 +83,7 @@ export function Backups() {
         notify('No hay una copia disponible en este navegador.');
         return;
       }
-      download('motortrack-copia-local-sin-modificar.json', raw, 'application/json');
+      download('taller-calamante-copia-local-sin-modificar.json', raw, 'application/json');
     } catch {
       notify('El navegador no permite leer esa copia.');
     }
@@ -183,7 +183,9 @@ export function Backups() {
                   disabled={!!storageError}
                   onClick={() =>
                     download(
-                      mode === 'demo' ? 'motortrack-clientes-demo.csv' : 'motortrack-clientes.csv',
+                      mode === 'demo'
+                        ? 'taller-calamante-clientes-demo.csv'
+                        : 'taller-calamante-clientes.csv',
                       customerCSV(customers),
                       'text/csv;charset=utf-8',
                     )
@@ -213,7 +215,7 @@ export function Backups() {
               <ArchiveRestore size={34} />
               <h3>Recuperación con validación previa</h3>
               <p>
-                Elegí un respaldo JSON de MotorTrack. Se comprobarán su versión, patentes y
+                Elegí un respaldo JSON de Taller Calamante. Se comprobarán su versión, patentes y
                 relaciones antes de permitir un reemplazo.
               </p>
               <label className="button">
@@ -344,8 +346,9 @@ export function Backups() {
         <Modal title="Confirmar restauración" close={() => setConfirming(false)}>
           <form className="form-stack" onSubmit={restore}>
             <p>
-              Se reemplazarán <strong>todos los datos locales de MotorTrack</strong> por los del
-              respaldo de <strong>{candidate.data.workshop.name}</strong>. No se combinan registros.
+              Se reemplazarán <strong>todos los datos locales de Taller Calamante</strong> por los
+              del respaldo de <strong>{candidate.data.workshop.name}</strong>. No se combinan
+              registros.
             </p>
             <p>
               Actuales: {customers.length} clientes, {vehicles.length} vehículos y {services.length}{' '}
@@ -431,7 +434,7 @@ export function SettingsPage() {
                   </span>
                   <div>
                     <h3>{workshop.name}</h3>
-                    <p>Tu espacio de trabajo en MotorTrack</p>
+                    <p>Tu espacio de trabajo en Taller Calamante</p>
                   </div>
                   <span className="subtle-chip">
                     {mode === 'demo' ? 'DEMOSTRACIÓN' : 'MODO LOCAL'}

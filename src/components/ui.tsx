@@ -7,10 +7,9 @@ export function Brand({ compact = false }: { compact?: boolean }) {
     <Link className={`brand ${compact ? 'brand-compact' : ''}`} to="/">
       <CarFront aria-hidden="true" />
       <span>
-        <strong>
-          Motor<span>Track</span>
-        </strong>
-        <small>Gestión hoy. Kilómetros mañana.</small>
+        <small className="brand-kicker">TALLER</small>
+        <strong>Calamante</strong>
+        <small>Gestión y mantenimiento vehicular</small>
       </span>
     </Link>
   );
@@ -144,7 +143,7 @@ export function VehicleArt({
     <div className={`vehicle-art ${color} ${large ? 'large' : ''}`}>
       <div className="vehicle-art-grid" />
       <CarFront aria-hidden="true" strokeWidth={1} />
-      <span>MOTORTRACK / GARAGE</span>
+      <span>TALLER CALAMANTE / GARAGE</span>
     </div>
   );
 }

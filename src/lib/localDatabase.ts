@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Customer, Service, Vehicle } from './demo';
 
+// Se conservan los identificadores originales para leer los datos y respaldos existentes.
 export const DATABASE_KEY = 'motortrack-local-database-v1';
 export const SAFETY_COPY_KEY = 'motortrack-before-restore-v1';
 export const VIEW_MODE_KEY = 'motortrack-view-mode';
@@ -124,7 +125,7 @@ export function emptyData(): LocalData {
     vehicles: [],
     services: [],
     workshop: {
-      name: 'Mi taller',
+      name: 'Taller Calamante',
       phone: '',
       email: '',
       address: '',

@@ -10,3 +10,6 @@ motortrack-respaldo-*.json
 motortrack-copia-local-*.json
 motortrack-clientes*.csv
 backups/
+taller-calamante-respaldo-*.json
+taller-calamante-copia-local-*.json
+taller-calamante-clientes*.csv

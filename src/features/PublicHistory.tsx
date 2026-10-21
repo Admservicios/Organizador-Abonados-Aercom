@@ -31,7 +31,7 @@ export function PublicHistory() {
           text="Este historial de prueba no está disponible"
           action={
             <Link className="button" to="/">
-              Volver a MotorTrack
+              Volver a Taller Calamante
             </Link>
           }
         />
@@ -143,7 +143,7 @@ export function PublicHistory() {
                     onClick={() => setExpanded(expanded === s.id ? null : s.id)}
                   >
                     <Building2 size={16} />
-                    <span>Taller Central MotorTrack</span>
+                    <span>Taller Calamante</span>
                     <ChevronDown size={17} className={expanded === s.id ? 'rotated' : ''} />
                   </button>
                 </div>
@@ -167,7 +167,7 @@ export function PublicHistory() {
             <Building2 size={27} />
           </span>
           <div>
-            <h3>Taller Central MotorTrack</h3>
+            <h3>Taller Calamante</h3>
             <p>Taller de demostración</p>
           </div>
           <button className="button primary" disabled>

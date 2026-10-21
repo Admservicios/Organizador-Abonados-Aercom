@@ -68,7 +68,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     services: structuredClone(initialServices),
     workshop: {
       ...emptyData().workshop,
-      name: 'Taller Central',
+      name: 'Taller Calamante',
       phone: '11 4567-8900',
       email: 'taller@example.com',
       address: 'Av. San Martín 1234, Buenos Aires',

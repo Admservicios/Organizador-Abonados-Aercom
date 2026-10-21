@@ -1,4 +1,4 @@
-name: Verificar y publicar MotorTrack
+name: Verificar y publicar Taller Calamante
 on:
   push:
     branches: [main]
@@ -23,7 +23,7 @@ jobs:
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         with:
-          name: motortrack-web
+          name: taller-calamante-web
           path: dist
       - name: Preparar sitio de GitHub Pages
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

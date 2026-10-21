@@ -285,7 +285,7 @@ export function VehicleQR({ id }: { id: string }) {
       <a
         className="button full"
         href={image || undefined}
-        download={`motortrack-qr-demo-${id}.png`}
+        download={`taller-calamante-qr-demo-${id}.png`}
       >
         <Download size={16} />
         Descargar QR demo

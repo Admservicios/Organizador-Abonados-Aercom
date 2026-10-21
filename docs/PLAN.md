@@ -1,8 +1,8 @@
-# Plan de MotorTrack
+# Plan de Taller Calamante
 
 ## Decisión vigente
 
-El usuario pidió una base local como el CRM de Aercom. El historial del repositorio confirma que ese CRM usaba `localStorage`. MotorTrack adopta persistencia en el navegador y deja Supabase fuera de esta versión.
+El usuario pidió una base local como el CRM de Aercom. El historial del repositorio confirma que ese CRM usaba `localStorage`. Taller Calamante adopta persistencia en el navegador y deja Supabase fuera de esta versión.
 
 GitHub versiona código, esquemas y pruebas. Los registros personales del taller permanecen en cada navegador y se trasladan mediante respaldos descargados. Este modelo no proporciona autenticación, colaboración ni sincronización.
 

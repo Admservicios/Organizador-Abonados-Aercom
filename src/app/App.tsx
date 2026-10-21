@@ -242,11 +242,11 @@ function Layout() {
               )}
             </div>
             <button className="profile-button" onClick={() => navigate('/ajustes')}>
-              <span className="profile-avatar">{mode === 'demo' ? 'ML' : 'MT'}</span>
+              <span className="profile-avatar">{mode === 'demo' ? 'ML' : 'TC'}</span>
               <span>
                 <strong>{mode === 'demo' ? 'Matías López' : workshop.name}</strong>
                 <small>
-                  {mode === 'demo' ? 'Taller Central · Demo' : 'Este navegador · Local'}
+                  {mode === 'demo' ? 'Taller Calamante · Demo' : 'Este navegador · Local'}
                 </small>
               </span>
               <ChevronDown size={15} />
@@ -287,7 +287,7 @@ function Layout() {
         </main>
         <footer className="page-footer">
           <span>
-            MotorTrack <span>·</span> Gestión hoy. Kilómetros mañana.
+            Taller Calamante <span>·</span> Gestión hoy. Kilómetros mañana.
           </span>
           <span>
             <CircleHelp size={14} /> Almacenamiento local · Sin sincronización entre equipos

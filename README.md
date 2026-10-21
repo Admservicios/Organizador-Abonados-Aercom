@@ -1,4 +1,6 @@
-# MotorTrack
+# Taller Calamante
+
+La aplicación se llama **Taller Calamante** desde la versión 0.2.1. Se conservan las claves internas `motortrack-*` y los formatos de respaldo originales para mantener compatibilidad con los datos existentes.
 
 Gestión de clientes, vehículos y mantenimiento para talleres y lubricentros. Interfaz basada en los bocetos acordados: azul, menú lateral grafito, tarjetas claras y adaptación móvil.
 
@@ -48,7 +50,7 @@ Playwright usa Chromium del sistema si existe. Para indicar otra ruta, usar `PLA
 1. Usar el **modo local** para tus registros.
 2. En **Backups**, descargar **Respaldo local · JSON** después de cambios importantes.
 3. Conservar una copia fuera del navegador, por ejemplo en una unidad externa.
-4. Para recuperar o trasladar la información, abrir MotorTrack en el navegador de destino y seleccionar el JSON en **Restaurar un respaldo**.
+4. Para recuperar o trasladar la información, abrir Taller Calamante en el navegador de destino y seleccionar el JSON en **Restaurar un respaldo**.
 5. Revisar los conteos y confirmar el reemplazo. No se combinan bases.
 
 La restauración rechaza archivos incompatibles, referencias inválidas, identificadores o patentes duplicados. Antes de reemplazar una base existente, conserva una copia local previa; si esa copia o el guardado fallan, no reemplaza los datos originales. Las copias internas válidas también pueden restaurarse desde esa pantalla.
@@ -65,11 +67,13 @@ El código se prepara para un alojamiento estático: `npm run build` genera `dis
 
 Para comprobar la compilación: `npm run preview -- --port 5173 --strictPort`. El desarrollo usa rutas normales; la distribución usa rutas con `#` para evitar errores al recargar en servidores estáticos.
 
-El workflow **Verificar y publicar MotorTrack** ejecuta compilación, pruebas y formato en GitHub Actions. También genera el artefacto descargable `motortrack-web`. Después de una verificación exitosa en `main`, publica **solo `dist`** en GitHub Pages mediante las acciones oficiales de Pages. Las solicitudes de cambios ejecutan verificaciones sin publicar.
+El workflow **Verificar y publicar Taller Calamante** ejecuta compilación, pruebas y formato en GitHub Actions. También genera el artefacto descargable `taller-calamante-web`. Después de una verificación exitosa en `main`, publica **solo `dist`** en GitHub Pages mediante las acciones oficiales de Pages. Las solicitudes de cambios ejecutan verificaciones sin publicar.
 
 La dirección del sitio es `https://admservicios.github.io/Organizador-Abonados-Aercom/`. Pages debe usar **GitHub Actions** como origen de publicación; servir directamente la raíz de `main` entrega el HTML fuente y provoca una pantalla en blanco, porque el navegador no puede ejecutar `/src/main.tsx`. El paso de publicación intenta actualizar esta configuración con el token automático del workflow. Si las políticas del repositorio lo impiden, un administrador debe elegir **Settings → Pages → Build and deployment → Source → GitHub Actions** y volver a ejecutar el workflow desde Actions.
 
 El despliegue mantiene el origen web y conserva el almacenamiento local de los usuarios. No borra datos del navegador ni sube respaldos al repositorio. Los errores y estados del despliegue se consultan en la pestaña Actions.
+
+Para que la dirección web también use el nuevo nombre, el propietario debe renombrar el repositorio en **Settings → General → Repository name** a `taller-calamante`. El cambio de nombre solicitado desde este entorno fue bloqueado por el acceso a la API de GitHub. Después del cambio, volver a ejecutar el workflow de publicación y actualizar la dirección del remoto del checkout. La dirección prevista será `https://admservicios.github.io/taller-calamante/`; no darla por publicada hasta verificar el despliegue del repositorio renombrado. Mantener el mismo usuario y dominio conserva el origen de los datos locales, aunque cambie el camino de la aplicación.
 
 ## Límites actuales
 

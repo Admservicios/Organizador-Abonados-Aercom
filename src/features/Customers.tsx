@@ -139,7 +139,7 @@ export function Customers() {
     .sort((a, b) => b.date.localeCompare(a.date));
   const exportCSV = () =>
     download(
-      mode === 'demo' ? 'motortrack-clientes-demo.csv' : 'motortrack-clientes.csv',
+      mode === 'demo' ? 'taller-calamante-clientes-demo.csv' : 'taller-calamante-clientes.csv',
       customerCSV(filtered),
       'text/csv;charset=utf-8',
     );
