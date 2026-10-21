@@ -44,4 +44,4 @@ La copia anterior a una restauración permanece en el mismo navegador y puede pe
 
 ## Autorización
 
-El usuario autorizó implementar la base local y subir la estructura a GitHub para mejorarla progresivamente. La publicación pública del sitio y nuevas funciones compartidas se tramitan como pasos separados. No se modificarán otros proyectos ni se subirán registros reales al repositorio.
+El usuario autorizó implementar la base local y subir la estructura a GitHub para mejorarla progresivamente. Después informó una pantalla en blanco en su sitio de GitHub Pages; la corrección incorpora la publicación de `dist` desde Actions, manteniendo el mismo origen web. Las nuevas funciones compartidas requieren una autorización específica. No se modificarán otros proyectos ni se subirán registros reales al repositorio.

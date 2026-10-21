@@ -65,7 +65,11 @@ El código se prepara para un alojamiento estático: `npm run build` genera `dis
 
 Para comprobar la compilación: `npm run preview -- --port 5173 --strictPort`. El desarrollo usa rutas normales; la distribución usa rutas con `#` para evitar errores al recargar en servidores estáticos.
 
-El workflow **Verificar MotorTrack** ejecuta compilación, pruebas y formato en GitHub Actions. También genera el artefacto descargable `motortrack-web`. No publica automáticamente un sitio web. GitHub Pages u otro alojamiento se configurará cuando se autorice la publicación.
+El workflow **Verificar y publicar MotorTrack** ejecuta compilación, pruebas y formato en GitHub Actions. También genera el artefacto descargable `motortrack-web`. Después de una verificación exitosa en `main`, publica **solo `dist`** en GitHub Pages mediante las acciones oficiales de Pages. Las solicitudes de cambios ejecutan verificaciones sin publicar.
+
+La dirección del sitio es `https://admservicios.github.io/Organizador-Abonados-Aercom/`. Pages debe usar **GitHub Actions** como origen de publicación; servir directamente la raíz de `main` entrega el HTML fuente y provoca una pantalla en blanco, porque el navegador no puede ejecutar `/src/main.tsx`. El paso de publicación intenta actualizar esta configuración con el token automático del workflow. Si las políticas del repositorio lo impiden, un administrador debe elegir **Settings → Pages → Build and deployment → Source → GitHub Actions** y volver a ejecutar el workflow desde Actions.
+
+El despliegue mantiene el origen web y conserva el almacenamiento local de los usuarios. No borra datos del navegador ni sube respaldos al repositorio. Los errores y estados del despliegue se consultan en la pestaña Actions.
 
 ## Límites actuales
 

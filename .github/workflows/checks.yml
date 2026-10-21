@@ -1,4 +1,4 @@
-name: Verificar MotorTrack
+name: Verificar y publicar MotorTrack
 on:
   push:
     branches: [main]
@@ -25,3 +25,33 @@ jobs:
         with:
           name: motortrack-web
           path: dist
+      - name: Preparar sitio de GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  publicar:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: verificar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configurar Pages para publicar desde GitHub Actions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" -f build_type=workflow
+      - name: Comprobar configuración de Pages
+        uses: actions/configure-pages@v5
+      - name: Publicar la versión compilada
+        id: deployment
+        uses: actions/deploy-pages@v4
