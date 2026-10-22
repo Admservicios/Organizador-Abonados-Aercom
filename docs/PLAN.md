@@ -19,6 +19,8 @@ GitHub versiona código, esquemas y pruebas. Los registros personales del taller
 
 ## Estado inicial de la base
 
+La base visual, la persistencia local y la recuperación JSON están implementadas. La operación ampliada avanza con **comprobantes PDF de mantenimiento**: descarga al registrar y desde los historiales, generación local, notas privadas excluidas y textos largos distribuidos entre páginas. Quedan pendientes las fotografías permanentes, los documentos y las recomendaciones múltiples por vehículo.
+
 - Formato `motortrack-local`, versión 1.
 - Una unidad de almacenamiento contiene clientes, vehículos, mantenimientos y taller.
 - Validación de identificadores, relaciones, patentes y kilometraje antes de guardar o restaurar.
@@ -33,6 +35,7 @@ GitHub versiona código, esquemas y pruebas. Los registros personales del taller
 - En modo local se usa la fecha actual de Argentina; la demo conserva 21 de octubre de 2026 como referencia.
 - El kilometraje representa el último dato registrado; no una medición en vivo.
 - Actualmente hay una recomendación por vehículo; registrar un servicio reemplaza esa recomendación.
+- Los comprobantes PDF muestran la recomendación vigente al descargarlos, identificada como tal. No reconstruyen recomendaciones históricas que no están guardadas en el servicio.
 - Los importes actuales se expresan en pesos. Antes de integrar contabilidad o facturación se revisará su representación monetaria.
 - No se publican datos locales mediante las rutas de demostración del QR.
 

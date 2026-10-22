@@ -571,7 +571,7 @@ export function SettingsPage() {
                   [
                     '04',
                     'Operación y archivos',
-                    'Mejoras del flujo de trabajo, fotografías, documentos y PDF.',
+                    'PDF de mantenimiento disponible. Próximas entregas: fotografías permanentes y documentos.',
                   ],
                   [
                     '05',
@@ -581,7 +581,7 @@ export function SettingsPage() {
                   ['06', 'Calidad y publicación', 'Pruebas, distribución y evolución incremental.'],
                 ].map(([step, title, description]) => (
                   <div key={step}>
-                    <span className={step === '02' ? 'current' : ''}>{step}</span>
+                    <span className={step === '04' ? 'current' : ''}>{step}</span>
                     <div>
                       <h3>{title}</h3>
                       <p>{description}</p>

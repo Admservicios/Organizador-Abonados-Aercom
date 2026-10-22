@@ -15,6 +15,7 @@ Disponible:
 - Clientes: crear, editar, buscar y desactivar.
 - Vehículos: registrar, editar y consultar su ficha e historial.
 - Mantenimientos: registrar trabajos e insumos, importe y próximo servicio.
+- Comprobantes PDF: guardar y descargar al registrar un servicio, o descargar desde el historial del vehículo y el listado de mantenimientos. Incluyen importe con centavos y excluyen notas privadas del cliente y del servicio.
 - Dashboard, gráficos y vencimientos calculados sobre los registros locales.
 - Datos del taller persistentes.
 - Respaldo JSON versionado, validación de relaciones y restauración confirmada.
@@ -68,6 +69,12 @@ Para cargarlo, volver al modo local si se está explorando la demo, seleccionar 
 
 Ver [datos locales y recuperación](docs/DATOS-LOCALES.md).
 
+## Comprobantes de mantenimiento
+
+En el formulario, **Guardar y generar PDF** primero conserva el servicio y luego descarga el comprobante. En **Mantenimientos** y en el historial de cada vehículo, el botón **PDF** permite descargarlo nuevamente sin duplicar registros. Si falla el guardado no se genera el comprobante; si falla la generación, el servicio guardado sigue disponible para reintentar desde el historial.
+
+El PDF se genera en el navegador, sin subir datos ni abrir servicios externos. Incluye taller, cliente, vehículo, fecha y kilometraje del servicio, tareas, insumos e importe en ARS. Las notas privadas se omiten; los ejemplos de la demo se identifican como ficticios. La recomendación del próximo servicio es la **vigente al generar el comprobante**, porque los registros anteriores no almacenan una copia histórica de esa recomendación. Los PDFs descargados no se guardan como adjuntos en la base ni en el respaldo JSON.
+
 ## Distribución web y GitHub
 
 El código se prepara para un alojamiento estático: `npm run build` genera `dist`. La compilación usa rutas con `#` y recursos relativos para funcionar también dentro de una carpeta de GitHub Pages. Por ejemplo, la sección Clientes se abre con `#/clientes`.
@@ -91,7 +98,7 @@ El repositorio ahora se llama **Admservicios/Taller-Calamante**. La dirección a
 - Sin autenticación, roles efectivos ni aislamiento entre personas que usan el mismo perfil del navegador. El panel de roles es una propuesta visual futura.
 - Sin sincronización ni historial público de datos reales. El QR de demostración no es un mecanismo de acceso seguro o revocable.
 - Fotografías: solo previsualización; no se guardan al registrar un servicio.
-- Pendientes: documentos permanentes, PDF, ZIP con archivos y respaldos automáticos independientes.
+- Pendientes: documentos permanentes, ZIP con adjuntos y respaldos automáticos independientes.
 - Una recomendación pendiente por vehículo en esta base inicial; se ampliará a varias categorías.
 - PWA y edición sin conexión a la aplicación todavía no implementadas.
 - Para editar, usar una pestaña a la vez. Se detectan revisiones desactualizadas al escribir y se reciben avisos de cambios de otras pestañas; no hay edición colaborativa.

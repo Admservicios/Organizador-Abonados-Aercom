@@ -18,6 +18,7 @@
     "test:publication": "node scripts/check-publication.mjs"
   },
   "dependencies": {
+    "jspdf": "4.2.1",
     "lucide-react": "1.61.0",
     "qrcode": "1.5.4",
     "react": "19.3.1",

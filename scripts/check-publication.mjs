@@ -77,8 +77,24 @@ try {
       await page.goto(`${url}#/publico/demo/v2`);
       await page.getByRole('heading', { name: 'Historial del vehículo', exact: true }).waitFor();
       assert.ok(!(await page.locator('body').innerText()).includes('Cliente de prueba estática'));
+      await page.goto(`${url}#/backups`);
+      await page
+        .getByLabel('Seleccionar respaldo JSON')
+        .setInputFiles(resolve(root, 'src/data/taller-calamante-practica.json'));
+      await page.getByRole('button', { name: 'Revisar y restaurar' }).click();
+      await page.getByRole('dialog').getByRole('checkbox').check();
+      await page.getByRole('dialog').getByRole('button', { name: 'Confirmar y restaurar' }).click();
+      await page.getByRole('dialog').waitFor({ state: 'hidden' });
+      await page.goto(`${url}#/mantenimientos`);
+      const pending = page.waitForEvent('download');
+      await page
+        .getByRole('button', { name: /^Descargar PDF/ })
+        .first()
+        .click();
+      const pdf = await readFile(await (await pending).path());
+      assert.match(pdf.toString('latin1'), /^%PDF-/);
       assert.deepEqual(errors, [], `${name}: errores en el sitio servido sin Vite`);
-      console.log(`${name}: Dashboard, rutas, recarga, persistencia y recursos correctos.`);
+      console.log(`${name}: Dashboard, rutas, persistencia, recursos y descarga PDF correctos.`);
     } finally {
       await context.close();
     }

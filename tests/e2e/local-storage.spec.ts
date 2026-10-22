@@ -115,6 +115,98 @@ test('crear un vehículo nuevo y actualizar el taller en la base local', async (
   await expect(page.locator('.profile-button')).toContainText('Taller de prueba local');
 });
 
+test('guardar con PDF, volver a descargarlo y conservar un único mantenimiento', async ({
+  page,
+}) => {
+  await seed(page);
+  await page.goto('/mantenimientos/nuevo?vehiculo=v2');
+  await page.getByLabel(/Trabajos realizados/).fill('Trabajo para comprobante PDF.');
+  await page.getByLabel('Observaciones privadas', { exact: true }).fill('SECRETO-PDF-NO-INCLUIR');
+  await page.getByLabel(/Importe total/).fill('58400.75');
+  await page.getByLabel(/Kilometraje actual/).fill('113000');
+  await page.getByLabel(/Kilometraje objetivo/).fill('123000');
+  await page.getByLabel('Trabajo recomendado').selectOption('Alineación y balanceo');
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Guardar y generar PDF', exact: true }).click();
+  const downloaded = await pending;
+  expect(downloaded.suggestedFilename()).toMatch(/AF-456-EF.*\.pdf$/);
+  await downloaded.saveAs('/tmp/taller-calamante-comprobante-prueba.pdf');
+  const pdf = (await readFile((await downloaded.path())!)).toString('latin1');
+  expect(pdf).toMatch(/^%PDF-/);
+  expect(pdf).toContain('Trabajo para comprobante PDF.');
+  expect(pdf).toContain('ARS 58.400,75');
+  expect(pdf).toContain('123.000 km');
+  expect(pdf).toContain('Alineación y balanceo');
+  expect(pdf).not.toContain('SECRETO-PDF-NO-INCLUIR');
+  await expect(page).toHaveURL(/vehiculos\/v2$/);
+  await page.reload();
+  const before = await dataFromBrowser(page);
+  expect(before.services).toHaveLength(initialServices.length + 1);
+  const row = page.getByRole('row').filter({ hasText: 'Trabajo para comprobante PDF.' });
+  const second = page.waitForEvent('download');
+  await row.getByRole('button', { name: /^Descargar PDF/ }).click();
+  expect((await readFile((await (await second).path())!)).toString('latin1')).toContain(
+    'Trabajo para comprobante PDF.',
+  );
+  expect(await dataFromBrowser(page)).toEqual(before);
+  await page.goto('/mantenimientos');
+  const third = page.waitForEvent('download');
+  await page
+    .getByRole('button', { name: /^Descargar PDF/ })
+    .first()
+    .click();
+  expect((await readFile((await (await third).path())!)).toString('latin1')).toMatch(/^%PDF-/);
+  expect(await dataFromBrowser(page)).toEqual(before);
+});
+
+test('fallo de generación PDF conserva el servicio y permite descargarlo después', async ({
+  page,
+}) => {
+  await seed(page);
+  await page.route('**/*jspdf*', (route) => route.abort());
+  await page.goto('/mantenimientos/nuevo?vehiculo=v2');
+  await page.getByLabel(/Trabajos realizados/).fill('Servicio guardado aunque falle el PDF.');
+  await page.getByLabel(/Importe total/).fill('45000');
+  await page.getByRole('button', { name: 'Guardar y generar PDF', exact: true }).click();
+  await expect(page).toHaveURL(/vehiculos\/v2$/);
+  await expect(page.getByRole('status')).toContainText('El mantenimiento quedó guardado');
+  expect((await dataFromBrowser(page)).services).toHaveLength(initialServices.length + 1);
+  await page.unroute('**/*jspdf*');
+  await page.reload();
+  const pending = page.waitForEvent('download');
+  await page
+    .getByRole('row')
+    .filter({ hasText: 'Servicio guardado aunque falle el PDF.' })
+    .getByRole('button', { name: /^Descargar PDF/ })
+    .click();
+  expect((await pending).suggestedFilename()).toMatch(/\.pdf$/);
+  expect((await dataFromBrowser(page)).services).toHaveLength(initialServices.length + 1);
+});
+
+test('almacenamiento lleno impide guardar y generar un comprobante de un servicio no guardado', async ({
+  page,
+}) => {
+  await seed(page);
+  await page.goto('/mantenimientos/nuevo?vehiculo=v2');
+  const before = await dataFromBrowser(page);
+  let downloads = 0;
+  page.on('download', () => downloads++);
+  await page.evaluate((key) => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k: string, value: string) {
+      if (k === key) throw new DOMException('Storage full', 'QuotaExceededError');
+      return original.call(this, k, value);
+    };
+  }, DATABASE_KEY);
+  await page.getByLabel(/Trabajos realizados/).fill('Este servicio no debe guardarse.');
+  await page.getByLabel(/Importe total/).fill('45000');
+  await page.getByRole('button', { name: 'Guardar y generar PDF', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('No se pudo guardar');
+  await expect(page).toHaveURL(/mantenimientos\/nuevo/);
+  expect(downloads).toBe(0);
+  expect(await dataFromBrowser(page)).toEqual(before);
+});
+
 test('alineación y balanceo: detalle, persistencia y respaldo desde el móvil', async ({ page }) => {
   await seed(page);
   await page.setViewportSize({ width: 390, height: 844 });

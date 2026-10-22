@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Badge, Empty, Modal, PageTitle, Panel, VehicleArt } from '../components/ui';
 import { useData } from '../app/store';
+import { ServicePDFButton } from '../components/ServicePDFButton';
 import { dateLabel, maintenanceStatus, money, number, type Vehicle } from '../lib/demo';
 
 export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: () => void }) {
@@ -426,6 +427,7 @@ export function VehicleDetail() {
                         <th>Insumos</th>
                         <th>Importe</th>
                         <th>Visibilidad</th>
+                        <th>Comprobante</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -441,6 +443,9 @@ export function VehicleDetail() {
                           <td>{money(s.amount)}</td>
                           <td>
                             <span className="subtle-chip">{s.public ? 'Público' : 'Privado'}</span>
+                          </td>
+                          <td>
+                            <ServicePDFButton service={s} />
                           </td>
                         </tr>
                       ))}

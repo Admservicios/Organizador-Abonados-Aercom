@@ -38,6 +38,8 @@ El esquema completo está en `src/lib/localDatabase.ts`. No agregar contraseñas
 
 El archivo usa `format: motortrack-backup`, `version: 1`, una fecha `exportedAt` y el mismo campo `data`. No incluye credenciales ni archivos. Se admite como máximo un archivo de 5 MB, sujeto además a la cuota disponible del navegador.
 
+Los comprobantes PDF se generan y descargan localmente a partir de los registros. No son adjuntos permanentes ni forman parte del respaldo JSON; pueden descargarse nuevamente desde el historial. El PDF excluye las notas privadas del cliente y del servicio. Para comprobantes anteriores se utiliza la recomendación de mantenimiento vigente al descargarlos, identificada en el documento, sin alterar el servicio original.
+
 La validación comprueba formato y relaciones; no es una firma digital ni permite demostrar quién creó el archivo. Se rechazan versiones desconocidas, campos no previstos, identificadores duplicados, patentes repetidas y relaciones inexistentes.
 
 ## Restauración

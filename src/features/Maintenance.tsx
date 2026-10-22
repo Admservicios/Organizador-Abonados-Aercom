@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { serviceSchema } from '../lib/serviceValidation';
 import { nextServiceDate } from '../lib/localDatabase';
+import { downloadServicePDF } from '../lib/servicePDF';
+import { ServicePDFButton } from '../components/ServicePDFButton';
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,7 +25,7 @@ import {
 } from 'lucide-react';
 import { Badge, Empty, PageTitle, Panel, VehicleArt } from '../components/ui';
 import { useData } from '../app/store';
-import { dateLabel, maintenanceStatus, money, number } from '../lib/demo';
+import { dateLabel, maintenanceStatus, money, number, type Service } from '../lib/demo';
 
 export function MaintenanceList() {
   const { services, vehicles, customers } = useData();
@@ -71,9 +73,7 @@ export function MaintenanceList() {
                 <th>Servicio</th>
                 <th>Kilometraje</th>
                 <th>Importe</th>
-                <th>
-                  <span className="sr-only">Ver ficha</span>
-                </th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -100,6 +100,7 @@ export function MaintenanceList() {
                     <td>{number(s.km)} km</td>
                     <td>{money(s.amount)}</td>
                     <td>
+                      <ServicePDFButton service={s} />
                       <Link
                         className="icon-button"
                         to={`/vehiculos/${s.vehicleId}`}
@@ -120,7 +121,8 @@ export function MaintenanceList() {
   );
 }
 export function MaintenanceForm() {
-  const { customers, vehicles, services, addService, notify, mode, referenceDate } = useData();
+  const { customers, vehicles, services, workshop, addService, notify, mode, referenceDate } =
+    useData();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const initialVehicle = vehicles.find((v) => v.id === params.get('vehiculo')) ?? vehicles[0];
@@ -131,6 +133,7 @@ export function MaintenanceForm() {
   const isAlignment = serviceType === 'Alineación y balanceo';
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
   const [photos, setPhotos] = useState<{ url: string; name: string }[]>([]);
   const photoRef = useRef(photos);
   photoRef.current = photos;
@@ -153,9 +156,10 @@ export function MaintenanceForm() {
     if (!dirty || window.confirm('Hay cambios sin guardar. ¿Querés salir del formulario?'))
       navigate('/mantenimientos');
   };
-  const submit = (e: FormEvent<HTMLFormElement>) => {
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!vehicle) return;
+    if (!vehicle || saving) return;
+    const wantsPDF = (e.nativeEvent as SubmitEvent).submitter?.getAttribute('value') === 'pdf';
     const data = new FormData(e.currentTarget);
     const alignment = String(data.get('alignment') ?? '');
     const balancing = String(data.get('balancing') ?? '');
@@ -195,28 +199,56 @@ export function MaintenanceForm() {
       .map((key) => String(data.get(key) ?? '').trim())
       .filter(Boolean)
       .join(' · ');
-    const saved = addService(
-      {
-        id: crypto.randomUUID(),
-        vehicleId: vehicle.id,
-        date: result.data.date,
-        km: result.data.km,
-        type: result.data.type,
-        work,
-        supplies: supplies || 'Sin insumos registrados',
-        amount: result.data.amount,
-        notes: String(data.get('notes')).trim(),
-        public: data.get('public') === 'on',
-      },
-      { date: nextDate, km: nextKm, recommendation: String(data.get('nextType')) },
-    );
+    const service: Service = {
+      id: crypto.randomUUID(),
+      vehicleId: vehicle.id,
+      date: result.data.date,
+      km: result.data.km,
+      type: result.data.type,
+      work,
+      supplies: supplies || 'Sin insumos registrados',
+      amount: result.data.amount,
+      notes: String(data.get('notes')).trim(),
+      public: data.get('public') === 'on',
+    };
+    const next = { date: nextDate, km: nextKm, recommendation: String(data.get('nextType')) };
+    const saved = addService(service, next);
     if (!saved) return;
     setDirty(false);
-    notify(
+    let message =
       mode === 'demo'
         ? 'Mantenimiento agregado a la sesión de demostración. Las fotos solo se previsualizaron.'
-        : 'Mantenimiento guardado en la base local. Las fotos solo se previsualizaron.',
-    );
+        : 'Mantenimiento guardado en la base local. Las fotos solo se previsualizaron.';
+    if (wantsPDF) {
+      setSaving(true);
+      try {
+        const customer = customers.find((c) => c.id === vehicle.customerId);
+        if (!customer) throw new Error('Falta el cliente.');
+        await downloadServicePDF({
+          service,
+          customer,
+          vehicle: {
+            ...vehicle,
+            km: service.km,
+            nextDate: next.date,
+            nextKm: next.km,
+            recommendation: next.recommendation,
+          },
+          workshop,
+          demo: mode === 'demo',
+        });
+        message =
+          mode === 'demo'
+            ? 'Mantenimiento agregado a la demo y PDF descargado.'
+            : 'Mantenimiento guardado en la base local y PDF descargado.';
+      } catch {
+        message =
+          'El mantenimiento quedó guardado. No se pudo generar el PDF; podés descargarlo desde el historial sin volver a cargar el servicio.';
+      } finally {
+        setSaving(false);
+      }
+    }
+    notify(message);
     navigate(`/vehiculos/${vehicle.id}`);
   };
   const history = services
@@ -229,14 +261,14 @@ export function MaintenanceForm() {
         title="Registrar mantenimiento"
         subtitle="Completá la información del servicio realizado al vehículo."
         actions={
-          <button className="button" onClick={cancel}>
+          <button className="button" onClick={cancel} disabled={saving}>
             <ArrowLeft size={16} />
             Volver
           </button>
         }
       />
       <form className="maintenance-layout" onSubmit={submit} onChange={() => setDirty(true)}>
-        <div className="form-main">
+        <div className="form-main" inert={saving}>
           <Panel title="Cliente y vehículo" icon={CarFront}>
             <div className="form-grid">
               <label>
@@ -604,15 +636,21 @@ export function MaintenanceForm() {
                 {error}
               </p>
             )}
-            <button className="button primary full" type="submit" disabled={!vehicle}>
+            <button className="button primary full" type="submit" disabled={!vehicle || saving}>
               <Save size={17} />
               {mode === 'demo' ? 'Guardar en demo' : 'Guardar mantenimiento'}
             </button>
-            <button className="button full" type="button" disabled>
+            <button
+              className="button full"
+              type="submit"
+              name="intent"
+              value="pdf"
+              disabled={!vehicle || saving}
+            >
               <FileDown size={17} />
-              Generar PDF · Etapa 5
+              {saving ? 'Generando PDF…' : 'Guardar y generar PDF'}
             </button>
-            <button className="button ghost full" type="button" onClick={cancel}>
+            <button className="button ghost full" type="button" onClick={cancel} disabled={saving}>
               Cancelar
             </button>
             <p className="fine-print">
