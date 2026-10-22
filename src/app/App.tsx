@@ -29,6 +29,7 @@ import { MaintenanceForm, MaintenanceList, Reminders } from '../features/Mainten
 import { Backups, SettingsPage } from '../features/Settings';
 import { PublicHistory } from '../features/PublicHistory';
 import { OfflineNotice } from '../components/OfflineApp';
+import { AutomaticBackupsProvider, AutomaticBackupNotice } from '../components/AutomaticBackups';
 
 const navigation = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -260,6 +261,7 @@ function Layout() {
           </div>
         </header>
         <OfflineNotice />
+        <AutomaticBackupNotice />
         <div className="demo-banner">
           <span>
             <span className="online-dot" />{' '}
@@ -327,22 +329,24 @@ function NotFound() {
 export default function App() {
   return (
     <DataProvider>
-      <Routes>
-        <Route path="/publico/demo-hilux" element={<PublicHistory />} />
-        <Route path="/publico/demo/:id" element={<PublicHistory />} />
-        <Route element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="clientes" element={<Customers />} />
-          <Route path="vehiculos" element={<Vehicles />} />
-          <Route path="vehiculos/:id" element={<VehicleDetail />} />
-          <Route path="mantenimientos" element={<MaintenanceList />} />
-          <Route path="mantenimientos/nuevo" element={<MaintenanceForm />} />
-          <Route path="proximos-servicios" element={<Reminders />} />
-          <Route path="backups" element={<Backups />} />
-          <Route path="ajustes" element={<SettingsPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
+      <AutomaticBackupsProvider>
+        <Routes>
+          <Route path="/publico/demo-hilux" element={<PublicHistory />} />
+          <Route path="/publico/demo/:id" element={<PublicHistory />} />
+          <Route element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="clientes" element={<Customers />} />
+            <Route path="vehiculos" element={<Vehicles />} />
+            <Route path="vehiculos/:id" element={<VehicleDetail />} />
+            <Route path="mantenimientos" element={<MaintenanceList />} />
+            <Route path="mantenimientos/nuevo" element={<MaintenanceForm />} />
+            <Route path="proximos-servicios" element={<Reminders />} />
+            <Route path="backups" element={<Backups />} />
+            <Route path="ajustes" element={<SettingsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </AutomaticBackupsProvider>
     </DataProvider>
   );
 }

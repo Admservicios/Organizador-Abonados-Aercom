@@ -19,7 +19,7 @@ GitHub versiona código, esquemas y pruebas. Los registros personales del taller
 
 ## Estado inicial de la base
 
-La base visual, la persistencia local y la recuperación JSON están implementadas. La operación ampliada avanza con **comprobantes PDF de mantenimiento**: descarga al registrar y desde los historiales, generación local, notas privadas excluidas y textos largos distribuidos entre páginas. También están implementadas las fotografías persistentes por mantenimiento, la galería del vehículo y el respaldo ZIP completo con verificación de archivos. También están implementados los vencimientos independientes por tipo de servicio y su edición en Recordatorios. Está implementada la documentación PDF por vehículo con descarga, retiro confirmado y respaldo ZIP completo. También están implementados la instalación como aplicación y el uso sin conexión tras la primera preparación. Quedan pendientes otros formatos y respaldos automáticos independientes.
+La base visual, la persistencia local y la recuperación JSON están implementadas. La operación ampliada avanza con **comprobantes PDF de mantenimiento**: descarga al registrar y desde los historiales, generación local, notas privadas excluidas y textos largos distribuidos entre páginas. También están implementadas las fotografías persistentes por mantenimiento, la galería del vehículo y el respaldo ZIP completo con verificación de archivos. También están implementados los vencimientos independientes por tipo de servicio y su edición en Recordatorios. Está implementada la documentación PDF por vehículo con descarga, retiro confirmado y respaldo ZIP completo. También están implementados la instalación como aplicación y el uso sin conexión tras la primera preparación. También están disponibles los ZIP automáticos en una carpeta autorizada del equipo, con intervalo y verificación de escritura, mientras la aplicación permanece abierta. Quedan pendientes otros formatos y las funciones compartidas.
 
 - Formato `motortrack-local`, versión 1.
 - Una unidad de `localStorage` contiene clientes, vehículos, mantenimientos, taller y referencias de fotos y documentos. IndexedDB conserva las imágenes optimizadas y los PDF originales, en colecciones locales identificadas.
@@ -41,9 +41,9 @@ La base visual, la persistencia local y la recuperación JSON están implementad
 
 ## Recuperación pendiente de ampliación
 
-La exportación/restauración JSON abarca registros y datos del taller. El ZIP completo incluye fotos optimizadas y documentos PDF originales, con integridad y límites de tamaño verificados. Siguen pendientes otros formatos de adjuntos y copias automáticas independientes. Los JSON anteriores siguen siendo compatibles y no contienen archivos adjuntos.
+La exportación/restauración JSON abarca registros y datos del taller. El ZIP completo incluye fotos optimizadas y documentos PDF originales, con integridad y límites de tamaño verificados. Las copias automáticas en carpeta están disponibles como opción local en navegadores compatibles; no se ejecutan con la aplicación cerrada. Siguen pendientes otros formatos de adjuntos. Los JSON anteriores siguen siendo compatibles y no contienen archivos adjuntos.
 
-La copia anterior a una restauración permanece en el mismo navegador y puede perderse junto con él. Por eso se requiere una descarga conservada fuera del navegador. No hay promesa de retención automática ni protección contra pérdida del dispositivo.
+La copia anterior a una restauración permanece en el mismo navegador y puede perderse junto con él. Por eso se requiere una descarga conservada fuera del navegador. Las copias automáticas requieren una carpeta autorizada y la aplicación abierta. Una carpeta en el mismo disco no protege contra la pérdida del dispositivo.
 
 ## Autorización
 

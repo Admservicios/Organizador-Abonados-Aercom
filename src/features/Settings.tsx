@@ -18,6 +18,7 @@ import {
 import { Avatar, Modal, PageTitle, Panel } from '../components/ui';
 import { useData } from '../app/store';
 import { OfflineSettings } from '../components/OfflineApp';
+import { AutomaticBackupPanel, useAutomaticBackups } from '../components/AutomaticBackups';
 import { customerCSV, download } from '../lib/demo';
 import practiceBackup from '../data/taller-calamante-practica.json';
 import {
@@ -44,6 +45,7 @@ import {
 } from '../lib/localDatabase';
 
 export function Backups() {
+  const auto = useAutomaticBackups();
   const {
     customers,
     vehicles,
@@ -281,6 +283,7 @@ export function Backups() {
               La descarga por sí sola no cambia tus registros.
             </p>
           </Panel>
+          <AutomaticBackupPanel />
           <Panel title="Exportar información" icon={HardDriveDownload}>
             <p className="panel-description">
               Clientes, vehículos, mantenimientos y datos del taller. Si cargaste fotos o
@@ -481,7 +484,15 @@ export function Backups() {
               </div>
               <div>
                 <dt>Backup automático</dt>
-                <dd>No configurado</dd>
+                <dd>
+                  {mode === 'demo'
+                    ? 'No aplica en demo'
+                    : auto.settings
+                      ? auto.settings.enabled
+                        ? 'Activado'
+                        : 'Pausado'
+                      : 'No configurado'}
+                </dd>
               </div>
               <div>
                 <dt>Última descarga en esta vista</dt>

@@ -81,7 +81,7 @@ La ficha del vehículo tiene una pestaña **Fotos**, con vista ampliada, fecha, 
 
 En **Backups → Descargar ZIP completo** se descargan `backup.json` y las imágenes. El ZIP valida relaciones, cantidades, tamaños, dimensiones y huellas SHA-256; admite hasta 100 MB en total y 1.000 fotos, con hasta 6 por mantenimiento. También se conservan los respaldos JSON anteriores y el ZIP de práctica con un único JSON. La importación se revisa y confirma antes de reemplazar la base. Las fotos importadas se guardan en una colección nueva: si falla el proceso se conserva la base anterior con sus archivos. La copia local previa mantiene acceso a sus fotos mientras existan en ese mismo navegador.
 
-**El JSON no incluye imágenes.** Para mover una base con fotos a otro navegador hay que usar el ZIP completo. No hay respaldo automático: descargar el ZIP y conservarlo fuera del navegador. Las colecciones anteriores no se borran automáticamente; las cuotas dependen del navegador y un fallo de espacio no reemplaza la información actual.
+**El JSON no incluye imágenes.** Para mover una base con fotos a otro navegador hay que usar el ZIP completo. Se pueden activar copias automáticas en una carpeta local desde Backups, en navegadores de escritorio compatibles. También se puede descargar el ZIP manualmente y conservarlo fuera del navegador. Las colecciones anteriores no se borran automáticamente; las cuotas dependen del navegador y un fallo de espacio no reemplaza la información actual.
 
 ## Comprobantes de mantenimiento
 
@@ -112,7 +112,7 @@ El repositorio ahora se llama **Admservicios/Taller-Calamante**. La dirección a
 - Sin autenticación, roles efectivos ni aislamiento entre personas que usan el mismo perfil del navegador. El panel de roles es una propuesta visual futura.
 - Sin sincronización ni historial público de datos reales. El QR de demostración no es un mecanismo de acceso seguro o revocable.
 - Fotografías: se conserva la versión optimizada; los originales deben guardarse por separado.
-- Documentos: PDF de hasta 5 MB, 20 por vehículo y 200 en total. Otros formatos y respaldos automáticos independientes quedan pendientes.
+- Documentos: PDF de hasta 5 MB, 20 por vehículo y 200 en total. Otros formatos quedan pendientes. Las copias automáticas en carpeta requieren Chrome o Edge de escritorio compatible y la aplicación abierta.
 - Vencimientos por tipo de servicio, con fecha, kilometraje y último trabajo independientes. No se reconstruyen intervalos que el sistema anterior ya había sobrescrito.
 - Aplicación instalable y uso sin conexión disponibles después de la primera preparación con internet. La instalación depende del navegador; no sincroniza bases entre dispositivos.
 - Para editar, usar una pestaña a la vez. Se detectan revisiones desactualizadas al escribir y se reciben avisos de cambios de otras pestañas; no hay edición colaborativa.
@@ -170,3 +170,13 @@ Usar el navegador y perfil donde está la base. Si una instalación o un navegad
 Las nuevas versiones muestran un aviso para **Actualizar aplicación**; se recarga solo al confirmar. Guardar los formularios de todas las pestañas antes de aplicar la actualización. Si una descarga falla, la versión preparada sigue disponible. La primera apertura, una nueva preparación si el navegador retiró su caché y las actualizaciones necesitan internet. No hay datos en un servidor ni historial QR real publicado por instalar la aplicación.
 
 Ver [instalación y funcionamiento sin conexión](docs/USO-SIN-CONEXION.md). `npm run test:offline` comprueba ambas variantes estáticas con un navegador y red desactivada, además de actualizaciones con varias pestañas y descargas fallidas.
+
+## Respaldos automáticos en una carpeta local
+
+En **Backups → Respaldo automático en carpeta → Elegir carpeta de respaldo** se puede autorizar una carpeta del equipo. Se crea la primera copia completa al elegirla. Los intervalos disponibles son **Diario** (inicial), **Cada hora** y **Cada 15 minutos**. Se comprueban cambios al abrir, al volver a la aplicación, después de guardar y una vez por minuto mientras está abierta. Se crea una copia solo si hay cambios y se cumplió el intervalo; **Crear copia ahora** permite forzarla.
+
+Se guardan ZIP completos con registros, fotos y documentos, con nombre nuevo por copia y fecha de Argentina. Se verifica la escritura leyendo nuevamente el archivo. No se reemplazan ni se borran copias anteriores. **Pausar copias** detiene las escrituras; **Desvincular carpeta** retira la configuración sin borrar archivos. Los ZIP se recuperan con **Restaurar un respaldo**.
+
+Requiere HTTPS y un navegador de escritorio con selector de carpeta y bloqueo entre pestañas, como Chrome o Edge compatibles. Si el navegador vuelve a pedir acceso, se usa **Autorizar carpeta**; no se abren permisos automáticamente. En navegadores sin esta capacidad sigue disponible la descarga manual. La demostración no genera estas copias. Funciona sin internet después de preparar la aplicación, pero **no se ejecuta con la aplicación cerrada o suspendida**: al volver se revisa lo pendiente.
+
+La carpeta elegida está fuera del almacenamiento del navegador, pero no protege por sí sola de perder el mismo disco o dispositivo. Elegir una ubicación independiente si se necesita esa protección. Se conservan todas las copias: revisar el espacio de esa carpeta. Un fallo pausa los intentos automáticos de esa sesión hasta reintentar; no reemplaza la base ni las copias ya verificadas. Los permisos y la configuración de carpeta pertenecen a cada navegador y no se incluyen en los respaldos.

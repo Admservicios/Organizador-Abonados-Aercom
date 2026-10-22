@@ -4833,3 +4833,9 @@ label > .input-suffix input {
   flex: 1;
   min-width: 180px;
 }
+
+.backup-folder-file {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  color: var(--muted);
+}
