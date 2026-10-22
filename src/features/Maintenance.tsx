@@ -127,6 +127,8 @@ export function MaintenanceForm() {
   const [customerId, setCustomerId] = useState(initialVehicle?.customerId ?? '');
   const [vehicleId, setVehicleId] = useState(initialVehicle?.id ?? '');
   const vehicle = vehicles.find((v) => v.id === vehicleId);
+  const [serviceType, setServiceType] = useState('Service general');
+  const isAlignment = serviceType === 'Alineación y balanceo';
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState('');
   const [photos, setPhotos] = useState<{ url: string; name: string }[]>([]);
@@ -155,6 +157,12 @@ export function MaintenanceForm() {
     e.preventDefault();
     if (!vehicle) return;
     const data = new FormData(e.currentTarget);
+    const alignment = String(data.get('alignment') ?? '');
+    const balancing = String(data.get('balancing') ?? '');
+    if (isAlignment && alignment === 'No realizada' && balancing === 'No realizado') {
+      setError('Indicá una alineación o un balanceo realizado para guardar este servicio.');
+      return;
+    }
     const result = serviceSchema.safeParse({
       date: data.get('date'),
       km: Number(data.get('km')),
@@ -166,6 +174,13 @@ export function MaintenanceForm() {
     });
     if (!result.success) {
       setError(result.error.issues[0].message);
+      return;
+    }
+    const work = isAlignment
+      ? `Alineación: ${alignment}. Balanceo: ${balancing}. ${result.data.work}`
+      : result.data.work;
+    if (work.length > 2000) {
+      setError('El detalle completo del trabajo no puede superar los 2000 caracteres.');
       return;
     }
     if (result.data.km < vehicle.km) {
@@ -187,7 +202,7 @@ export function MaintenanceForm() {
         date: result.data.date,
         km: result.data.km,
         type: result.data.type,
-        work: result.data.work,
+        work,
         supplies: supplies || 'Sin insumos registrados',
         amount: result.data.amount,
         notes: String(data.get('notes')).trim(),
@@ -311,12 +326,18 @@ export function MaintenanceForm() {
               </label>
               <label>
                 Tipo de servicio <span>*</span>
-                <select name="type" required>
+                <select
+                  name="type"
+                  required
+                  value={serviceType}
+                  onChange={(e) => setServiceType(e.target.value)}
+                >
                   <option>Service general</option>
                   <option>Cambio de aceite</option>
                   <option>Filtros</option>
                   <option>Frenos</option>
                   <option>Neumáticos</option>
+                  <option>Alineación y balanceo</option>
                   <option>Revisión general</option>
                   <option>Otro mantenimiento</option>
                 </select>
@@ -328,12 +349,39 @@ export function MaintenanceForm() {
                 name="work"
                 required
                 minLength={5}
-                maxLength={2000}
+                maxLength={isAlignment ? 1800 : 2000}
                 rows={3}
                 placeholder="Describí las tareas realizadas en este servicio…"
               />
             </label>
           </Panel>
+          {isAlignment && (
+            <Panel title="Alineación y balanceo" icon={Settings2}>
+              <div className="form-grid">
+                <label>
+                  Alineación realizada <span>*</span>
+                  <select name="alignment" required defaultValue="Eje delantero">
+                    <option>Eje delantero</option>
+                    <option>Ejes delantero y trasero</option>
+                    <option>No realizada</option>
+                  </select>
+                </label>
+                <label>
+                  Ruedas balanceadas <span>*</span>
+                  <select name="balancing" required defaultValue="Las 4 ruedas">
+                    <option>Las 4 ruedas</option>
+                    <option>2 ruedas delanteras</option>
+                    <option>2 ruedas traseras</option>
+                    <option>No realizado</option>
+                  </select>
+                </label>
+              </div>
+              <p className="fine-print">
+                Detallá ajustes, vibraciones o desgaste de neumáticos en Trabajos realizados. Podés
+                registrar ambas tareas o solo la que se realizó.
+              </p>
+            </Panel>
+          )}
           <Panel title="Insumos y repuestos" icon={Settings2}>
             <div className="form-grid three">
               <label>
@@ -404,6 +452,7 @@ export function MaintenanceForm() {
                   <option>Service general</option>
                   <option>Revisión de frenos</option>
                   <option>Control de neumáticos</option>
+                  <option>Alineación y balanceo</option>
                 </select>
               </label>
             </div>

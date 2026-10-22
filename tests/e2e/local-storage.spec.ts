@@ -114,6 +114,53 @@ test('crear un vehículo nuevo y actualizar el taller en la base local', async (
   await expect(page.locator('.profile-button')).toContainText('Taller de prueba local');
 });
 
+test('alineación y balanceo: detalle, persistencia y respaldo desde el móvil', async ({ page }) => {
+  await seed(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/mantenimientos/nuevo?vehiculo=v2');
+  await expect(page.getByLabel(/Alineación realizada/)).toHaveCount(0);
+  await page.getByLabel(/Tipo de servicio/).selectOption('Alineación y balanceo');
+  await expect(page.getByRole('heading', { name: 'Alineación y balanceo' })).toBeVisible();
+  await page.getByLabel(/Trabajos realizados/).fill('     ');
+  await page.getByLabel(/Importe total/).fill('45000');
+  await page.getByRole('button', { name: 'Guardar mantenimiento', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Describí los trabajos realizados');
+  await page.getByLabel(/Trabajos realizados/).fill('Se corrigió la deriva y la vibración.');
+  await page.getByLabel(/Alineación realizada/).selectOption('No realizada');
+  await page.getByLabel(/Ruedas balanceadas/).selectOption('No realizado');
+  await page.getByRole('button', { name: 'Guardar mantenimiento', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Indicá una alineación o un balanceo');
+  expect((await dataFromBrowser(page)).services).toHaveLength(initialServices.length);
+  await page.getByLabel(/Alineación realizada/).selectOption('Ejes delantero y trasero');
+  await page.getByLabel(/Ruedas balanceadas/).selectOption('2 ruedas delanteras');
+  await page.getByLabel('Trabajo recomendado').selectOption('Alineación y balanceo');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.getByRole('button', { name: 'Guardar mantenimiento', exact: true }).click();
+  await expect(page).toHaveURL(/vehiculos\/v2$/);
+  await page.reload();
+  const work =
+    'Alineación: Ejes delantero y trasero. Balanceo: 2 ruedas delanteras. Se corrigió la deriva y la vibración.';
+  await expect(page.getByText(work, { exact: true })).toBeVisible();
+  const data = await dataFromBrowser(page);
+  const added = data.services.find((s: { work: string }) => s.work === work);
+  expect(added).toMatchObject({ type: 'Alineación y balanceo', amount: 45000, public: false });
+  expect(data.services.filter((s: { id: string }) => s.id !== added.id)).toEqual(initialServices);
+  expect(data.vehicles.find((v: { id: string }) => v.id === 'v2').recommendation).toBe(
+    'Alineación y balanceo',
+  );
+  await page.goto('/mantenimientos');
+  await page.getByRole('textbox', { name: 'Buscar mantenimientos' }).fill('alineación');
+  await expect(page.locator('tbody tr')).toHaveCount(1);
+  await expect(page.locator('tbody')).toContainText('Alineación y balanceo');
+  await page.goto('/backups');
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Descargar', exact: true }).first().click();
+  const backup = JSON.parse(await readFile((await (await pending).path())!, 'utf8'));
+  expect(backup.data.services.find((s: { id: string }) => s.id === added.id)).toEqual(added);
+});
+
 test('exportar y restaurar con confirmación y copia previa', async ({ page }) => {
   await seed(page);
   await page.goto('/backups');
