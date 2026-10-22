@@ -93,10 +93,27 @@ describe('vencimientos independientes por servicio', () => {
   });
   it('filtros solos y servicios personalizados no reinician aceite ni otros trabajos personalizados', () => {
     expect(maintenanceKind('Filtros').key).not.toBe(maintenanceKind('Cambio de aceite').key);
+    expect(maintenanceKind('Filtro de habitáculo').key).toBe('otro-filtro-de-habitaculo');
+    expect(maintenanceKind('Cambio de filtro de habitáculo').key).toBe(
+      maintenanceKind('Filtro de habitáculo').key,
+    );
+    expect(maintenanceKind('Filtro de habitáculo').key).not.toBe(
+      maintenanceKind('Cambio de aceite').key,
+    );
     expect(maintenanceKind('Filtro de aire').key).not.toBe(
       maintenanceKind('Filtro de combustible').key,
     );
     expect(maintenanceKind('Aceite de caja').key).not.toBe(maintenanceKind('Cambio de aceite').key);
+    const cabin = recordServicePlan(
+      vehicle,
+      { ...brakes, type: 'Filtro de habitáculo' },
+      { ...brakeNext, recommendation: 'Cambio de filtro de habitáculo' },
+      today,
+    );
+    expect(vehiclePlans(cabin)).toHaveLength(2);
+    expect(vehiclePlans(cabin).find((p) => p.category === 'aceite-filtros')?.nextKm).toBe(
+      vehicle.nextKm,
+    );
   });
   it('conserva el único vencimiento anterior sin inventar los intervalos ya sobrescritos', () => {
     const old = { ...vehicle, recommendation: 'Revisión de frenos' };

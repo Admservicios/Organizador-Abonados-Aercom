@@ -49,6 +49,14 @@ export const maintenanceTypes = [
     recommendations: ['Cambio de filtros'],
   },
   {
+    // Conserva la categoría que ya usaban los servicios personalizados con este nombre.
+    key: 'otro-filtro-de-habitaculo',
+    label: 'Filtro de habitáculo',
+    type: 'Filtro de habitáculo',
+    aliases: ['Cambio de filtro de habitáculo', 'Filtro de cabina'],
+    recommendations: ['Cambio de filtro de habitáculo'],
+  },
+  {
     key: 'frenos',
     label: 'Frenos',
     type: 'Frenos',

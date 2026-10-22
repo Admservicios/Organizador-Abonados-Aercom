@@ -121,6 +121,7 @@ test('guardar con PDF, volver a descargarlo y conservar un único mantenimiento'
   await seed(page);
   await page.goto('/mantenimientos/nuevo?vehiculo=v2');
   await page.getByLabel(/Trabajos realizados/).fill('Trabajo para comprobante PDF.');
+  await page.getByLabel('Filtro de habitáculo', { exact: true }).fill('MANN CUK 2939');
   await page.getByLabel('Observaciones privadas', { exact: true }).fill('SECRETO-PDF-NO-INCLUIR');
   await page.getByLabel(/Importe total/).fill('58400.75');
   await page.getByLabel(/Kilometraje actual/).fill('113000');
@@ -135,6 +136,7 @@ test('guardar con PDF, volver a descargarlo y conservar un único mantenimiento'
   expect(pdf).toMatch(/^%PDF-/);
   expect(pdf).toContain('Trabajo para comprobante PDF.');
   expect(pdf).toContain('ARS 58.400,75');
+  expect(pdf).toContain('Filtro de habitáculo: MANN CUK 2939');
   expect(pdf).toContain('123.000 km');
   expect(pdf).toContain('Cambio de aceite y filtros');
   expect(pdf).not.toContain('SECRETO-PDF-NO-INCLUIR');
@@ -142,6 +144,7 @@ test('guardar con PDF, volver a descargarlo y conservar un único mantenimiento'
   await page.reload();
   const before = await dataFromBrowser(page);
   expect(before.services).toHaveLength(initialServices.length + 1);
+  expect(before.services[0].supplies).toContain('Filtro de habitáculo: MANN CUK 2939');
   const row = page.getByRole('row').filter({ hasText: 'Trabajo para comprobante PDF.' });
   const second = page.waitForEvent('download');
   await row.getByRole('button', { name: /^Descargar PDF/ }).click();

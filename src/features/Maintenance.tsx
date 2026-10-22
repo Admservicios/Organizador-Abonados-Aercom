@@ -218,8 +218,19 @@ export function MaintenanceForm() {
       setError('La fecha del servicio no puede ser posterior a la fecha actual de referencia.');
       return;
     }
-    const supplies = ['oil', 'viscosity', 'oilFilter', 'airFilter', 'fuelFilter', 'other']
-      .map((key) => String(data.get(key) ?? '').trim())
+    const supplies = [
+      'oil',
+      'viscosity',
+      'oilFilter',
+      'airFilter',
+      'fuelFilter',
+      'cabinFilter',
+      'other',
+    ]
+      .map((key) => {
+        const value = String(data.get(key) ?? '').trim();
+        return key === 'cabinFilter' && value ? `Filtro de habitáculo: ${value}` : value;
+      })
       .filter(Boolean)
       .join(' · ');
     const service: Service = {
@@ -392,6 +403,7 @@ export function MaintenanceForm() {
                   <option>Service general</option>
                   <option>Cambio de aceite</option>
                   <option>Filtros</option>
+                  <option>Filtro de habitáculo</option>
                   <option>Frenos</option>
                   <option>Neumáticos</option>
                   <option>Alineación y balanceo</option>
@@ -486,6 +498,10 @@ export function MaintenanceForm() {
               <label>
                 Filtro de combustible
                 <input name="fuelFilter" placeholder="Marca / código" maxLength={100} />
+              </label>
+              <label>
+                Filtro de habitáculo
+                <input name="cabinFilter" placeholder="Marca / código" maxLength={100} />
               </label>
               <label>
                 Otros repuestos
