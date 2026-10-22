@@ -2,6 +2,12 @@ import { z } from 'zod';
 import type { Customer, Service, Vehicle } from './demo';
 import { photoReferenceSchema, type PhotoReference } from './photos';
 import { maintenancePlanSchema } from './maintenancePlans';
+import {
+  documentReferenceSchema,
+  MAX_DOCUMENTS,
+  MAX_VEHICLE_DOCUMENTS,
+  type DocumentReference,
+} from './documents';
 
 // Se conservan los identificadores originales para leer los datos y respaldos existentes.
 export const DATABASE_KEY = 'motortrack-local-database-v1';
@@ -65,6 +71,8 @@ export type LocalData = {
   workshop: Workshop;
   photoSet?: string;
   photos?: PhotoReference[];
+  documentSet?: string;
+  documents?: DocumentReference[];
 };
 export const dataSchema = z
   .strictObject({
@@ -74,12 +82,27 @@ export const dataSchema = z
     workshop: workshopSchema,
     photoSet: id.optional(),
     photos: z.array(photoReferenceSchema).max(1000).optional(),
+    documentSet: z.uuid().optional(),
+    documents: z.array(documentReferenceSchema).max(MAX_DOCUMENTS).optional(),
   })
   .superRefine((data, context) => {
     const customers = new Set(data.customers.map((c) => c.id));
     const vehicles = new Set(data.vehicles.map((v) => v.id));
     const services = new Set(data.services.map((s) => s.id));
     const photos = data.photos ?? [];
+    const documents = data.documents ?? [];
+    if (
+      (documents.length > 0 && !data.documentSet) ||
+      new Set(documents.map((d) => d.id)).size !== documents.length ||
+      documents.some((d) => !vehicles.has(d.vehicleId)) ||
+      data.vehicles.some(
+        (v) => documents.filter((d) => d.vehicleId === v.id).length > MAX_VEHICLE_DOCUMENTS,
+      )
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Las referencias de los documentos no son válidas.',
+      });
     if (
       data.vehicles.some(
         (v) =>

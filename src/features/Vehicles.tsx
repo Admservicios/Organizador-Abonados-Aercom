@@ -30,6 +30,7 @@ import { useData } from '../app/store';
 import { ServicePDFButton } from '../components/ServicePDFButton';
 import { PhotoGallery } from '../components/MaintenancePhotos';
 import { MaintenanceSchedules } from '../components/MaintenanceSchedules';
+import { VehicleDocuments } from '../components/VehicleDocuments';
 import { nextVehiclePlan, planServiceURL } from '../lib/maintenancePlans';
 import { dateLabel, maintenanceStatus, money, number, type Vehicle } from '../lib/demo';
 
@@ -492,17 +493,7 @@ export function VehicleDetail() {
             )}
             {tab === 'Documentación' && (
               <Panel title="Documentación del vehículo" icon={FileText}>
-                <div className="empty">
-                  <FileText size={36} />
-                  <h3>Los documentos, en un lugar seguro</h3>
-                  <p>
-                    Los documentos adicionales se incorporarán en una próxima entrega. Las fotos de
-                    los mantenimientos están en la pestaña Fotos.
-                  </p>
-                  <button className="button" disabled>
-                    Disponible en la etapa de persistencia
-                  </button>
-                </div>
+                <VehicleDocuments vehicleId={vehicle.id} />
               </Panel>
             )}
             {tab === 'Fotos' && (

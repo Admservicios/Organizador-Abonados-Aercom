@@ -4763,3 +4763,52 @@ label > .input-suffix input {
   white-space: normal;
   text-align: left;
 }
+
+.document-upload {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.document-upload input[type='file'] {
+  max-width: 100%;
+  min-width: 0;
+}
+.vehicle-documents {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+}
+.vehicle-document {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 0;
+}
+.vehicle-document > svg {
+  color: var(--blue);
+  flex-shrink: 0;
+}
+.vehicle-document-info {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+  min-width: 130px;
+  overflow-wrap: anywhere;
+}
+.vehicle-document-info span,
+.vehicle-document-info small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.vehicle-document-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

@@ -28,6 +28,12 @@ import {
 } from '../lib/photoBackup';
 import { discardPhotos, storePhotos, validatePhoto, type StoredPhoto } from '../lib/photos';
 import {
+  discardDocuments,
+  storeDocuments,
+  type PreparedDocument,
+  type StoredDocument,
+} from '../lib/documents';
+import {
   DATABASE_KEY,
   MAX_BACKUP_BYTES,
   SAFETY_COPY_KEY,
@@ -43,6 +49,8 @@ export function Backups() {
     services,
     photos,
     photoSet,
+    documents,
+    documentSet,
     workshop,
     mode,
     storageError,
@@ -55,6 +63,7 @@ export function Backups() {
   const [confirming, setConfirming] = useState(false);
   const [lastExport, setLastExport] = useState('');
   const [candidatePhotos, setCandidatePhotos] = useState<ArchivePhoto[] | null>(null);
+  const [candidateDocuments, setCandidateDocuments] = useState<PreparedDocument[] | null>(null);
   const [working, setWorking] = useState(false);
   const [reading, setReading] = useState(false);
   const localData = {
@@ -63,6 +72,7 @@ export function Backups() {
     services,
     workshop,
     ...(photoSet ? { photoSet, photos } : {}),
+    ...(documentSet ? { documentSet, documents } : {}),
   };
   const exportZIP = async () => {
     if (working || storageError) return;
@@ -74,7 +84,7 @@ export function Backups() {
       const blob = await createPhotoBackup(localData);
       downloadBlob(blob, `taller-calamante-completo-${new Date().toISOString().slice(0, 10)}.zip`);
       setLastExport(new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }));
-      notify('Respaldo completo descargado: registros y fotos en un ZIP.');
+      notify('Respaldo completo descargado: registros, fotos y documentos en un ZIP.');
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : 'No se pudo descargar el respaldo completo.',
@@ -130,6 +140,7 @@ export function Backups() {
   const readFile = async (e: ChangeEvent<HTMLInputElement>) => {
     setCandidate(null);
     setCandidatePhotos(null);
+    setCandidateDocuments(null);
     setError('');
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -148,6 +159,7 @@ export function Backups() {
         for (const photo of parsed.photos) await validatePhoto(photo);
         setCandidate(parsed.backup);
         setCandidatePhotos(parsed.photos);
+        setCandidateDocuments(parsed.documents);
       } else setCandidate(parseBackup(await file.text()));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'No se pudo leer el archivo.');
@@ -161,6 +173,7 @@ export function Backups() {
     setWorking(true);
     setError('');
     let staged: StoredPhoto[] = [];
+    let stagedDocuments: StoredDocument[] = [];
     try {
       const data = { ...candidate.data };
       if (candidatePhotos !== null) {
@@ -175,11 +188,29 @@ export function Backups() {
           delete data.photos;
         }
       }
+      if (candidateDocuments !== null) {
+        if (candidateDocuments.length) {
+          const setId = crypto.randomUUID();
+          stagedDocuments = candidateDocuments.map((document) => ({
+            ...document,
+            id: crypto.randomUUID(),
+            setId,
+          }));
+          await storeDocuments(stagedDocuments);
+          data.documentSet = setId;
+          data.documents = stagedDocuments.map(({ data: _blob, setId: _set, ...ref }) => ref);
+        } else {
+          delete data.documentSet;
+          delete data.documents;
+        }
+      }
       if (!restoreBackup({ ...candidate, data }))
         throw new Error('No se pudo restaurar. La base actual se conserva.');
       staged = [];
+      stagedDocuments = [];
       setCandidate(null);
       setCandidatePhotos(null);
+      setCandidateDocuments(null);
       setConfirming(false);
       setError('');
       notify(
@@ -187,8 +218,9 @@ export function Backups() {
       );
     } catch {
       await discardPhotos(staged.map((p) => p.id)).catch(() => {});
+      await discardDocuments(stagedDocuments.map((d) => d.id)).catch(() => {});
       setError(
-        'No se pudo restaurar la base con sus fotos. Revisá el espacio disponible. La base actual se conserva.',
+        'No se pudo restaurar la base con sus archivos. Revisá el espacio disponible. La base actual se conserva.',
       );
     } finally {
       setWorking(false);
@@ -250,8 +282,8 @@ export function Backups() {
           </Panel>
           <Panel title="Exportar información" icon={HardDriveDownload}>
             <p className="panel-description">
-              Clientes, vehículos, mantenimientos y datos del taller. Si cargaste fotos, usá el ZIP
-              completo.
+              Clientes, vehículos, mantenimientos y datos del taller. Si cargaste fotos o
+              documentos, usá el ZIP completo.
             </p>
             <div className="export-options">
               <div>
@@ -267,7 +299,7 @@ export function Backups() {
                   <small>
                     {mode === 'demo'
                       ? 'Datos ficticios. No restaurable.'
-                      : 'Solo registros. Las fotos se recuperan con el ZIP completo.'}
+                      : 'Solo registros. Las fotos y documentos se recuperan con el ZIP completo.'}
                   </small>
                 </span>
                 <button
@@ -287,7 +319,7 @@ export function Backups() {
                   <h3>Listado de clientes · CSV</h3>
                   <p>Archivo compatible con hojas de cálculo.</p>
                   <small>
-                    Solo clientes. Usá el ZIP completo para recuperar registros y fotos.
+                    Solo clientes. Usá el ZIP completo para recuperar registros, fotos y documentos.
                   </small>
                 </span>
                 <button
@@ -312,9 +344,11 @@ export function Backups() {
                   <FolderArchive size={27} />
                 </span>
                 <span>
-                  <h3>Respaldo completo con fotos · ZIP</h3>
-                  <p>Clientes, vehículos, mantenimientos y fotografías guardadas.</p>
-                  <small>Usá esta opción para recuperar también las fotos en otro navegador.</small>
+                  <h3>Respaldo completo con archivos · ZIP</h3>
+                  <p>Clientes, vehículos, mantenimientos, fotos y documentos guardados.</p>
+                  <small>
+                    Usá esta opción para recuperar también los archivos en otro navegador.
+                  </small>
                 </span>
                 <button
                   className="button"
@@ -353,7 +387,7 @@ export function Backups() {
                 JSON: hasta 5 MB. ZIP completo: hasta 100 MB. El archivo se procesa en este
                 navegador.
               </small>
-              {reading && <p role="status">Verificando el respaldo y sus fotos…</p>}
+              {reading && <p role="status">Verificando el respaldo y sus archivos…</p>}
             </div>
             {error && !confirming && (
               <p className="form-error" role="alert">
@@ -369,8 +403,8 @@ export function Backups() {
                 </p>
                 <p>
                   {candidatePhotos !== null
-                    ? `${candidatePhotos.length} ${candidatePhotos.length === 1 ? 'foto incluida' : 'fotos incluidas'} en el ZIP.`
-                    : 'JSON de registros: no incluye archivos de fotos. Para recuperarlas en otro navegador necesitás el ZIP completo.'}
+                    ? `${candidatePhotos.length} fotos y ${candidateDocuments?.length ?? 0} documentos incluidos en el ZIP.`
+                    : 'JSON de registros: no incluye fotos ni documentos. Para recuperarlos en otro navegador necesitás el ZIP completo.'}
                 </p>
                 <p className="muted">
                   Exportado: {new Date(candidate.exportedAt).toLocaleString('es-AR')}
@@ -388,6 +422,7 @@ export function Backups() {
                   onClick={() => {
                     setCandidate(null);
                     setCandidatePhotos(null);
+                    setCandidateDocuments(null);
                   }}
                 >
                   Descartar archivo
@@ -700,7 +735,7 @@ export function SettingsPage() {
                   [
                     '04',
                     'Operación y archivos',
-                    'PDF, fotos permanentes y respaldo ZIP completo disponibles. Vencimientos por servicio disponibles. Próximas entregas: documentos adicionales.',
+                    'PDF, fotos, documentos del vehículo y respaldo ZIP completo disponibles. Vencimientos independientes por servicio. Próximas entregas: uso sin conexión.',
                   ],
                   [
                     '05',

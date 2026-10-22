@@ -6,7 +6,7 @@ Gestión de clientes, vehículos y mantenimiento para talleres y lubricentros. I
 
 ## Versión 0.2: base local
 
-Los datos se guardan en **el navegador del usuario**, usando `localStorage` para los registros e IndexedDB para las fotos, como ampliación del modelo local del CRM de Aercom. No requiere Supabase, cuentas externas ni un servidor de base de datos.
+Los datos se guardan en **el navegador del usuario**, usando `localStorage` para los registros e IndexedDB para las fotos y documentos, como ampliación del modelo local del CRM de Aercom. No requiere Supabase, cuentas externas ni un servidor de base de datos.
 
 **GitHub guarda el código. Los datos de tus clientes no se suben a GitHub.** Cada perfil de navegador tiene una base independiente. No existe sincronización entre dispositivos ni inicio de sesión.
 
@@ -22,7 +22,8 @@ Disponible:
 - Copia previa antes de restaurar cuando ya existe una base.
 - Exportación de clientes a CSV.
 - Fotos de mantenimiento persistentes y galería por vehículo.
-- Respaldo ZIP completo con registros y fotografías verificadas.
+- Documentos PDF por vehículo: cédula, seguro, VTV / RTO, facturas y otros.
+- Respaldo ZIP completo con registros, fotografías y documentos verificados.
 - Modo claro/oscuro y navegación móvil.
 
 La base comienza **vacía**. El botón **Explorar demo** abre datos ficticios separados, mantenidos en memoria. **Volver a mis datos** recupera la base local. Los QR y el historial público actuales son ejemplos ficticios; nunca publican los datos locales.
@@ -56,7 +57,7 @@ Playwright usa Chromium del sistema si existe. Para indicar otra ruta, usar `PLA
 3. Conservar una copia fuera del navegador, por ejemplo en una unidad externa.
 4. Para recuperar o trasladar la información, abrir Taller Calamante en el navegador de destino y seleccionar el JSON en **Restaurar un respaldo**.
 5. Revisar los conteos y confirmar el reemplazo. No se combinan bases.
-6. Si hay fotografías, usar **Respaldo completo con fotos · ZIP** para trasladarlas o recuperarlas en otro navegador. El JSON solo contiene registros y referencias, sin archivos de imagen.
+6. Si hay fotos o documentos, usar **Respaldo completo con archivos · ZIP** para recuperarlos en otro navegador. El JSON solo contiene registros y referencias, sin archivos adjuntos.
 
 La restauración rechaza archivos incompatibles, referencias inválidas, identificadores o patentes duplicados. Antes de reemplazar una base existente, conserva una copia local previa; si esa copia o el guardado fallan, no reemplaza los datos originales. Las copias internas válidas también pueden restaurarse desde esa pantalla.
 
@@ -111,7 +112,7 @@ El repositorio ahora se llama **Admservicios/Taller-Calamante**. La dirección a
 - Sin autenticación, roles efectivos ni aislamiento entre personas que usan el mismo perfil del navegador. El panel de roles es una propuesta visual futura.
 - Sin sincronización ni historial público de datos reales. El QR de demostración no es un mecanismo de acceso seguro o revocable.
 - Fotografías: se conserva la versión optimizada; los originales deben guardarse por separado.
-- Pendientes: otros documentos adjuntos, respaldos automáticos independientes.
+- Documentos: PDF de hasta 5 MB, 20 por vehículo y 200 en total. Otros formatos y respaldos automáticos independientes quedan pendientes.
 - Vencimientos por tipo de servicio, con fecha, kilometraje y último trabajo independientes. No se reconstruyen intervalos que el sistema anterior ya había sobrescrito.
 - PWA y edición sin conexión a la aplicación todavía no implementadas.
 - Para editar, usar una pestaña a la vez. Se detectan revisiones desactualizadas al escribir y se reciben avisos de cambios de otras pestañas; no hay edición colaborativa.
@@ -143,8 +144,16 @@ Ver [plan actualizado](docs/PLAN.md). No se deben agregar respaldos, bases de da
 
 Registrar frenos, alineación, neumáticos u otro trabajo actualiza el odómetro del vehículo y únicamente el vencimiento de ese servicio. **No reinicia el último cambio de aceite ni su fecha o kilometraje objetivo.** El nuevo odómetro sí se usa para evaluar todos los vencimientos: el aceite puede quedar vencido aunque frenos esté al día.
 
-**Service general** y **Cambio de aceite** comparten el seguimiento de aceite y filtros del service. **Filtros** por separado tiene un seguimiento propio. Frenos, alineación/balanceo, neumáticos y revisión general son independientes; en **Otro mantenimiento → Nombre del servicio** se pueden crear seguimientos propios, como refrigerante o correa de distribución.
+**Service general** y **Cambio de aceite** comparten el seguimiento de aceite y filtros del service. **Filtros** por separado y **Filtro de habitáculo** tienen seguimientos propios. Frenos, alineación/balanceo, neumáticos y revisión general son independientes; en **Otro mantenimiento → Nombre del servicio** se pueden crear seguimientos propios, como refrigerante o correa de distribución.
 
 En **Vehículo → Recordatorios** se muestran los vencimientos, el último servicio de cada tipo, los kilómetros recorridos desde ese trabajo y los kilómetros restantes. **Editar** permite corregir un vencimiento, incluso si ya pasó, y **Agregar vencimiento** añade uno sin duplicar mantenimientos ni modificar el historial. Para registrar un trabajo realizado se usa **Registrar** en el seguimiento correspondiente.
 
 Las bases y respaldos anteriores siguen siendo compatibles. Su único vencimiento se conserva y se identifica como anterior; no se inventan los que ya se habían perdido. Si otro mantenimiento había reiniciado un vencimiento antes de esta corrección, revisarlo y corregirlo con **Editar**. Las fechas y kilómetros del historial original permanecen intactos.
+
+## Documentación del vehículo
+
+En **Vehículos → ficha → Documentación** se puede seleccionar el tipo (Cédula, Seguro, VTV / RTO, Factura u Otro), elegir un PDF y pulsar **Guardar documento**. Se conserva el archivo original: hasta 5 MB por PDF, 20 documentos por vehículo y 200 en toda la base. Cada documento muestra nombre, categoría, fecha de carga y tamaño; se puede descargar o quitar de la ficha con confirmación.
+
+Son archivos locales privados del taller: no se incluyen en el historial público de demostración. La demo guarda sus documentos solo en memoria y los pierde al recargar. No se evalúa la vigencia de los documentos ni se genera una alerta de vencimiento de seguro o VTV.
+
+El **ZIP completo** incluye `documents/<id>.pdf` junto con las fotos y los registros. Al restaurarlo se verifican tamaños, formato básico e integridad antes de confirmar la base. Los JSON contienen referencias, **no los PDF**; para trasladar archivos a otro navegador hay que usar el ZIP. Las copias anteriores siguen siendo compatibles. Quitar un documento retira su referencia de la ficha, sin borrar archivos que todavía podría necesitar una copia previa; no es una eliminación física garantizada del dispositivo.

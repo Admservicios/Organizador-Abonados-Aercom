@@ -29,6 +29,12 @@ import {
   type StoredPhoto,
 } from '../lib/photos';
 import { recordServicePlan, servicePlan, withPlanSummary } from '../lib/maintenancePlans';
+import {
+  discardDocuments,
+  storeDocuments,
+  type PreparedDocument,
+  type StoredDocument,
+} from '../lib/documents';
 
 type Store = LocalData & {
   mode: 'local' | 'demo';
@@ -45,6 +51,9 @@ type Store = LocalData & {
     photos?: PreparedPhoto[],
   ) => Promise<boolean>;
   demoPhotos: StoredPhoto[];
+  demoDocuments: StoredDocument[];
+  addDocument: (document: PreparedDocument) => Promise<boolean>;
+  removeDocument: (id: string) => boolean;
   restoreBackup: (backup: LocalBackup) => boolean;
   notify: (message: string) => void;
   toast: string;
@@ -86,6 +95,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }));
   const [toast, setToast] = useState('');
   const [demoPhotos, setDemoPhotos] = useState<StoredPhoto[]>([]);
+  const [demoDocuments, setDemoDocuments] = useState<StoredDocument[]>([]);
   const notify = useCallback((message: string) => setToast(message), []);
   const clearToast = useCallback(() => setToast(''), []);
   useEffect(() => {
@@ -186,6 +196,34 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (mode === 'local') await discardPhotos(files.map((photo) => photo.id)).catch(() => {});
     return false;
   };
+  const addDocument = async (document: PreparedDocument): Promise<boolean> => {
+    const setId = data.documentSet ?? crypto.randomUUID();
+    const file = { ...document, setId };
+    const { data: _blob, ...ref } = document;
+    const next = { ...data, documentSet: setId, documents: [...(data.documents ?? []), ref] };
+    try {
+      newDatabase(next);
+      if (mode === 'demo') {
+        const saved = commit(next);
+        if (saved) setDemoDocuments((previous) => [...previous, file]);
+        return saved;
+      }
+      await storeDocuments([file]);
+      if (commit(next)) return true;
+    } catch {
+      notify(
+        'No se pudo guardar el documento. Revisá el archivo y el espacio disponible. La base anterior se conserva.',
+      );
+    }
+    if (mode === 'local') await discardDocuments([document.id]).catch(() => {});
+    return false;
+  };
+  const removeDocument = (id: string) => {
+    const saved = commit({ ...data, documents: (data.documents ?? []).filter((d) => d.id !== id) });
+    if (saved && mode === 'demo')
+      setDemoDocuments((previous) => previous.filter((d) => d.id !== id));
+    return saved;
+  };
   const switchMode = () => {
     const next = mode === 'local' ? 'demo' : 'local';
     try {
@@ -216,6 +254,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         saveVehicle,
         addService,
         demoPhotos,
+        demoDocuments,
+        addDocument,
+        removeDocument,
         saveWorkshop: (workshop) => commit({ ...data, workshop }),
         restoreBackup,
         notify,

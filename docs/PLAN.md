@@ -19,10 +19,10 @@ GitHub versiona código, esquemas y pruebas. Los registros personales del taller
 
 ## Estado inicial de la base
 
-La base visual, la persistencia local y la recuperación JSON están implementadas. La operación ampliada avanza con **comprobantes PDF de mantenimiento**: descarga al registrar y desde los historiales, generación local, notas privadas excluidas y textos largos distribuidos entre páginas. También están implementadas las fotografías persistentes por mantenimiento, la galería del vehículo y el respaldo ZIP completo con verificación de archivos. También están implementados los vencimientos independientes por tipo de servicio y su edición en Recordatorios. Quedan pendientes otros documentos.
+La base visual, la persistencia local y la recuperación JSON están implementadas. La operación ampliada avanza con **comprobantes PDF de mantenimiento**: descarga al registrar y desde los historiales, generación local, notas privadas excluidas y textos largos distribuidos entre páginas. También están implementadas las fotografías persistentes por mantenimiento, la galería del vehículo y el respaldo ZIP completo con verificación de archivos. También están implementados los vencimientos independientes por tipo de servicio y su edición en Recordatorios. Está implementada la documentación PDF por vehículo con descarga, retiro confirmado y respaldo ZIP completo. Quedan pendientes otros formatos, la PWA y el uso sin conexión.
 
 - Formato `motortrack-local`, versión 1.
-- Una unidad de `localStorage` contiene clientes, vehículos, mantenimientos, taller y referencias de fotos. IndexedDB conserva las imágenes optimizadas, en colecciones locales identificadas.
+- Una unidad de `localStorage` contiene clientes, vehículos, mantenimientos, taller y referencias de fotos y documentos. IndexedDB conserva las imágenes optimizadas y los PDF originales, en colecciones locales identificadas.
 - Validación de identificadores, relaciones, patentes y kilometraje antes de guardar o restaurar.
 - Revisión para detectar escrituras basadas en un estado anterior.
 - Modo local vacío y demostración separada.
@@ -41,7 +41,7 @@ La base visual, la persistencia local y la recuperación JSON están implementad
 
 ## Recuperación pendiente de ampliación
 
-La exportación/restauración JSON abarca registros y datos del taller. El ZIP completo incluye las fotos optimizadas, con integridad y límites de tamaño verificados. Siguen pendientes otros adjuntos y copias automáticas independientes. Los JSON anteriores siguen siendo compatibles y no contienen archivos de imagen.
+La exportación/restauración JSON abarca registros y datos del taller. El ZIP completo incluye fotos optimizadas y documentos PDF originales, con integridad y límites de tamaño verificados. Siguen pendientes otros formatos de adjuntos y copias automáticas independientes. Los JSON anteriores siguen siendo compatibles y no contienen archivos adjuntos.
 
 La copia anterior a una restauración permanece en el mismo navegador y puede perderse junto con él. Por eso se requiere una descarga conservada fuera del navegador. No hay promesa de retención automática ni protección contra pérdida del dispositivo.
 
