@@ -20,6 +20,14 @@ import { useData } from '../app/store';
 import { customerCSV, download } from '../lib/demo';
 import practiceBackup from '../data/taller-calamante-practica.json';
 import {
+  createPhotoBackup,
+  downloadBlob,
+  MAX_PHOTO_ARCHIVE_BYTES,
+  parsePhotoBackup,
+  type ArchivePhoto,
+} from '../lib/photoBackup';
+import { discardPhotos, storePhotos, validatePhoto, type StoredPhoto } from '../lib/photos';
+import {
   DATABASE_KEY,
   MAX_BACKUP_BYTES,
   SAFETY_COPY_KEY,
@@ -33,6 +41,8 @@ export function Backups() {
     customers,
     vehicles,
     services,
+    photos,
+    photoSet,
     workshop,
     mode,
     storageError,
@@ -44,7 +54,35 @@ export function Backups() {
   const [error, setError] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [lastExport, setLastExport] = useState('');
-  const localData = { customers, vehicles, services, workshop };
+  const [candidatePhotos, setCandidatePhotos] = useState<ArchivePhoto[] | null>(null);
+  const [working, setWorking] = useState(false);
+  const [reading, setReading] = useState(false);
+  const localData = {
+    customers,
+    vehicles,
+    services,
+    workshop,
+    ...(photoSet ? { photoSet, photos } : {}),
+  };
+  const exportZIP = async () => {
+    if (working || storageError) return;
+    setWorking(true);
+    setError('');
+    try {
+      if (mode === 'demo')
+        throw new Error('Volvé a tus datos para descargar un respaldo completo.');
+      const blob = await createPhotoBackup(localData);
+      downloadBlob(blob, `taller-calamante-completo-${new Date().toISOString().slice(0, 10)}.zip`);
+      setLastExport(new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }));
+      notify('Respaldo completo descargado: registros y fotos en un ZIP.');
+    } catch (reason) {
+      setError(
+        reason instanceof Error ? reason.message : 'No se pudo descargar el respaldo completo.',
+      );
+    } finally {
+      setWorking(false);
+    }
+  };
   const exportJSON = () => {
     if (storageError) {
       setError('Primero recuperá la base local o descargá la copia sin modificar.');
@@ -91,30 +129,69 @@ export function Backups() {
   };
   const readFile = async (e: ChangeEvent<HTMLInputElement>) => {
     setCandidate(null);
+    setCandidatePhotos(null);
     setError('');
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file) return;
-    if (file.size > MAX_BACKUP_BYTES) {
-      setError('El respaldo supera el límite de 5 MB.');
+    if (!file || reading || working) return;
+    const zip = file.name.toLowerCase().endsWith('.zip');
+    if (file.size > (zip ? MAX_PHOTO_ARCHIVE_BYTES : MAX_BACKUP_BYTES)) {
+      setError(
+        zip ? 'El respaldo ZIP supera los 100 MB.' : 'El respaldo supera el límite de 5 MB.',
+      );
       return;
     }
+    setReading(true);
     try {
-      setCandidate(parseBackup(await file.text()));
+      if (zip) {
+        const parsed = await parsePhotoBackup(new Uint8Array(await file.arrayBuffer()));
+        for (const photo of parsed.photos) await validatePhoto(photo);
+        setCandidate(parsed.backup);
+        setCandidatePhotos(parsed.photos);
+      } else setCandidate(parseBackup(await file.text()));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'No se pudo leer el archivo.');
+    } finally {
+      setReading(false);
     }
   };
-  const restore = (e: FormEvent<HTMLFormElement>) => {
+  const restore = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!candidate) return;
-    if (restoreBackup(candidate)) {
+    if (!candidate || working) return;
+    setWorking(true);
+    setError('');
+    let staged: StoredPhoto[] = [];
+    try {
+      const data = { ...candidate.data };
+      if (candidatePhotos !== null) {
+        if (candidatePhotos.length) {
+          const setId = crypto.randomUUID();
+          staged = candidatePhotos.map((photo) => ({ ...photo, id: crypto.randomUUID(), setId }));
+          await storePhotos(staged);
+          data.photoSet = setId;
+          data.photos = staged.map(({ data: _blob, setId: _set, ...ref }) => ref);
+        } else {
+          delete data.photoSet;
+          delete data.photos;
+        }
+      }
+      if (!restoreBackup({ ...candidate, data }))
+        throw new Error('No se pudo restaurar. La base actual se conserva.');
+      staged = [];
       setCandidate(null);
+      setCandidatePhotos(null);
       setConfirming(false);
       setError('');
       notify(
         'Respaldo restaurado en este navegador. Se conservó una copia previa cuando existían datos.',
       );
+    } catch {
+      await discardPhotos(staged.map((p) => p.id)).catch(() => {});
+      setError(
+        'No se pudo restaurar la base con sus fotos. Revisá el espacio disponible. La base actual se conserva.',
+      );
+    } finally {
+      setWorking(false);
     }
   };
   return (
@@ -173,7 +250,8 @@ export function Backups() {
           </Panel>
           <Panel title="Exportar información" icon={HardDriveDownload}>
             <p className="panel-description">
-              Clientes, vehículos, mantenimientos y datos del taller.
+              Clientes, vehículos, mantenimientos y datos del taller. Si cargaste fotos, usá el ZIP
+              completo.
             </p>
             <div className="export-options">
               <div>
@@ -189,10 +267,14 @@ export function Backups() {
                   <small>
                     {mode === 'demo'
                       ? 'Datos ficticios. No restaurable.'
-                      : 'Formato validado y restaurable. Sin fotografías ni adjuntos.'}
+                      : 'Solo registros. Las fotos se recuperan con el ZIP completo.'}
                   </small>
                 </span>
-                <button className="button primary" onClick={exportJSON} disabled={!!storageError}>
+                <button
+                  className="button primary"
+                  onClick={exportJSON}
+                  disabled={!!storageError || working}
+                >
                   <Download size={16} />
                   Descargar
                 </button>
@@ -204,7 +286,9 @@ export function Backups() {
                 <span>
                   <h3>Listado de clientes · CSV</h3>
                   <p>Archivo compatible con hojas de cálculo.</p>
-                  <small>Solo clientes; para recuperar el sistema usá el respaldo JSON.</small>
+                  <small>
+                    Solo clientes. Usá el ZIP completo para recuperar registros y fotos.
+                  </small>
                 </span>
                 <button
                   className="button"
@@ -228,12 +312,17 @@ export function Backups() {
                   <FolderArchive size={27} />
                 </span>
                 <span>
-                  <h3>Fotografías y adjuntos · ZIP</h3>
-                  <p>Se incorporarán con el almacenamiento de archivos.</p>
-                  <small>No hay archivos permanentes en esta entrega.</small>
+                  <h3>Respaldo completo con fotos · ZIP</h3>
+                  <p>Clientes, vehículos, mantenimientos y fotografías guardadas.</p>
+                  <small>Usá esta opción para recuperar también las fotos en otro navegador.</small>
                 </span>
-                <button className="button" disabled>
-                  Próxima etapa
+                <button
+                  className="button"
+                  disabled={mode === 'demo' || !!storageError || working}
+                  onClick={exportZIP}
+                >
+                  <Download size={16} />
+                  {working ? 'Preparando…' : 'Descargar ZIP completo'}
                 </button>
               </div>
             </div>
@@ -243,26 +332,30 @@ export function Backups() {
               <ArchiveRestore size={34} />
               <h3>Recuperación con validación previa</h3>
               <p>
-                Elegí un respaldo JSON de Taller Calamante. Se comprobarán su versión, patentes y
-                relaciones antes de permitir un reemplazo.
+                Elegí un respaldo JSON o ZIP de Taller Calamante. Se comprobarán su versión,
+                patentes y relaciones antes de permitir un reemplazo.
               </p>
               <label className="button">
-                <span className="sr-only">Seleccionar respaldo JSON</span>
+                <span className="sr-only">Seleccionar respaldo JSON o ZIP</span>
                 <input
-                  aria-label="Seleccionar respaldo JSON"
+                  aria-label="Seleccionar respaldo JSON o ZIP"
                   className="backup-file-input"
                   type="file"
-                  accept=".json,application/json"
+                  accept=".json,.zip,application/json,application/zip"
                   onChange={readFile}
-                  disabled={mode === 'demo'}
+                  disabled={mode === 'demo' || working || reading}
                 />
                 {mode === 'demo'
                   ? 'Restauración disponible en modo local'
-                  : 'Seleccionar respaldo JSON'}
+                  : 'Seleccionar respaldo JSON o ZIP'}
               </label>
-              <small>Máximo 5 MB. No se envía el archivo a ningún servidor.</small>
+              <small>
+                JSON: hasta 5 MB. ZIP completo: hasta 100 MB. El archivo se procesa en este
+                navegador.
+              </small>
+              {reading && <p role="status">Verificando el respaldo y sus fotos…</p>}
             </div>
-            {error && (
+            {error && !confirming && (
               <p className="form-error" role="alert">
                 {error}
               </p>
@@ -274,13 +367,29 @@ export function Backups() {
                   {candidate.data.customers.length} clientes · {candidate.data.vehicles.length}{' '}
                   vehículos · {candidate.data.services.length} mantenimientos
                 </p>
+                <p>
+                  {candidatePhotos !== null
+                    ? `${candidatePhotos.length} ${candidatePhotos.length === 1 ? 'foto incluida' : 'fotos incluidas'} en el ZIP.`
+                    : 'JSON de registros: no incluye archivos de fotos. Para recuperarlas en otro navegador necesitás el ZIP completo.'}
+                </p>
                 <p className="muted">
                   Exportado: {new Date(candidate.exportedAt).toLocaleString('es-AR')}
                 </p>
-                <button className="button primary" onClick={() => setConfirming(true)}>
+                <button
+                  className="button primary"
+                  disabled={working}
+                  onClick={() => setConfirming(true)}
+                >
                   Revisar y restaurar
                 </button>
-                <button className="button" onClick={() => setCandidate(null)}>
+                <button
+                  className="button"
+                  disabled={working}
+                  onClick={() => {
+                    setCandidate(null);
+                    setCandidatePhotos(null);
+                  }}
+                >
                   Descartar archivo
                 </button>
               </div>
@@ -371,7 +480,12 @@ export function Backups() {
         </aside>
       </div>
       {confirming && candidate && (
-        <Modal title="Confirmar restauración" close={() => setConfirming(false)}>
+        <Modal
+          title="Confirmar restauración"
+          close={() => {
+            if (!working) setConfirming(false);
+          }}
+        >
           <form className="form-stack" onSubmit={restore}>
             <p>
               Se reemplazarán <strong>todos los datos locales de Taller Calamante</strong> por los
@@ -382,21 +496,36 @@ export function Backups() {
               Actuales: {customers.length} clientes, {vehicles.length} vehículos y {services.length}{' '}
               mantenimientos.
             </p>
-            <button className="button" type="button" disabled={!!storageError} onClick={exportJSON}>
+            <button
+              className="button"
+              type="button"
+              disabled={!!storageError || working}
+              onClick={exportZIP}
+            >
               Descargar respaldo actual antes de continuar
             </button>
             <label className="check-label">
-              <input type="checkbox" required />
+              <input type="checkbox" required disabled={working} />
               Entiendo que se reemplazará la información actual.
             </label>
             <div className="modal-actions">
-              <button type="button" className="button" onClick={() => setConfirming(false)}>
+              <button
+                type="button"
+                className="button"
+                disabled={working}
+                onClick={() => setConfirming(false)}
+              >
                 Cancelar
               </button>
-              <button className="button primary" type="submit">
-                Confirmar y restaurar
+              <button className="button primary" type="submit" disabled={working}>
+                {working ? 'Restaurando…' : 'Confirmar y restaurar'}
               </button>
             </div>
+            {error && (
+              <p role="alert" className="form-error">
+                {error}
+              </p>
+            )}
           </form>
         </Modal>
       )}
@@ -571,7 +700,7 @@ export function SettingsPage() {
                   [
                     '04',
                     'Operación y archivos',
-                    'PDF de mantenimiento disponible. Próximas entregas: fotografías permanentes y documentos.',
+                    'PDF, fotos permanentes y respaldo ZIP completo disponibles. Próximas entregas: documentos y recomendaciones múltiples.',
                   ],
                   [
                     '05',

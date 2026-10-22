@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Customer, Service, Vehicle } from './demo';
+import { photoReferenceSchema, type PhotoReference } from './photos';
 
 // Se conservan los identificadores originales para leer los datos y respaldos existentes.
 export const DATABASE_KEY = 'motortrack-local-database-v1';
@@ -59,6 +60,8 @@ export type LocalData = {
   vehicles: Vehicle[];
   services: Service[];
   workshop: Workshop;
+  photoSet?: string;
+  photos?: PhotoReference[];
 };
 export const dataSchema = z
   .strictObject({
@@ -66,11 +69,22 @@ export const dataSchema = z
     vehicles: z.array(vehicleSchema).max(20000),
     services: z.array(serviceSchema).max(50000),
     workshop: workshopSchema,
+    photoSet: id.optional(),
+    photos: z.array(photoReferenceSchema).max(1000).optional(),
   })
   .superRefine((data, context) => {
     const customers = new Set(data.customers.map((c) => c.id));
     const vehicles = new Set(data.vehicles.map((v) => v.id));
     const services = new Set(data.services.map((s) => s.id));
+    const photos = data.photos ?? [];
+    if (
+      (photos.length > 0 && !data.photoSet) ||
+      new Set(photos.map((p) => p.id)).size !== photos.length ||
+      photos.some((p) => !services.has(p.serviceId)) ||
+      data.services.some((s) => photos.filter((p) => p.serviceId === s.id).length > 6)
+    ) {
+      context.addIssue({ code: 'custom', message: 'Las referencias de las fotos no son válidas.' });
+    }
     if (
       customers.size !== data.customers.length ||
       vehicles.size !== data.vehicles.length ||

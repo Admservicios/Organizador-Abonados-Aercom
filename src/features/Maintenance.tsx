@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { serviceSchema } from '../lib/serviceValidation';
 import { nextServiceDate } from '../lib/localDatabase';
 import { downloadServicePDF } from '../lib/servicePDF';
 import { ServicePDFButton } from '../components/ServicePDFButton';
+import { PhotoPicker } from '../components/MaintenancePhotos';
+import type { PreparedPhoto } from '../lib/photos';
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,10 +20,8 @@ import {
   Save,
   Search,
   Settings2,
-  UploadCloud,
   Wallet,
   Wrench,
-  X,
 } from 'lucide-react';
 import { Badge, Empty, PageTitle, Panel, VehicleArt } from '../components/ui';
 import { useData } from '../app/store';
@@ -134,9 +134,9 @@ export function MaintenanceForm() {
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [photos, setPhotos] = useState<{ url: string; name: string }[]>([]);
-  const photoRef = useRef(photos);
-  photoRef.current = photos;
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [photos, setPhotos] = useState<PreparedPhoto[]>([]);
+  const [preparingPhotos, setPreparingPhotos] = useState(false);
   const [nextDate, setNextDate] = useState(nextServiceDate(referenceDate));
   const [nextKm, setNextKm] = useState((initialVehicle?.km ?? 0) + 10000);
   useEffect(() => {
@@ -146,7 +146,6 @@ export function MaintenanceForm() {
     window.addEventListener('beforeunload', onUnload);
     return () => window.removeEventListener('beforeunload', onUnload);
   }, [dirty]);
-  useEffect(() => () => photoRef.current.forEach((p) => URL.revokeObjectURL(p.url)), []);
   const changeVehicle = (id: string) => {
     setVehicleId(id);
     setNextKm((vehicles.find((v) => v.id === id)?.km ?? 0) + 10000);
@@ -158,7 +157,7 @@ export function MaintenanceForm() {
   };
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!vehicle || saving) return;
+    if (!vehicle || saving || preparingPhotos) return;
     const wantsPDF = (e.nativeEvent as SubmitEvent).submitter?.getAttribute('value') === 'pdf';
     const data = new FormData(e.currentTarget);
     const alignment = String(data.get('alignment') ?? '');
@@ -212,15 +211,21 @@ export function MaintenanceForm() {
       public: data.get('public') === 'on',
     };
     const next = { date: nextDate, km: nextKm, recommendation: String(data.get('nextType')) };
-    const saved = addService(service, next);
-    if (!saved) return;
+    setSaving(true);
+    const saved = await addService(service, next, photos);
+    if (!saved) {
+      setSaving(false);
+      return;
+    }
     setDirty(false);
     let message =
       mode === 'demo'
-        ? 'Mantenimiento agregado a la sesión de demostración. Las fotos solo se previsualizaron.'
-        : 'Mantenimiento guardado en la base local. Las fotos solo se previsualizaron.';
+        ? 'Mantenimiento agregado a la sesión de demostración. Las fotos se conservan en esta sesión.'
+        : photos.length
+          ? 'Mantenimiento y fotos guardados en la base local. Incluí las fotos en tu respaldo ZIP.'
+          : 'Mantenimiento guardado en la base local.';
     if (wantsPDF) {
-      setSaving(true);
+      setGeneratingPDF(true);
       try {
         const customer = customers.find((c) => c.id === vehicle.customerId);
         if (!customer) throw new Error('Falta el cliente.');
@@ -245,9 +250,10 @@ export function MaintenanceForm() {
         message =
           'El mantenimiento quedó guardado. No se pudo generar el PDF; podés descargarlo desde el historial sin volver a cargar el servicio.';
       } finally {
-        setSaving(false);
+        setGeneratingPDF(false);
       }
     }
+    setSaving(false);
     notify(message);
     navigate(`/vehiculos/${vehicle.id}`);
   };
@@ -261,7 +267,7 @@ export function MaintenanceForm() {
         title="Registrar mantenimiento"
         subtitle="Completá la información del servicio realizado al vehículo."
         actions={
-          <button className="button" onClick={cancel} disabled={saving}>
+          <button className="button" onClick={cancel} disabled={saving || preparingPhotos}>
             <ArrowLeft size={16} />
             Volver
           </button>
@@ -523,60 +529,15 @@ export function MaintenanceForm() {
             </Panel>
           </div>
           <Panel title="Fotos del mantenimiento" icon={Camera}>
-            <label className="upload-zone">
-              <UploadCloud size={28} />
-              <strong>Seleccioná imágenes para previsualizar</strong>
-              <span>JPG, PNG o WebP · Hasta 6 imágenes de 10 MB</span>
-              <input
-                type="file"
-                aria-label="Seleccionar fotos"
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                onChange={(e) => {
-                  const files = Array.from(e.target.files ?? []);
-                  if (
-                    files.length + photos.length > 6 ||
-                    files.some(
-                      (f) =>
-                        f.size > 10 * 1024 * 1024 ||
-                        !['image/jpeg', 'image/png', 'image/webp'].includes(f.type),
-                    )
-                  ) {
-                    setError('Elegí hasta 6 imágenes JPG, PNG o WebP de 10 MB como máximo.');
-                    e.target.value = '';
-                    return;
-                  }
-                  setPhotos((p) => [
-                    ...p,
-                    ...files.map((f) => ({ name: f.name, url: URL.createObjectURL(f) })),
-                  ]);
-                  e.target.value = '';
-                }}
-              />
-            </label>
-            {photos.length > 0 && (
-              <div className="photo-previews">
-                {photos.map((p) => (
-                  <div key={p.url}>
-                    <img src={p.url} alt={p.name} />
-                    <button
-                      className="icon-button"
-                      type="button"
-                      aria-label={`Quitar ${p.name}`}
-                      onClick={() => {
-                        URL.revokeObjectURL(p.url);
-                        setPhotos((current) => current.filter((i) => i.url !== p.url));
-                      }}
-                    >
-                      <X size={15} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <p className="fine-print">
-              Solo previsualización local: las imágenes no se suben ni se guardan en esta etapa.
-            </p>
+            <PhotoPicker
+              photos={photos}
+              onChange={(next) => {
+                setPhotos(next);
+                setDirty(true);
+              }}
+              onBusy={setPreparingPhotos}
+              onError={setError}
+            />
           </Panel>
         </div>
         <aside className="form-aside">
@@ -636,21 +597,34 @@ export function MaintenanceForm() {
                 {error}
               </p>
             )}
-            <button className="button primary full" type="submit" disabled={!vehicle || saving}>
+            <button
+              className="button primary full"
+              type="submit"
+              disabled={!vehicle || saving || preparingPhotos}
+            >
               <Save size={17} />
-              {mode === 'demo' ? 'Guardar en demo' : 'Guardar mantenimiento'}
+              {saving
+                ? 'Guardando…'
+                : mode === 'demo'
+                  ? 'Guardar en demo'
+                  : 'Guardar mantenimiento'}
             </button>
             <button
               className="button full"
               type="submit"
               name="intent"
               value="pdf"
-              disabled={!vehicle || saving}
+              disabled={!vehicle || saving || preparingPhotos}
             >
               <FileDown size={17} />
-              {saving ? 'Generando PDF…' : 'Guardar y generar PDF'}
+              {generatingPDF ? 'Generando PDF…' : 'Guardar y generar PDF'}
             </button>
-            <button className="button ghost full" type="button" onClick={cancel} disabled={saving}>
+            <button
+              className="button ghost full"
+              type="button"
+              onClick={cancel}
+              disabled={saving || preparingPhotos}
+            >
               Cancelar
             </button>
             <p className="fine-print">

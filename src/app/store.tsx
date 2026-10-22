@@ -21,6 +21,13 @@ import {
   type LocalData,
   type Workshop,
 } from '../lib/localDatabase';
+import {
+  discardPhotos,
+  MAX_SERVICE_PHOTOS,
+  storePhotos,
+  type PreparedPhoto,
+  type StoredPhoto,
+} from '../lib/photos';
 
 type Store = LocalData & {
   mode: 'local' | 'demo';
@@ -34,7 +41,9 @@ type Store = LocalData & {
   addService: (
     service: Service,
     next: { date: string; km: number; recommendation: string },
-  ) => boolean;
+    photos?: PreparedPhoto[],
+  ) => Promise<boolean>;
+  demoPhotos: StoredPhoto[];
   restoreBackup: (backup: LocalBackup) => boolean;
   notify: (message: string) => void;
   toast: string;
@@ -75,6 +84,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     },
   }));
   const [toast, setToast] = useState('');
+  const [demoPhotos, setDemoPhotos] = useState<StoredPhoto[]>([]);
   const notify = useCallback((message: string) => setToast(message), []);
   const clearToast = useCallback(() => setToast(''), []);
   useEffect(() => {
@@ -125,11 +135,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         ? data.vehicles.map((v) => (v.id === vehicle.id ? vehicle : v))
         : [...data.vehicles, vehicle],
     });
-  const addService = (
+  const addService = async (
     service: Service,
     next: { date: string; km: number; recommendation: string },
-  ) =>
-    commit({
+    photos: PreparedPhoto[] = [],
+  ): Promise<boolean> => {
+    const nextData: LocalData = {
       ...data,
       services: [service, ...data.services],
       vehicles: data.vehicles.map((v) =>
@@ -143,7 +154,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
             }
           : v,
       ),
-    });
+    };
+    if (!photos.length) return commit(nextData);
+    const setId = data.photoSet ?? crypto.randomUUID();
+    const files = photos.map((photo) => ({ ...photo, serviceId: service.id, setId }));
+    try {
+      if (photos.length > MAX_SERVICE_PHOTOS) throw new Error('Máximo 6 fotos por mantenimiento.');
+      nextData.photoSet = setId;
+      nextData.photos = [
+        ...(data.photos ?? []),
+        ...files.map(({ data: _blob, setId: _set, ...ref }) => ref),
+      ];
+      newDatabase(nextData);
+      if (mode === 'demo') {
+        const saved = commit(nextData);
+        if (saved) setDemoPhotos((previous) => [...previous, ...files]);
+        return saved;
+      }
+      await storePhotos(files);
+      if (commit(nextData)) return true;
+    } catch {
+      notify(
+        'No se pudo guardar el mantenimiento con sus fotos. Revisá el espacio disponible o elegí menos imágenes. La base anterior se conserva.',
+      );
+    }
+    if (mode === 'local') await discardPhotos(files.map((photo) => photo.id)).catch(() => {});
+    return false;
+  };
   const switchMode = () => {
     const next = mode === 'local' ? 'demo' : 'local';
     try {
@@ -173,6 +210,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         saveCustomer,
         saveVehicle,
         addService,
+        demoPhotos,
         saveWorkshop: (workshop) => commit({ ...data, workshop }),
         restoreBackup,
         notify,

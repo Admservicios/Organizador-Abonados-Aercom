@@ -32,7 +32,7 @@ El modo demo usa otra colección en memoria y no copia ejemplos a la base real. 
 }
 ```
 
-El esquema completo está en `src/lib/localDatabase.ts`. No agregar contraseñas, tokens, sesiones o archivos codificados a este documento.
+El esquema completo está en `src/lib/localDatabase.ts`. No agregar contraseñas, tokens, sesiones o archivos codificados a este documento. Los campos opcionales `photoSet` y `photos` identifican una colección y sus referencias (servicio, nombre, dimensiones, tamaño y SHA-256); no contienen imágenes. Su ausencia conserva la compatibilidad con los datos y respaldos anteriores.
 
 ## Respaldo descargable
 
@@ -64,3 +64,15 @@ Un sitio servido con otra combinación de protocolo, hostname o puerto usa un al
 El tamaño disponible depende del navegador. Un fallo de cuota o acceso bloqueado conserva la base anterior y mantiene el formulario abierto. Usar una sola pestaña para editar: las notificaciones y revisiones no equivalen a un sistema de edición colaborativa ni eliminan todas las condiciones de carrera.
 
 Quien tiene acceso al perfil del navegador puede leer sus registros. No hay cuentas, roles efectivos, cifrado con contraseña ni sincronización. El acceso público real por QR necesita un servicio independiente o un mecanismo de publicación que todavía no está implementado.
+
+## Fotografías y ZIP completo
+
+Las imágenes optimizadas se guardan como `Blob` en la base IndexedDB `motortrack-photos-v1`, objeto `photos`, separadas del JSON. La clave de cada foto es un UUID; `setId` identifica la colección y `serviceId` vincula el mantenimiento. Se validan archivos JPEG, dimensiones y hash antes de persistirlos. No se incorporan originales ni fotografías a GitHub.
+
+El guardado escribe primero las nuevas fotos en una transacción de IndexedDB y luego confirma el documento local con sus referencias y su revisión. Si falla el segundo paso se retiran únicamente los archivos recién agregados; el estado anterior no se reemplaza. Una interrupción entre esos pasos puede dejar archivos sin referencia: no se muestran ni se exportan, y no se borran colecciones anteriores automáticamente.
+
+El respaldo ZIP contiene un `backup.json` validado y `photos/<id>.jpg`. Se comprueba el tamaño declarado antes de descomprimir, las referencias, las dimensiones y SHA-256 de cada archivo. SHA-256 detecta discrepancias; no autentica al autor del respaldo. Límites: 100 MB comprimidos y descomprimidos, JSON de hasta 5 MB, hasta 1.000 fotos en la base y 6 por mantenimiento. Cada foto optimizada pesa hasta 350 KB y mide hasta 1.600 píxeles de lado.
+
+Al restaurar un ZIP, se validan las imágenes y se escribe una colección nueva con identificadores nuevos antes de confirmar los registros. Si falla la escritura de registros, se retiran las fotos recién preparadas y se conserva la base previa. La copia anterior de `localStorage` conserva sus referencias a las fotos originales, que permanecen en IndexedDB. Esa copia solo funciona completa en el mismo navegador; para trasladarla hacen falta los archivos en un ZIP independiente.
+
+Los JSON solo trasladan registros. Si incluyen referencias a fotos ausentes en el navegador de destino, los registros pueden recuperarse, pero la galería informa que necesita el ZIP completo. El exportador de ZIP rechaza un respaldo incompleto cuando faltan imágenes referenciadas. Los PDFs no incorporan estas fotografías. La demo mantiene sus fotos exclusivamente en memoria y las descarta al recargar.

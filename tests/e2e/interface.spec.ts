@@ -104,7 +104,7 @@ test('exportación JSON identificada como demo y sin restauración simulada', as
   expect(data.restorable).toBe(false);
   expect(data.customers).toHaveLength(8);
   expect(data.vehicles).toHaveLength(6);
-  await expect(page.getByLabel('Seleccionar respaldo JSON', { exact: true })).toBeDisabled();
+  await expect(page.getByLabel('Seleccionar respaldo JSON o ZIP', { exact: true })).toBeDisabled();
 });
 
 test('capturas de las pantallas de referencia', async ({ page }) => {

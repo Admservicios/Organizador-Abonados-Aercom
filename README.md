@@ -6,7 +6,7 @@ Gestión de clientes, vehículos y mantenimiento para talleres y lubricentros. I
 
 ## Versión 0.2: base local
 
-Los datos se guardan en **el navegador del usuario**, usando `localStorage`, como el CRM de Aercom. No requiere Supabase, cuentas externas ni un servidor de base de datos.
+Los datos se guardan en **el navegador del usuario**, usando `localStorage` para los registros e IndexedDB para las fotos, como ampliación del modelo local del CRM de Aercom. No requiere Supabase, cuentas externas ni un servidor de base de datos.
 
 **GitHub guarda el código. Los datos de tus clientes no se suben a GitHub.** Cada perfil de navegador tiene una base independiente. No existe sincronización entre dispositivos ni inicio de sesión.
 
@@ -21,6 +21,8 @@ Disponible:
 - Respaldo JSON versionado, validación de relaciones y restauración confirmada.
 - Copia previa antes de restaurar cuando ya existe una base.
 - Exportación de clientes a CSV.
+- Fotos de mantenimiento persistentes y galería por vehículo.
+- Respaldo ZIP completo con registros y fotografías verificadas.
 - Modo claro/oscuro y navegación móvil.
 
 La base comienza **vacía**. El botón **Explorar demo** abre datos ficticios separados, mantenidos en memoria. **Volver a mis datos** recupera la base local. Los QR y el historial público actuales son ejemplos ficticios; nunca publican los datos locales.
@@ -54,6 +56,7 @@ Playwright usa Chromium del sistema si existe. Para indicar otra ruta, usar `PLA
 3. Conservar una copia fuera del navegador, por ejemplo en una unidad externa.
 4. Para recuperar o trasladar la información, abrir Taller Calamante en el navegador de destino y seleccionar el JSON en **Restaurar un respaldo**.
 5. Revisar los conteos y confirmar el reemplazo. No se combinan bases.
+6. Si hay fotografías, usar **Respaldo completo con fotos · ZIP** para trasladarlas o recuperarlas en otro navegador. El JSON solo contiene registros y referencias, sin archivos de imagen.
 
 La restauración rechaza archivos incompatibles, referencias inválidas, identificadores o patentes duplicados. Antes de reemplazar una base existente, conserva una copia local previa; si esa copia o el guardado fallan, no reemplaza los datos originales. Las copias internas válidas también pueden restaurarse desde esa pantalla.
 
@@ -68,6 +71,16 @@ Para cargarlo, volver al modo local si se está explorando la demo, seleccionar 
 **Borrar los datos del sitio, usar navegación privada o cambiar de navegador/dirección web puede impedir recuperar los registros sin un respaldo.** Trabajar desde una dirección estable y descargar una copia antes de cambiar de servidor o alojamiento. `localStorage` tiene una capacidad limitada y no sustituye un sistema de base de datos con respaldo independiente.
 
 Ver [datos locales y recuperación](docs/DATOS-LOCALES.md).
+
+## Fotos de mantenimiento y respaldo completo
+
+En **Registrar mantenimiento → Fotos del mantenimiento** se pueden seleccionar hasta **6 imágenes JPG, PNG o WebP de 10 MB cada una**. Se convierten a JPEG optimizado, con un máximo de 1.600 píxeles de lado y 350 KB por foto; se guarda la versión optimizada, sin conservar el original. El mantenimiento se confirma solamente después de guardar sus fotos y sus registros. Si falla una escritura, la base anterior permanece intacta y las imágenes seleccionadas siguen en el formulario para reintentar.
+
+La ficha del vehículo tiene una pestaña **Fotos**, con vista ampliada, fecha, servicio y descarga individual. En la demo solo duran durante la sesión y no se escriben en la base local. Las fotos locales no se publican en el QR ni se agregan al PDF.
+
+En **Backups → Descargar ZIP completo** se descargan `backup.json` y las imágenes. El ZIP valida relaciones, cantidades, tamaños, dimensiones y huellas SHA-256; admite hasta 100 MB en total y 1.000 fotos, con hasta 6 por mantenimiento. También se conservan los respaldos JSON anteriores y el ZIP de práctica con un único JSON. La importación se revisa y confirma antes de reemplazar la base. Las fotos importadas se guardan en una colección nueva: si falla el proceso se conserva la base anterior con sus archivos. La copia local previa mantiene acceso a sus fotos mientras existan en ese mismo navegador.
+
+**El JSON no incluye imágenes.** Para mover una base con fotos a otro navegador hay que usar el ZIP completo. No hay respaldo automático: descargar el ZIP y conservarlo fuera del navegador. Las colecciones anteriores no se borran automáticamente; las cuotas dependen del navegador y un fallo de espacio no reemplaza la información actual.
 
 ## Comprobantes de mantenimiento
 
@@ -97,8 +110,8 @@ El repositorio ahora se llama **Admservicios/Taller-Calamante**. La dirección a
 
 - Sin autenticación, roles efectivos ni aislamiento entre personas que usan el mismo perfil del navegador. El panel de roles es una propuesta visual futura.
 - Sin sincronización ni historial público de datos reales. El QR de demostración no es un mecanismo de acceso seguro o revocable.
-- Fotografías: solo previsualización; no se guardan al registrar un servicio.
-- Pendientes: documentos permanentes, ZIP con adjuntos y respaldos automáticos independientes.
+- Fotografías: se conserva la versión optimizada; los originales deben guardarse por separado.
+- Pendientes: otros documentos adjuntos, varias recomendaciones por vehículo y respaldos automáticos independientes.
 - Una recomendación pendiente por vehículo en esta base inicial; se ampliará a varias categorías.
 - PWA y edición sin conexión a la aplicación todavía no implementadas.
 - Para editar, usar una pestaña a la vez. Se detectan revisiones desactualizadas al escribir y se reciben avisos de cambios de otras pestañas; no hay edición colaborativa.

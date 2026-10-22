@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { nextServiceDate } from '../lib/localDatabase';
@@ -28,6 +28,7 @@ import {
 import { Badge, Empty, Modal, PageTitle, Panel, VehicleArt } from '../components/ui';
 import { useData } from '../app/store';
 import { ServicePDFButton } from '../components/ServicePDFButton';
+import { PhotoGallery } from '../components/MaintenancePhotos';
 import { dateLabel, maintenanceStatus, money, number, type Vehicle } from '../lib/demo';
 
 export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: () => void }) {
@@ -299,10 +300,15 @@ export function VehicleQR({ id }: { id: string }) {
 }
 export function VehicleDetail() {
   const { id } = useParams();
-  const { vehicles, customers, services, referenceDate } = useData();
+  const { vehicles, customers, services, photos, referenceDate } = useData();
   const vehicle = vehicles.find((v) => v.id === id);
   const [tab, setTab] = useState('Historial de mantenimientos');
   const [editing, setEditing] = useState(false);
+  const history = useMemo(
+    () => services.filter((s) => s.vehicleId === id).sort((a, b) => b.date.localeCompare(a.date)),
+    [services, id],
+  );
+  const photoCount = (photos ?? []).filter((p) => history.some((s) => s.id === p.serviceId)).length;
   if (!vehicle)
     return (
       <Empty
@@ -315,9 +321,6 @@ export function VehicleDetail() {
       />
     );
   const customer = customers.find((c) => c.id === vehicle.customerId);
-  const history = services
-    .filter((s) => s.vehicleId === id)
-    .sort((a, b) => b.date.localeCompare(a.date));
   return (
     <>
       <div className="breadcrumb">
@@ -387,6 +390,7 @@ export function VehicleDetail() {
             {[
               { title: 'Historial de mantenimientos', icon: ClipboardList },
               { title: 'Información técnica', icon: Settings2 },
+              { title: 'Fotos', icon: Camera },
               { title: 'Documentación', icon: FileText },
               { title: 'Recordatorios', icon: CalendarDays },
             ].map(({ title, icon: Icon }) => (
@@ -497,6 +501,11 @@ export function VehicleDetail() {
                 </div>
               </Panel>
             )}
+            {tab === 'Fotos' && (
+              <Panel title="Fotos de los mantenimientos" icon={Camera}>
+                <PhotoGallery services={history} />
+              </Panel>
+            )}
             {tab === 'Recordatorios' && (
               <Panel title="Próximo mantenimiento" icon={CalendarDays}>
                 <div className="reminder-detail">
@@ -563,15 +572,22 @@ export function VehicleDetail() {
             </div>
             <span className="private-label">Información privada del taller</span>
           </Panel>
-          <Panel title="Fotografías y archivos" icon={Camera}>
+          <Panel title="Fotos de mantenimiento" icon={Camera}>
             <div className="attachment-placeholder">
               <Camera size={24} />
-              <span>Sin archivos almacenados</span>
+              <span>
+                {photoCount
+                  ? `${photoCount} ${photoCount === 1 ? 'foto guardada' : 'fotos guardadas'}`
+                  : 'Sin fotos guardadas'}
+              </span>
             </div>
             <p className="fine-print">
-              Usamos ilustraciones provisionales. Las fotografías reales se incorporarán con
-              almacenamiento privado.
+              Registrá fotos junto al mantenimiento. Se conservan localmente y se incluyen en el
+              respaldo ZIP completo.
             </p>
+            <button className="button full" onClick={() => setTab('Fotos')}>
+              Ver fotos
+            </button>
           </Panel>
         </aside>
       </div>

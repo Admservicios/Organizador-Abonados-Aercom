@@ -93,8 +93,25 @@ try {
         .click();
       const pdf = await readFile(await (await pending).path());
       assert.match(pdf.toString('latin1'), /^%PDF-/);
+      await page.goto(`${url}#/mantenimientos/nuevo?vehiculo=practica-v02`);
+      await page.getByLabel(/Trabajos realizados/).fill('Mantenimiento estático con foto.');
+      await page.getByLabel(/Importe total/).fill('45000');
+      await page
+        .getByLabel('Seleccionar fotos')
+        .setInputFiles(resolve(root, 'tests/fixtures/foto-prueba.jpg'));
+      await page.locator('.photo-previews img').waitFor();
+      await page.getByRole('button', { name: 'Guardar mantenimiento', exact: true }).click();
+      await page.waitForURL(/vehiculos\/practica-v02$/);
+      await page.reload();
+      await page.getByRole('tab', { name: 'Fotos', exact: true }).click();
+      await page.getByRole('button', { name: /^Ver foto foto-prueba.jpg/ }).waitFor();
+      await page.goto(`${url}#/backups`);
+      const archiveDownload = page.waitForEvent('download');
+      await page.getByRole('button', { name: 'Descargar ZIP completo' }).click();
+      const archive = await readFile(await (await archiveDownload).path());
+      assert.equal(archive.subarray(0, 2).toString(), 'PK');
       assert.deepEqual(errors, [], `${name}: errores en el sitio servido sin Vite`);
-      console.log(`${name}: Dashboard, rutas, persistencia, recursos y descarga PDF correctos.`);
+      console.log(`${name}: rutas, persistencia, PDF, fotos locales y respaldo ZIP correctos.`);
     } finally {
       await context.close();
     }
