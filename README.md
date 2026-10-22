@@ -58,6 +58,12 @@ La restauración rechaza archivos incompatibles, referencias inválidas, identif
 
 El CSV solo exporta clientes; no sirve para restaurar todo el sistema. Los respaldos de la demo están marcados como ficticios y no se aceptan como respaldos locales.
 
+### Base de práctica importable
+
+En **Backups → Datos de práctica → Descargar datos de práctica** se obtiene un JSON compatible con la restauración local: **12 clientes, 16 vehículos y 48 mantenimientos ficticios**. Incluye alineación y balanceo, frenos, aceite, filtros y neumáticos. Los vencimientos de ejemplo toman como referencia el 22 de octubre de 2026.
+
+Para cargarlo, volver al modo local si se está explorando la demo, seleccionar el archivo en **Restaurar un respaldo**, revisar los conteos y confirmar. **Reemplaza la base actual; no combina registros.** Descargar primero un respaldo propio si ya existen datos. La descarga del ejemplo no modifica la base. El archivo editable está en [src/data/taller-calamante-practica.json](src/data/taller-calamante-practica.json); solo contiene información inventada.
+
 **Borrar los datos del sitio, usar navegación privada o cambiar de navegador/dirección web puede impedir recuperar los registros sin un respaldo.** Trabajar desde una dirección estable y descargar una copia antes de cambiar de servidor o alojamiento. `localStorage` tiene una capacidad limitada y no sustituye un sistema de base de datos con respaldo independiente.
 
 Ver [datos locales y recuperación](docs/DATOS-LOCALES.md).

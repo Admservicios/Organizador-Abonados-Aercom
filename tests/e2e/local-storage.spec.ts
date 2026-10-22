@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { initialCustomers, initialServices, initialVehicles } from '../../src/lib/demo';
+import practiceBackup from '../../src/data/taller-calamante-practica.json' with { type: 'json' };
 import {
   DATABASE_KEY,
   SAFETY_COPY_KEY,
@@ -193,6 +194,50 @@ test('exportar y restaurar con confirmación y copia previa', async ({ page }) =
   ).toBe(9);
   await page.reload();
   expect(await dataFromBrowser(page)).toEqual(backup.data);
+});
+
+test('descargar la base de práctica e importarla conserva las relaciones y persiste al recargar', async ({
+  page,
+}) => {
+  await addCustomer(page, 'Cliente previo a la práctica');
+  const before = await dataFromBrowser(page);
+  await page.goto('/backups');
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Descargar datos de práctica', exact: true }).click();
+  const downloaded = await pending;
+  expect(downloaded.suggestedFilename()).toBe('taller-calamante-practica.json');
+  const content = await readFile((await downloaded.path())!, 'utf8');
+  expect(JSON.parse(content)).toEqual(practiceBackup);
+  expect(await dataFromBrowser(page)).toEqual(before);
+  await page.getByLabel('Seleccionar respaldo JSON').setInputFiles({
+    name: downloaded.suggestedFilename(),
+    mimeType: 'application/json',
+    buffer: Buffer.from(content),
+  });
+  await expect(page.locator('.backup-candidate')).toContainText(
+    '12 clientes · 16 vehículos · 48 mantenimientos',
+  );
+  await page.getByRole('button', { name: 'Revisar y restaurar' }).click();
+  await expect(page.getByRole('dialog')).toContainText('No se combinan registros');
+  expect(await dataFromBrowser(page)).toEqual(before);
+  await page.getByRole('dialog').getByRole('checkbox').check();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar y restaurar' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.reload();
+  expect(await dataFromBrowser(page)).toEqual(practiceBackup.data);
+  expect(
+    await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).data, SAFETY_COPY_KEY),
+  ).toEqual(before);
+  await page.goto('/clientes');
+  await expect(page.getByRole('button', { name: /^Julián Acosta/ })).toBeVisible();
+  await page.goto('/vehiculos/practica-v02');
+  await expect(page.getByRole('heading', { name: /Toyota Hilux SRX/ })).toBeVisible();
+  await expect(page.getByText(/Corrección de convergencia/)).toBeVisible();
+  await page.goto('/mantenimientos');
+  await page.getByRole('textbox', { name: 'Buscar mantenimientos' }).fill('alineación');
+  await expect(page.locator('tbody tr')).toHaveCount(
+    practiceBackup.data.services.filter((s) => s.type === 'Alineación y balanceo').length,
+  );
 });
 
 test('respaldo inválido y almacenamiento lleno no destruyen registros', async ({ page }) => {

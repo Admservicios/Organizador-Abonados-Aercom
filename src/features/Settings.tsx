@@ -18,6 +18,7 @@ import {
 import { Avatar, Modal, PageTitle, Panel } from '../components/ui';
 import { useData } from '../app/store';
 import { customerCSV, download } from '../lib/demo';
+import practiceBackup from '../data/taller-calamante-practica.json';
 import {
   DATABASE_KEY,
   MAX_BACKUP_BYTES,
@@ -143,6 +144,33 @@ export function Backups() {
       </div>
       <div className="backup-layout">
         <div>
+          <Panel title="Datos de práctica" icon={Database}>
+            <p className="panel-description">
+              Probá el sistema con {practiceBackup.data.customers.length} clientes,{' '}
+              {practiceBackup.data.vehicles.length} vehículos y{' '}
+              {practiceBackup.data.services.length} mantenimientos ficticios. Incluye alineación y
+              balanceo, frenos, cambios de aceite y próximos servicios.
+            </p>
+            <button
+              className="button"
+              onClick={() => {
+                download(
+                  'taller-calamante-practica.json',
+                  JSON.stringify(practiceBackup, null, 2),
+                  'application/json',
+                );
+                notify('Archivo de práctica descargado. Seleccionalo en Restaurar un respaldo.');
+              }}
+            >
+              <Download size={16} />
+              Descargar datos de práctica
+            </button>
+            <p className="fine-print">
+              Descargá el archivo y seleccionalo en Restaurar un respaldo, en modo local. La
+              importación reemplaza la base actual: guardá antes un respaldo de tus datos propios.
+              La descarga por sí sola no cambia tus registros.
+            </p>
+          </Panel>
           <Panel title="Exportar información" icon={HardDriveDownload}>
             <p className="panel-description">
               Clientes, vehículos, mantenimientos y datos del taller.
