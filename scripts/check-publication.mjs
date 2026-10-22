@@ -13,7 +13,14 @@ assert.equal(
   'La raíz publicada está desactualizada. Ejecutar npm run publish:static antes de subir cambios.',
 );
 const mount = '/Organizador-Abonados-Aercom/';
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
+const types = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.webmanifest': 'application/manifest+json',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+};
 const server = createServer(async (request, response) => {
   try {
     const path = decodeURIComponent(new URL(request.url, 'http://test.local').pathname);
@@ -23,7 +30,9 @@ const server = createServer(async (request, response) => {
     const relative = path.slice(prefix.length) || 'index.html';
     if (
       !path.startsWith(prefix) ||
-      (relative !== 'index.html' && !relative.startsWith('site-assets/'))
+      (!['index.html', 'sw.js', 'manifest.webmanifest'].includes(relative) &&
+        !relative.startsWith('site-assets/') &&
+        !relative.startsWith('icons/'))
     ) {
       response.writeHead(404).end();
       return;

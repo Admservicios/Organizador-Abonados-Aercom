@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Avatar, Modal, PageTitle, Panel } from '../components/ui';
 import { useData } from '../app/store';
+import { OfflineSettings } from '../components/OfflineApp';
 import { customerCSV, download } from '../lib/demo';
 import practiceBackup from '../data/taller-calamante-practica.json';
 import {
@@ -598,6 +599,7 @@ export function SettingsPage() {
         <div className="panel settings-navigation">
           {[
             { title: 'Taller', icon: Building2 },
+            { title: 'Aplicación', icon: Download },
             { title: 'Equipo y permisos', icon: Users },
             { title: 'Estado del proyecto', icon: ShieldCheck },
           ].map(({ title, icon: Icon }) => (
@@ -684,6 +686,7 @@ export function SettingsPage() {
               </form>
             </Panel>
           )}
+          {tab === 'Aplicación' && <OfflineSettings />}
           {tab === 'Equipo y permisos' && (
             <Panel title="Equipo y permisos" icon={Users}>
               <div className="info-strip">
@@ -735,7 +738,7 @@ export function SettingsPage() {
                   [
                     '04',
                     'Operación y archivos',
-                    'PDF, fotos, documentos del vehículo y respaldo ZIP completo disponibles. Vencimientos independientes por servicio. Próximas entregas: uso sin conexión.',
+                    'PDF, fotos, documentos del vehículo y respaldo ZIP completo disponibles. Vencimientos independientes por servicio e instalación con uso sin conexión disponibles.',
                   ],
                   [
                     '05',

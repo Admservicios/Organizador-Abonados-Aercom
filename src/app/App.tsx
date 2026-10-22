@@ -28,6 +28,7 @@ import { VehicleDetail, Vehicles } from '../features/Vehicles';
 import { MaintenanceForm, MaintenanceList, Reminders } from '../features/Maintenance';
 import { Backups, SettingsPage } from '../features/Settings';
 import { PublicHistory } from '../features/PublicHistory';
+import { OfflineNotice } from '../components/OfflineApp';
 
 const navigation = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -258,6 +259,7 @@ function Layout() {
             </button>
           </div>
         </header>
+        <OfflineNotice />
         <div className="demo-banner">
           <span>
             <span className="online-dot" />{' '}

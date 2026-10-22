@@ -8,18 +8,18 @@ GitHub versiona código, esquemas y pruebas. Los registros personales del taller
 
 ## Entregas
 
-| Paso                  | Alcance                                                                               | Validación                                                            |
-| --------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Base visual           | Dashboard, Clientes, Vehículos, Mantenimientos, Próximos servicios, Backups y Ajustes | Recorridos de escritorio y celular                                    |
-| Base local            | Persistencia versionada de clientes, vehículos, mantenimientos y datos del taller     | Guardar, recargar y recuperar los mismos registros                    |
-| Recuperación local    | Exportación JSON, estructura validada, confirmación y copia previa                    | Exportar, modificar y restaurar el estado anterior                    |
-| Operación ampliada    | Fotografías permanentes, documentos, PDF y varias recomendaciones por vehículo        | Pruebas sobre cada capacidad implementada                             |
-| Distribución          | Publicación estática y evolución desde GitHub                                         | Comprobación de rutas, recursos y conservación de datos al actualizar |
-| Funciones compartidas | Evaluar sincronización, usuarios e historial público real                             | Arquitectura y autorización específicas antes de implementarlas       |
+| Paso                  | Alcance                                                                               | Validación                                                         |
+| --------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Base visual           | Dashboard, Clientes, Vehículos, Mantenimientos, Próximos servicios, Backups y Ajustes | Recorridos de escritorio y celular                                 |
+| Base local            | Persistencia versionada de clientes, vehículos, mantenimientos y datos del taller     | Guardar, recargar y recuperar los mismos registros                 |
+| Recuperación local    | Exportación JSON, estructura validada, confirmación y copia previa                    | Exportar, modificar y restaurar el estado anterior                 |
+| Operación ampliada    | Fotografías permanentes, documentos, PDF y varias recomendaciones por vehículo        | Pruebas sobre cada capacidad implementada                          |
+| Distribución          | Publicación estática, instalación y uso sin conexión                                  | Comprobación de rutas, recursos, trabajo sin red y actualizaciones |
+| Funciones compartidas | Evaluar sincronización, usuarios e historial público real                             | Arquitectura y autorización específicas antes de implementarlas    |
 
 ## Estado inicial de la base
 
-La base visual, la persistencia local y la recuperación JSON están implementadas. La operación ampliada avanza con **comprobantes PDF de mantenimiento**: descarga al registrar y desde los historiales, generación local, notas privadas excluidas y textos largos distribuidos entre páginas. También están implementadas las fotografías persistentes por mantenimiento, la galería del vehículo y el respaldo ZIP completo con verificación de archivos. También están implementados los vencimientos independientes por tipo de servicio y su edición en Recordatorios. Está implementada la documentación PDF por vehículo con descarga, retiro confirmado y respaldo ZIP completo. Quedan pendientes otros formatos, la PWA y el uso sin conexión.
+La base visual, la persistencia local y la recuperación JSON están implementadas. La operación ampliada avanza con **comprobantes PDF de mantenimiento**: descarga al registrar y desde los historiales, generación local, notas privadas excluidas y textos largos distribuidos entre páginas. También están implementadas las fotografías persistentes por mantenimiento, la galería del vehículo y el respaldo ZIP completo con verificación de archivos. También están implementados los vencimientos independientes por tipo de servicio y su edición en Recordatorios. Está implementada la documentación PDF por vehículo con descarga, retiro confirmado y respaldo ZIP completo. También están implementados la instalación como aplicación y el uso sin conexión tras la primera preparación. Quedan pendientes otros formatos y respaldos automáticos independientes.
 
 - Formato `motortrack-local`, versión 1.
 - Una unidad de `localStorage` contiene clientes, vehículos, mantenimientos, taller y referencias de fotos y documentos. IndexedDB conserva las imágenes optimizadas y los PDF originales, en colecciones locales identificadas.

@@ -1,5 +1,6 @@
 import { constants } from 'node:fs';
 import { copyFile, readdir, rename, writeFile } from 'node:fs/promises';
+import { prepareOffline } from './prepare-offline.mjs';
 
 // app.html es la entrada editable; index.html es la salida que sirve un alojamiento estático.
 await rename(
@@ -7,6 +8,8 @@ await rename(
   new URL('../dist/index.html', import.meta.url),
 );
 await writeFile(new URL('../dist/.nojekyll', import.meta.url), '');
+// Debe ejecutarse antes de retener recursos anteriores, para preparar solo la versión actual.
+await prepareOffline(new URL('../dist/', import.meta.url));
 
 // Conservar recursos con hash anteriores evita romper pestañas que aún tienen el HTML en caché.
 let retained = [];

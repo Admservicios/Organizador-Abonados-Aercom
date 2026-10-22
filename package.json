@@ -15,7 +15,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "publish:static": "npm run build && node scripts/stage-static.mjs",
-    "test:publication": "node scripts/check-publication.mjs"
+    "test:publication": "node scripts/check-publication.mjs",
+    "test:offline": "node scripts/check-offline.mjs"
   },
   "dependencies": {
     "fflate": "0.8.3",

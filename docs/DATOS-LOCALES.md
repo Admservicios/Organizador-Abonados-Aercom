@@ -96,3 +96,11 @@ La carga revisa tamaño, encabezado y final PDF e integridad; no implica validar
 El ZIP incluye `documents/<id>.pdf`; sus límites globales siguen siendo 100 MB comprimidos y descomprimidos. La lectura rechaza archivos ausentes, adulterados, adicionales o que excedan los límites declarados antes de descomprimir. Al restaurar se preparan fotos y documentos con colecciones e identificadores nuevos antes de confirmar los registros. Si falla cualquiera de las escrituras, se retiran los archivos nuevos y se conserva la base anterior con sus archivos. Los JSON con referencias conservan acceso solo si esos archivos todavía existen en ese navegador. Si faltan, se informa el error al descargar y se impide crear un ZIP incompleto.
 
 La demo solo conserva documentos en memoria. El historial público no accede a documentos reales. No hay alertas de vencimiento de documentos en esta entrega.
+
+## Aplicación instalable y caché de la interfaz
+
+El service worker del mismo subdirectorio prepara HTML, manifiesto, iconos y todos los módulos de la compilación, incluidos PDF y ZIP. El caché almacena recursos de interfaz: los registros permanecen en `localStorage` y los archivos en sus bases IndexedDB originales. No se renombran claves, no se crea otra base y no hay sincronización ni envío de datos al instalar.
+
+La preparación requiere internet, HTTPS o localhost y soporte del navegador. Si no termina, se informa y se puede reintentar desde Ajustes → Aplicación. Un caché de interfaz no reemplaza el ZIP: el navegador puede retirar almacenamiento y distintas instalaciones/perfiles pueden usar contenedores de datos diferentes.
+
+Cada versión tiene un caché con prefijo propio de la aplicación y de su ruta. Se confirma la preparación completa antes de activar; un fallo retira solo el caché nuevo. Se conservan versiones anteriores para que las pestañas abiertas puedan seguir cargando sus módulos; pueden acumular espacio. No se borran cachés de otras aplicaciones del mismo origen. La nueva versión espera confirmación y no recarga otras pestañas. Esas pestañas conservan sus formularios hasta que el usuario guarda y decide recargar. El control de revisión y las reglas para una pestaña de edición a la vez siguen vigentes.

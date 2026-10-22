@@ -114,7 +114,7 @@ El repositorio ahora se llama **Admservicios/Taller-Calamante**. La dirección a
 - Fotografías: se conserva la versión optimizada; los originales deben guardarse por separado.
 - Documentos: PDF de hasta 5 MB, 20 por vehículo y 200 en total. Otros formatos y respaldos automáticos independientes quedan pendientes.
 - Vencimientos por tipo de servicio, con fecha, kilometraje y último trabajo independientes. No se reconstruyen intervalos que el sistema anterior ya había sobrescrito.
-- PWA y edición sin conexión a la aplicación todavía no implementadas.
+- Aplicación instalable y uso sin conexión disponibles después de la primera preparación con internet. La instalación depende del navegador; no sincroniza bases entre dispositivos.
 - Para editar, usar una pestaña a la vez. Se detectan revisiones desactualizadas al escribir y se reciben avisos de cambios de otras pestañas; no hay edición colaborativa.
 
 Las ilustraciones de vehículos son provisionales y no descargan imágenes externas. Los ejemplos usan información ficticia.
@@ -157,3 +157,16 @@ En **Vehículos → ficha → Documentación** se puede seleccionar el tipo (Cé
 Son archivos locales privados del taller: no se incluyen en el historial público de demostración. La demo guarda sus documentos solo en memoria y los pierde al recargar. No se evalúa la vigencia de los documentos ni se genera una alerta de vencimiento de seguro o VTV.
 
 El **ZIP completo** incluye `documents/<id>.pdf` junto con las fotos y los registros. Al restaurarlo se verifican tamaños, formato básico e integridad antes de confirmar la base. Los JSON contienen referencias, **no los PDF**; para trasladar archivos a otro navegador hay que usar el ZIP. Las copias anteriores siguen siendo compatibles. Quitar un documento retira su referencia de la ficha, sin borrar archivos que todavía podría necesitar una copia previa; no es una eliminación física garantizada del dispositivo.
+
+## Instalar y trabajar sin conexión
+
+1. Abrir la dirección habitual de Taller Calamante con internet.
+2. Entrar en **Ajustes → Aplicación** y esperar **Lista para usar sin conexión**.
+3. En Chrome o Edge, usar **Instalar Taller Calamante** cuando aparezca o la opción de instalar del navegador. En iPhone/iPad: Safari → Compartir → Agregar a inicio. También se puede seguir usando desde el navegador.
+4. Después de la preparación se puede cerrar y volver a abrir la aplicación sin internet. Siguen funcionando los registros, PDF, fotos, documentos y respaldos ZIP en ese dispositivo.
+
+Usar el navegador y perfil donde está la base. Si una instalación o un navegador distinto abre una base vacía, restaurar allí el ZIP completo: la instalación no traslada ni sincroniza datos automáticamente. El respaldo independiente sigue siendo necesario.
+
+Las nuevas versiones muestran un aviso para **Actualizar aplicación**; se recarga solo al confirmar. Guardar los formularios de todas las pestañas antes de aplicar la actualización. Si una descarga falla, la versión preparada sigue disponible. La primera apertura, una nueva preparación si el navegador retiró su caché y las actualizaciones necesitan internet. No hay datos en un servidor ni historial QR real publicado por instalar la aplicación.
+
+Ver [instalación y funcionamiento sin conexión](docs/USO-SIN-CONEXION.md). `npm run test:offline` comprueba ambas variantes estáticas con un navegador y red desactivada, además de actualizaciones con varias pestañas y descargas fallidas.

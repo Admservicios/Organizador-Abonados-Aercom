@@ -8,3 +8,6 @@ playwright-report
 # Salida compilada para GitHub Pages desde main
 index.html
 site-assets
+
+# Service worker generado por la compilación
+sw.js

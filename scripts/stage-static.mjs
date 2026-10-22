@@ -1,5 +1,5 @@
 import { constants } from 'node:fs';
-import { copyFile, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
@@ -22,5 +22,8 @@ for (const name of await readdir(join(root, 'dist/site-assets'))) {
 }
 // Se retienen los archivos con hash anteriores para que las pestañas con HTML en caché sigan cargando.
 await copyFile(join(root, 'dist/index.html'), join(root, 'index.html'));
+for (const path of ['sw.js', 'manifest.webmanifest', 'icons']) {
+  await cp(join(root, 'dist', path), join(root, path), { recursive: true });
+}
 await writeFile(join(root, '.nojekyll'), '');
 console.log('Versión estática preparada en index.html y site-assets/ para Pages desde main.');

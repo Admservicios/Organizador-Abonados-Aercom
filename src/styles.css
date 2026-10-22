@@ -4812,3 +4812,24 @@ label > .input-suffix input {
   gap: 8px;
   flex-wrap: wrap;
 }
+
+.offline-notice {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 24px;
+  background: var(--blue-soft);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.offline-notice > svg {
+  flex-shrink: 0;
+  color: var(--blue);
+}
+.offline-notice > span {
+  flex: 1;
+  min-width: 180px;
+}
