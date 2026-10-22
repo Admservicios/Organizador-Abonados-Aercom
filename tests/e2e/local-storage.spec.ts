@@ -125,7 +125,7 @@ test('guardar con PDF, volver a descargarlo y conservar un único mantenimiento'
   await page.getByLabel(/Importe total/).fill('58400.75');
   await page.getByLabel(/Kilometraje actual/).fill('113000');
   await page.getByLabel(/Kilometraje objetivo/).fill('123000');
-  await page.getByLabel('Trabajo recomendado').selectOption('Alineación y balanceo');
+  await page.getByLabel('Trabajo recomendado').selectOption('Cambio de aceite y filtros');
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Guardar y generar PDF', exact: true }).click();
   const downloaded = await pending;
@@ -136,7 +136,7 @@ test('guardar con PDF, volver a descargarlo y conservar un único mantenimiento'
   expect(pdf).toContain('Trabajo para comprobante PDF.');
   expect(pdf).toContain('ARS 58.400,75');
   expect(pdf).toContain('123.000 km');
-  expect(pdf).toContain('Alineación y balanceo');
+  expect(pdf).toContain('Cambio de aceite y filtros');
   expect(pdf).not.toContain('SECRETO-PDF-NO-INCLUIR');
   await expect(page).toHaveURL(/vehiculos\/v2$/);
   await page.reload();
@@ -213,7 +213,9 @@ test('alineación y balanceo: detalle, persistencia y respaldo desde el móvil',
   await page.goto('/mantenimientos/nuevo?vehiculo=v2');
   await expect(page.getByLabel(/Alineación realizada/)).toHaveCount(0);
   await page.getByLabel(/Tipo de servicio/).selectOption('Alineación y balanceo');
-  await expect(page.getByRole('heading', { name: 'Alineación y balanceo' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Alineación y balanceo', exact: true }),
+  ).toBeVisible();
   await page.getByLabel(/Trabajos realizados/).fill('     ');
   await page.getByLabel(/Importe total/).fill('45000');
   await page.getByRole('button', { name: 'Guardar mantenimiento', exact: true }).click();
@@ -240,9 +242,17 @@ test('alineación y balanceo: detalle, persistencia y respaldo desde el móvil',
   const added = data.services.find((s: { work: string }) => s.work === work);
   expect(added).toMatchObject({ type: 'Alineación y balanceo', amount: 45000, public: false });
   expect(data.services.filter((s: { id: string }) => s.id !== added.id)).toEqual(initialServices);
-  expect(data.vehicles.find((v: { id: string }) => v.id === 'v2').recommendation).toBe(
-    'Alineación y balanceo',
-  );
+  const updatedVehicle = data.vehicles.find((v: { id: string }) => v.id === 'v2');
+  expect(
+    updatedVehicle.maintenancePlans.find(
+      (p: { category: string }) => p.category === 'alineacion-balanceo',
+    ).recommendation,
+  ).toBe('Alineación y balanceo');
+  expect(
+    updatedVehicle.maintenancePlans.find(
+      (p: { category: string }) => p.category === 'aceite-filtros',
+    ).nextKm,
+  ).toBe(initialVehicles[1].nextKm);
   await page.goto('/mantenimientos');
   await page.getByRole('textbox', { name: 'Buscar mantenimientos' }).fill('alineación');
   await expect(page.locator('tbody tr')).toHaveCount(1);

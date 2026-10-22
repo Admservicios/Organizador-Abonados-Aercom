@@ -1,5 +1,6 @@
 import { dateLabel, number, type Customer, type Service, type Vehicle } from './demo';
 import type { Workshop } from './localDatabase';
+import { maintenanceKind, vehiclePlans } from './maintenancePlans';
 
 export type ServiceReceipt = {
   service: Service;
@@ -107,10 +108,22 @@ export async function createServicePDF({
     true,
     '#10203a',
   );
-  section('Próximo mantenimiento del vehículo');
-  text(vehicle.recommendation || 'Sin especificar.', 11, true);
-  text(`${dateLabel(vehicle.nextDate)} o ${number(vehicle.nextKm)} km, lo que ocurra primero.`);
-  text('Recomendación vigente al generar este comprobante.', 9, false, '#52647e');
+  section('Próximo mantenimiento de este servicio');
+  const plan =
+    service.maintenance ??
+    vehiclePlans(vehicle).find((p) => p.category === maintenanceKind(service.type).key);
+  if (plan) {
+    text(`${plan.label} · ${plan.recommendation}`, 11, true);
+    text(`${dateLabel(plan.nextDate)} o ${number(plan.nextKm)} km, lo que ocurra primero.`);
+    text(
+      service.maintenance
+        ? 'Vencimiento registrado al realizar este servicio.'
+        : 'Recomendación vigente de este tipo de servicio.',
+      9,
+      false,
+      '#52647e',
+    );
+  } else text('No hay un vencimiento registrado para este tipo de servicio.');
   const pages = doc.getNumberOfPages();
   for (let page = 1; page <= pages; page++) {
     doc.setPage(page);

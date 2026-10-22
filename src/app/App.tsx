@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Brand } from '../components/ui';
 import { DataProvider, useData } from './store';
-import { maintenanceStatus } from '../lib/demo';
+import { allPlanRows, planStatus } from '../lib/maintenancePlans';
 import { Dashboard } from '../features/Dashboard';
 import { Customers } from '../features/Customers';
 import { VehicleDetail, Vehicles } from '../features/Vehicles';
@@ -141,7 +141,12 @@ function Layout() {
               <span>{label}</span>
               {to === '/proximos-servicios' && (
                 <span className="nav-count">
-                  {vehicles.filter((v) => maintenanceStatus(v, referenceDate) !== 'Al día').length}
+                  {
+                    allPlanRows(vehicles, referenceDate).filter(
+                      ({ vehicle, plan }) =>
+                        planStatus(plan, vehicle.km, referenceDate) !== 'Al día',
+                    ).length
+                  }
                 </span>
               )}
             </NavLink>

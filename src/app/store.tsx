@@ -28,6 +28,7 @@ import {
   type PreparedPhoto,
   type StoredPhoto,
 } from '../lib/photos';
+import { recordServicePlan, servicePlan, withPlanSummary } from '../lib/maintenancePlans';
 
 type Store = LocalData & {
   mode: 'local' | 'demo';
@@ -132,7 +133,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     commit({
       ...data,
       vehicles: data.vehicles.some((v) => v.id === vehicle.id)
-        ? data.vehicles.map((v) => (v.id === vehicle.id ? vehicle : v))
+        ? data.vehicles.map((v) =>
+            v.id === vehicle.id
+              ? withPlanSummary(vehicle, mode === 'demo' ? demoDate : localToday())
+              : v,
+          )
         : [...data.vehicles, vehicle],
     });
   const addService = async (
@@ -142,16 +147,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
   ): Promise<boolean> => {
     const nextData: LocalData = {
       ...data,
-      services: [service, ...data.services],
+      services: [{ ...service, maintenance: servicePlan(service, next) }, ...data.services],
       vehicles: data.vehicles.map((v) =>
         v.id === service.vehicleId
-          ? {
-              ...v,
-              km: service.km,
-              nextDate: next.date,
-              nextKm: next.km,
-              recommendation: next.recommendation,
-            }
+          ? recordServicePlan(
+              v,
+              service,
+              next,
+              mode === 'demo' ? demoDate : localToday(),
+              data.services,
+            )
           : v,
       ),
     };

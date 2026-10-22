@@ -7,6 +7,16 @@ import { ServicePDFButton } from '../components/ServicePDFButton';
 import { PhotoPicker } from '../components/MaintenancePhotos';
 import type { PreparedPhoto } from '../lib/photos';
 import {
+  allPlanRows,
+  maintenanceKind,
+  maintenanceTypes,
+  planServiceURL,
+  planStatus,
+  recordServicePlan,
+  servicePlan,
+  vehiclePlans,
+} from '../lib/maintenancePlans';
+import {
   ArrowLeft,
   ArrowRight,
   CalendarDays,
@@ -25,7 +35,7 @@ import {
 } from 'lucide-react';
 import { Badge, Empty, PageTitle, Panel, VehicleArt } from '../components/ui';
 import { useData } from '../app/store';
-import { dateLabel, maintenanceStatus, money, number, type Service } from '../lib/demo';
+import { dateLabel, money, number, type Service } from '../lib/demo';
 
 export function MaintenanceList() {
   const { services, vehicles, customers } = useData();
@@ -129,7 +139,21 @@ export function MaintenanceForm() {
   const [customerId, setCustomerId] = useState(initialVehicle?.customerId ?? '');
   const [vehicleId, setVehicleId] = useState(initialVehicle?.id ?? '');
   const vehicle = vehicles.find((v) => v.id === vehicleId);
-  const [serviceType, setServiceType] = useState('Service general');
+  const requestedPlan =
+    initialVehicle &&
+    vehiclePlans(initialVehicle).find((p) => p.category === params.get('servicio'));
+  const initialKind = requestedPlan
+    ? (maintenanceTypes.find((k) => k.key === requestedPlan.category) ??
+      maintenanceKind(requestedPlan.label))
+    : maintenanceKind('Service general');
+  const [serviceType, setServiceType] = useState(
+    maintenanceTypes.some((k) => k.type === initialKind.type)
+      ? initialKind.type
+      : 'Otro mantenimiento',
+  );
+  const [customType, setCustomType] = useState(requestedPlan?.label ?? '');
+  const actualType = serviceType === 'Otro mantenimiento' ? customType.trim() : serviceType;
+  const kind = maintenanceKind(actualType);
   const isAlignment = serviceType === 'Alineación y balanceo';
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState('');
@@ -169,7 +193,7 @@ export function MaintenanceForm() {
     const result = serviceSchema.safeParse({
       date: data.get('date'),
       km: Number(data.get('km')),
-      type: data.get('type'),
+      type: actualType,
       work: data.get('work'),
       amount: Number(data.get('amount')),
       nextDate,
@@ -211,6 +235,7 @@ export function MaintenanceForm() {
       public: data.get('public') === 'on',
     };
     const next = { date: nextDate, km: nextKm, recommendation: String(data.get('nextType')) };
+    service.maintenance = servicePlan(service, next);
     setSaving(true);
     const saved = await addService(service, next, photos);
     if (!saved) {
@@ -232,13 +257,7 @@ export function MaintenanceForm() {
         await downloadServicePDF({
           service,
           customer,
-          vehicle: {
-            ...vehicle,
-            km: service.km,
-            nextDate: next.date,
-            nextKm: next.km,
-            recommendation: next.recommendation,
-          },
+          vehicle: recordServicePlan(vehicle, service, next, referenceDate, services),
           workshop,
           demo: mode === 'demo',
         });
@@ -381,6 +400,19 @@ export function MaintenanceForm() {
                 </select>
               </label>
             </div>
+            {serviceType === 'Otro mantenimiento' && (
+              <label>
+                Nombre del servicio <span>*</span>
+                <input
+                  required
+                  minLength={3}
+                  maxLength={70}
+                  value={customType}
+                  onChange={(e) => setCustomType(e.target.value)}
+                  placeholder="Ej.: refrigerante, correa de distribución…"
+                />
+              </label>
+            )}
             <label>
               Trabajos realizados <span>*</span>
               <textarea
@@ -461,7 +493,7 @@ export function MaintenanceForm() {
               </label>
             </div>
           </Panel>
-          <Panel title="Próximo mantenimiento" icon={CalendarDays}>
+          <Panel title={`Próximo mantenimiento · ${kind.label}`} icon={CalendarDays}>
             <div className="form-grid three">
               <label>
                 Fecha recomendada <span>*</span>
@@ -485,18 +517,25 @@ export function MaintenanceForm() {
               </label>
               <label>
                 Trabajo recomendado
-                <select name="nextType">
-                  <option>Cambio de aceite y filtros</option>
-                  <option>Service general</option>
-                  <option>Revisión de frenos</option>
-                  <option>Control de neumáticos</option>
-                  <option>Alineación y balanceo</option>
+                <select name="nextType" key={kind.key}>
+                  {kind.recommendations.map((recommendation) => (
+                    <option key={recommendation}>{recommendation}</option>
+                  ))}
                 </select>
               </label>
             </div>
             <p className="fine-print">
-              Se considerará la fecha o el kilometraje, lo que ocurra primero.
+              Solo se actualiza el vencimiento de {kind.label}. Los demás servicios conservan su
+              fecha y kilometraje objetivo.
             </p>
+            {vehicle &&
+              vehiclePlans(vehicle)
+                .filter((p) => p.category !== kind.key)
+                .map((plan) => (
+                  <p className="fine-print" key={plan.category}>
+                    Se conserva {plan.label}: {dateLabel(plan.nextDate)} o {number(plan.nextKm)} km.
+                  </p>
+                ))}
           </Panel>
           <div className="form-bottom-grid">
             <Panel title="Observaciones privadas" icon={NotebookPen}>
@@ -581,7 +620,7 @@ export function MaintenanceForm() {
             <div className="info-strip">
               <Info size={21} />
               <span>
-                Próximo servicio
+                Próximo servicio · {kind.label}
                 <strong>{nextDate ? dateLabel(nextDate) : 'Elegí una fecha'}</strong>o a los{' '}
                 {number(nextKm)} km
               </span>
@@ -645,15 +684,14 @@ export function Reminders() {
   const { vehicles, customers, referenceDate } = useData();
   const [status, setStatus] = useState('Todos');
   const [search, setSearch] = useState('');
-  const filtered = vehicles
-    .filter(
-      (v) =>
-        (status === 'Todos' || maintenanceStatus(v, referenceDate) === status) &&
-        `${v.plate} ${v.brand} ${v.model} ${customers.find((c) => c.id === v.customerId)?.name}`
-          .toLocaleLowerCase('es')
-          .includes(search.toLocaleLowerCase('es')),
-    )
-    .sort((a, b) => a.nextDate.localeCompare(b.nextDate));
+  const rows = allPlanRows(vehicles, referenceDate);
+  const filtered = rows.filter(
+    ({ vehicle: v, plan }) =>
+      (status === 'Todos' || planStatus(plan, v.km, referenceDate) === status) &&
+      `${v.plate} ${v.brand} ${v.model} ${plan.label} ${plan.recommendation} ${customers.find((c) => c.id === v.customerId)?.name}`
+        .toLocaleLowerCase('es')
+        .includes(search.toLocaleLowerCase('es')),
+  );
   return (
     <>
       <PageTitle
@@ -670,7 +708,11 @@ export function Reminders() {
             <CalendarDays size={24} />
             <span>
               <strong>
-                {vehicles.filter((v) => maintenanceStatus(v, referenceDate) === state).length}
+                {
+                  rows.filter(
+                    ({ vehicle, plan }) => planStatus(plan, vehicle.km, referenceDate) === state,
+                  ).length
+                }
               </strong>
               <small>
                 {state === 'Vencido'
@@ -689,7 +731,7 @@ export function Reminders() {
           <Search size={17} />
           <input
             aria-label="Buscar próximos servicios"
-            placeholder="Buscar por patente, vehículo o cliente…"
+            placeholder="Buscar por patente, cliente o tipo de servicio…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -719,8 +761,8 @@ export function Reminders() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((v) => (
-                <tr key={v.id}>
+              {filtered.map(({ vehicle: v, plan }) => (
+                <tr key={`${v.id}-${plan.category}`}>
                   <td>
                     <Link className="table-link" to={`/vehiculos/${v.id}`}>
                       <strong>{v.plate}</strong>
@@ -730,20 +772,23 @@ export function Reminders() {
                     </Link>
                   </td>
                   <td>{customers.find((c) => c.id === v.customerId)?.name}</td>
-                  <td>{v.recommendation}</td>
+                  <td>
+                    <strong>{plan.label}</strong>
+                    <small className="block muted">{plan.recommendation}</small>
+                  </td>
                   <td>
                     <div className="table-link">
-                      <strong>{dateLabel(v.nextDate)}</strong>
+                      <strong>{dateLabel(plan.nextDate)}</strong>
                       <small>
-                        {number(v.nextKm)} km · último: {number(v.km)} km
+                        {number(plan.nextKm)} km · actual: {number(v.km)} km
                       </small>
                     </div>
                   </td>
                   <td>
-                    <Badge>{maintenanceStatus(v, referenceDate)}</Badge>
+                    <Badge>{planStatus(plan, v.km, referenceDate)}</Badge>
                   </td>
                   <td>
-                    <Link className="button small" to={`/mantenimientos/nuevo?vehiculo=${v.id}`}>
+                    <Link className="button small" to={planServiceURL(v, plan)}>
                       <Plus size={14} />
                       Registrar
                     </Link>

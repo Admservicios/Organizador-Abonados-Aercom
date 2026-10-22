@@ -86,7 +86,7 @@ En **Backups → Descargar ZIP completo** se descargan `backup.json` y las imág
 
 En el formulario, **Guardar y generar PDF** primero conserva el servicio y luego descarga el comprobante. En **Mantenimientos** y en el historial de cada vehículo, el botón **PDF** permite descargarlo nuevamente sin duplicar registros. Si falla el guardado no se genera el comprobante; si falla la generación, el servicio guardado sigue disponible para reintentar desde el historial.
 
-El PDF se genera en el navegador, sin subir datos ni abrir servicios externos. Incluye taller, cliente, vehículo, fecha y kilometraje del servicio, tareas, insumos e importe en ARS. Las notas privadas se omiten; los ejemplos de la demo se identifican como ficticios. La recomendación del próximo servicio es la **vigente al generar el comprobante**, porque los registros anteriores no almacenan una copia histórica de esa recomendación. Los PDFs descargados no se guardan como adjuntos en la base ni en el respaldo JSON.
+El PDF se genera en el navegador, sin subir datos ni abrir servicios externos. Incluye taller, cliente, vehículo, fecha y kilometraje del servicio, tareas, insumos e importe en ARS. Las notas privadas se omiten; los ejemplos de la demo se identifican como ficticios. Los nuevos servicios conservan una copia de **su propio vencimiento al realizarlos**, que se utiliza al volver a descargar el PDF. Para registros anteriores se consulta únicamente el vencimiento vigente del mismo tipo de servicio; si no existe, el comprobante lo indica. Los PDFs descargados no se guardan como adjuntos en la base ni en el respaldo JSON.
 
 ## Distribución web y GitHub
 
@@ -111,8 +111,8 @@ El repositorio ahora se llama **Admservicios/Taller-Calamante**. La dirección a
 - Sin autenticación, roles efectivos ni aislamiento entre personas que usan el mismo perfil del navegador. El panel de roles es una propuesta visual futura.
 - Sin sincronización ni historial público de datos reales. El QR de demostración no es un mecanismo de acceso seguro o revocable.
 - Fotografías: se conserva la versión optimizada; los originales deben guardarse por separado.
-- Pendientes: otros documentos adjuntos, varias recomendaciones por vehículo y respaldos automáticos independientes.
-- Una recomendación pendiente por vehículo en esta base inicial; se ampliará a varias categorías.
+- Pendientes: otros documentos adjuntos, respaldos automáticos independientes.
+- Vencimientos por tipo de servicio, con fecha, kilometraje y último trabajo independientes. No se reconstruyen intervalos que el sistema anterior ya había sobrescrito.
 - PWA y edición sin conexión a la aplicación todavía no implementadas.
 - Para editar, usar una pestaña a la vez. Se detectan revisiones desactualizadas al escribir y se reciben avisos de cambios de otras pestañas; no hay edición colaborativa.
 
@@ -138,3 +138,13 @@ docs/                   Plan y decisiones de arquitectura
 ```
 
 Ver [plan actualizado](docs/PLAN.md). No se deben agregar respaldos, bases de datos reales ni secretos al repositorio.
+
+## Vencimientos independientes por servicio
+
+Registrar frenos, alineación, neumáticos u otro trabajo actualiza el odómetro del vehículo y únicamente el vencimiento de ese servicio. **No reinicia el último cambio de aceite ni su fecha o kilometraje objetivo.** El nuevo odómetro sí se usa para evaluar todos los vencimientos: el aceite puede quedar vencido aunque frenos esté al día.
+
+**Service general** y **Cambio de aceite** comparten el seguimiento de aceite y filtros del service. **Filtros** por separado tiene un seguimiento propio. Frenos, alineación/balanceo, neumáticos y revisión general son independientes; en **Otro mantenimiento → Nombre del servicio** se pueden crear seguimientos propios, como refrigerante o correa de distribución.
+
+En **Vehículo → Recordatorios** se muestran los vencimientos, el último servicio de cada tipo, los kilómetros recorridos desde ese trabajo y los kilómetros restantes. **Editar** permite corregir un vencimiento, incluso si ya pasó, y **Agregar vencimiento** añade uno sin duplicar mantenimientos ni modificar el historial. Para registrar un trabajo realizado se usa **Registrar** en el seguimiento correspondiente.
+
+Las bases y respaldos anteriores siguen siendo compatibles. Su único vencimiento se conserva y se identifica como anterior; no se inventan los que ya se habían perdido. Si otro mantenimiento había reiniciado un vencimiento antes de esta corrección, revisarlo y corregirlo con **Editar**. Las fechas y kilómetros del historial original permanecen intactos.

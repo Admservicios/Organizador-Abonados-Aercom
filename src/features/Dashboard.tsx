@@ -15,11 +15,15 @@ import {
 import { Badge, PageTitle, Panel, TextLink } from '../components/ui';
 import { useData } from '../app/store';
 import { dateLabel, maintenanceStatus, number } from '../lib/demo';
+import { allPlanRows, planStatus } from '../lib/maintenancePlans';
 
 export function Dashboard() {
   const { customers, vehicles, services, mode, referenceDate } = useData();
   const monthCount = services.filter((s) => s.date.startsWith(referenceDate.slice(0, 7))).length;
-  const upcoming = vehicles.filter((v) => maintenanceStatus(v, referenceDate) !== 'Al día');
+  const schedule = allPlanRows(vehicles, referenceDate);
+  const upcoming = schedule.filter(
+    ({ vehicle, plan }) => planStatus(plan, vehicle.km, referenceDate) !== 'Al día',
+  );
   const distribution = ['Al día', 'Próximo', 'Vencido'].map((status) => ({
     status,
     count: vehicles.filter((v) => maintenanceStatus(v, referenceDate) === status).length,
@@ -230,7 +234,7 @@ export function Dashboard() {
                     <th>Vehículo / Patente</th>
                     <th>Cliente</th>
                     <th>Último km</th>
-                    <th>Fecha objetivo</th>
+                    <th>Servicio / Vencimiento</th>
                     <th>Estado</th>
                     <th>
                       <span className="sr-only">Abrir</span>
@@ -238,41 +242,43 @@ export function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...vehicles]
-                    .sort((a, b) => a.nextDate.localeCompare(b.nextDate))
-                    .slice(0, 5)
-                    .map((v) => (
-                      <tr key={v.id}>
-                        <td>
-                          <Link className="vehicle-cell" to={`/vehiculos/${v.id}`}>
-                            <span className="mini-car">
-                              <CarFront size={19} />
-                            </span>
-                            <span>
-                              <strong>{v.plate}</strong>
-                              <small>
-                                {v.brand} {v.model}
-                              </small>
-                            </span>
-                          </Link>
-                        </td>
-                        <td>{customers.find((c) => c.id === v.customerId)?.name}</td>
-                        <td>{number(v.km)} km</td>
-                        <td>{dateLabel(v.nextDate)}</td>
-                        <td>
-                          <Badge>{maintenanceStatus(v, referenceDate)}</Badge>
-                        </td>
-                        <td>
-                          <Link
-                            className="icon-button"
-                            aria-label={`Ver ${v.plate}`}
-                            to={`/vehiculos/${v.id}`}
-                          >
-                            <ArrowRight size={16} />
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
+                  {schedule.slice(0, 5).map(({ vehicle: v, plan }) => (
+                    <tr key={`${v.id}-${plan.category}`}>
+                      <td>
+                        <Link className="vehicle-cell" to={`/vehiculos/${v.id}`}>
+                          <span className="mini-car">
+                            <CarFront size={19} />
+                          </span>
+                          <span>
+                            <strong>{v.plate}</strong>
+                            <small>
+                              {v.brand} {v.model}
+                            </small>
+                          </span>
+                        </Link>
+                      </td>
+                      <td>{customers.find((c) => c.id === v.customerId)?.name}</td>
+                      <td>{number(v.km)} km</td>
+                      <td>
+                        <strong>{plan.label}</strong>
+                        <small className="block muted">
+                          {dateLabel(plan.nextDate)} · {number(plan.nextKm)} km
+                        </small>
+                      </td>
+                      <td>
+                        <Badge>{planStatus(plan, v.km, referenceDate)}</Badge>
+                      </td>
+                      <td>
+                        <Link
+                          className="icon-button"
+                          aria-label={`Ver ${v.plate}`}
+                          to={`/vehiculos/${v.id}`}
+                        >
+                          <ArrowRight size={16} />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

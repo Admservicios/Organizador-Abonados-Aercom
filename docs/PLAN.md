@@ -19,7 +19,7 @@ GitHub versiona código, esquemas y pruebas. Los registros personales del taller
 
 ## Estado inicial de la base
 
-La base visual, la persistencia local y la recuperación JSON están implementadas. La operación ampliada avanza con **comprobantes PDF de mantenimiento**: descarga al registrar y desde los historiales, generación local, notas privadas excluidas y textos largos distribuidos entre páginas. También están implementadas las fotografías persistentes por mantenimiento, la galería del vehículo y el respaldo ZIP completo con verificación de archivos. Quedan pendientes otros documentos y las recomendaciones múltiples por vehículo.
+La base visual, la persistencia local y la recuperación JSON están implementadas. La operación ampliada avanza con **comprobantes PDF de mantenimiento**: descarga al registrar y desde los historiales, generación local, notas privadas excluidas y textos largos distribuidos entre páginas. También están implementadas las fotografías persistentes por mantenimiento, la galería del vehículo y el respaldo ZIP completo con verificación de archivos. También están implementados los vencimientos independientes por tipo de servicio y su edición en Recordatorios. Quedan pendientes otros documentos.
 
 - Formato `motortrack-local`, versión 1.
 - Una unidad de `localStorage` contiene clientes, vehículos, mantenimientos, taller y referencias de fotos. IndexedDB conserva las imágenes optimizadas, en colecciones locales identificadas.
@@ -34,8 +34,8 @@ La base visual, la persistencia local y la recuperación JSON están implementad
 - Vence al alcanzar fecha o kilometraje, lo que ocurra primero. Se avisa hasta 30 días o 1.000 km antes.
 - En modo local se usa la fecha actual de Argentina; la demo conserva 21 de octubre de 2026 como referencia.
 - El kilometraje representa el último dato registrado; no una medición en vivo.
-- Actualmente hay una recomendación por vehículo; registrar un servicio reemplaza esa recomendación.
-- Los comprobantes PDF muestran la recomendación vigente al descargarlos, identificada como tal. No reconstruyen recomendaciones históricas que no están guardadas en el servicio.
+- Cada vehículo tiene vencimientos independientes por tipo. Registrar un servicio modifica solo su seguimiento y conserva los demás; actualizar el odómetro puede volver vencido otro servicio sin reiniciarlo. Los registros anteriores conservan su único vencimiento almacenado hasta que el usuario lo revise o lo renueve.
+- Los comprobantes de nuevos servicios conservan su vencimiento histórico. En registros anteriores se usa únicamente el vencimiento vigente del mismo tipo, identificado como tal; no se reconstruyen intervalos históricos perdidos.
 - Los importes actuales se expresan en pesos. Antes de integrar contabilidad o facturación se revisará su representación monetaria.
 - No se publican datos locales mediante las rutas de demostración del QR.
 

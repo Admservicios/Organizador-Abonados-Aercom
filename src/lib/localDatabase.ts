@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Customer, Service, Vehicle } from './demo';
 import { photoReferenceSchema, type PhotoReference } from './photos';
+import { maintenancePlanSchema } from './maintenancePlans';
 
 // Se conservan los identificadores originales para leer los datos y respaldos existentes.
 export const DATABASE_KEY = 'motortrack-local-database-v1';
@@ -33,6 +34,7 @@ const vehicleSchema = z.strictObject({
   nextDate: z.iso.date(),
   nextKm: z.number().int().min(1).max(9999999),
   recommendation: text(150),
+  maintenancePlans: z.array(maintenancePlanSchema).min(1).max(100).optional(),
 });
 const serviceSchema = z.strictObject({
   id,
@@ -45,6 +47,7 @@ const serviceSchema = z.strictObject({
   amount: z.number().min(0).max(999999999),
   notes: text(500),
   public: z.boolean(),
+  maintenance: maintenancePlanSchema.optional(),
 });
 export const workshopSchema = z.strictObject({
   name: z.string().trim().min(1).max(100),
@@ -77,6 +80,22 @@ export const dataSchema = z
     const vehicles = new Set(data.vehicles.map((v) => v.id));
     const services = new Set(data.services.map((s) => s.id));
     const photos = data.photos ?? [];
+    if (
+      data.vehicles.some(
+        (v) =>
+          v.maintenancePlans &&
+          (new Set(v.maintenancePlans.map((p) => p.category)).size !== v.maintenancePlans.length ||
+            v.maintenancePlans.some((p) => p.lastKm !== undefined && p.lastKm > v.km)),
+      ) ||
+      data.services.some(
+        (s) =>
+          s.maintenance && (s.maintenance.lastDate !== s.date || s.maintenance.lastKm !== s.km),
+      )
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Los vencimientos por servicio no son válidos.',
+      });
     if (
       (photos.length > 0 && !data.photoSet) ||
       new Set(photos.map((p) => p.id)).size !== photos.length ||

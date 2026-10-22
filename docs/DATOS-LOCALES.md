@@ -38,7 +38,7 @@ El esquema completo está en `src/lib/localDatabase.ts`. No agregar contraseñas
 
 El archivo usa `format: motortrack-backup`, `version: 1`, una fecha `exportedAt` y el mismo campo `data`. No incluye credenciales ni archivos. Se admite como máximo un archivo de 5 MB, sujeto además a la cuota disponible del navegador.
 
-Los comprobantes PDF se generan y descargan localmente a partir de los registros. No son adjuntos permanentes ni forman parte del respaldo JSON; pueden descargarse nuevamente desde el historial. El PDF excluye las notas privadas del cliente y del servicio. Para comprobantes anteriores se utiliza la recomendación de mantenimiento vigente al descargarlos, identificada en el documento, sin alterar el servicio original.
+Los comprobantes PDF se generan y descargan localmente a partir de los registros. No son adjuntos permanentes ni forman parte del respaldo JSON; pueden descargarse nuevamente desde el historial. El PDF excluye las notas privadas del cliente y del servicio. Los nuevos servicios conservan su vencimiento propio en `maintenance`; los PDFs usan esa copia histórica. Para servicios anteriores, sin esa copia, solo se consulta el seguimiento vigente del mismo tipo, sin alterar el registro original.
 
 La validación comprueba formato y relaciones; no es una firma digital ni permite demostrar quién creó el archivo. Se rechazan versiones desconocidas, campos no previstos, identificadores duplicados, patentes repetidas y relaciones inexistentes.
 
@@ -76,3 +76,13 @@ El respaldo ZIP contiene un `backup.json` validado y `photos/<id>.jpg`. Se compr
 Al restaurar un ZIP, se validan las imágenes y se escribe una colección nueva con identificadores nuevos antes de confirmar los registros. Si falla la escritura de registros, se retiran las fotos recién preparadas y se conserva la base previa. La copia anterior de `localStorage` conserva sus referencias a las fotos originales, que permanecen en IndexedDB. Esa copia solo funciona completa en el mismo navegador; para trasladarla hacen falta los archivos en un ZIP independiente.
 
 Los JSON solo trasladan registros. Si incluyen referencias a fotos ausentes en el navegador de destino, los registros pueden recuperarse, pero la galería informa que necesita el ZIP completo. El exportador de ZIP rechaza un respaldo incompleto cuando faltan imágenes referenciadas. Los PDFs no incorporan estas fotografías. La demo mantiene sus fotos exclusivamente en memoria y las descarta al recargar.
+
+## Vencimientos por tipo de servicio
+
+La versión 1 admite ahora los campos opcionales `vehicle.maintenancePlans` y `service.maintenance`. Las bases y respaldos sin esos campos se leen sin una migración destructiva. Cada plan tiene una categoría estable, etiqueta, fecha y kilometraje objetivo, recomendación y, cuando se conoce, fecha/kilometraje del último trabajo del mismo tipo. No se guardan dos planes con la misma categoría en un vehículo.
+
+Las categorías de service de aceite/filtros, filtros por separado, frenos, alineación/balanceo, neumáticos y revisión general son independientes. Los servicios con nombre propio generan categorías separadas. Registrar un mantenimiento reemplaza únicamente el plan de su categoría y guarda una copia en el servicio; el odómetro general se actualiza, mientras los demás límites y últimos trabajos permanecen intactos. Los estados se calculan con ese odómetro actual y cada límite propio. El resumen del vehículo toma el estado más urgente; la agenda y el contador de pendientes cuentan servicios, no solo vehículos.
+
+Los campos históricos `nextDate`, `nextKm` y `recommendation` se mantienen como resumen compatible. Cuando existen planes, las pantallas derivan los valores de ellos, sin recalcular límites desde el odómetro actual. Sin planes, se conserva el único vencimiento anterior, marcado `legacy`. Solo se completa la referencia del último trabajo a partir de un registro existente del mismo tipo y sin modificar sus datos; no se inventa un intervalo perdido. El usuario puede ajustar los planes desde Recordatorios, sin registrar un servicio ficticio. Se admite corregir un vencimiento ya pasado, siempre posterior al último trabajo conocido de ese tipo.
+
+Las copias JSON y ZIP incluyen los planes y las copias históricas de los nuevos servicios. La edición del odómetro conserva esos planes; fotos, clientes e historial no se reescriben al ajustar un vencimiento.

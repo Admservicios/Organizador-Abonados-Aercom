@@ -1,3 +1,5 @@
+import { vehiclePlanStatus, type MaintenancePlan } from './maintenancePlans';
+
 export type Customer = {
   id: string;
   name: string;
@@ -22,6 +24,7 @@ export type Vehicle = {
   nextDate: string;
   nextKm: number;
   recommendation: string;
+  maintenancePlans?: MaintenancePlan[];
 };
 export type Service = {
   id: string;
@@ -34,6 +37,7 @@ export type Service = {
   amount: number;
   notes: string;
   public: boolean;
+  maintenance?: MaintenancePlan;
 };
 export const demoDate = '2026-10-21';
 export const initialCustomers: Customer[] = [
@@ -310,11 +314,7 @@ export const initialServices: Service[] = [
 ];
 export type MaintenanceStatus = 'Al día' | 'Próximo' | 'Vencido';
 export function maintenanceStatus(vehicle: Vehicle, today = demoDate): MaintenanceStatus {
-  const date = Date.parse(`${today}T12:00:00Z`);
-  const due = Date.parse(`${vehicle.nextDate}T12:00:00Z`);
-  if (vehicle.km >= vehicle.nextKm || due <= date) return 'Vencido';
-  if (vehicle.nextKm - vehicle.km <= 1000 || (due - date) / 86400000 <= 30) return 'Próximo';
-  return 'Al día';
+  return vehiclePlanStatus(vehicle, today);
 }
 export const number = (value: number) => new Intl.NumberFormat('es-AR').format(value);
 export const money = (value: number) =>

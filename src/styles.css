@@ -4720,3 +4720,46 @@ label > .input-suffix input {
   max-height: 65vh;
   object-fit: contain;
 }
+
+.service-schedules {
+  display: grid;
+  gap: 14px;
+}
+.service-schedule {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.service-schedule p {
+  margin: 8px 0;
+  line-height: 1.6;
+  font-size: 12px;
+}
+.service-schedule-heading,
+.service-schedule-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.service-schedule-heading {
+  justify-content: space-between;
+}
+.service-schedule-heading h3 {
+  font-size: 15px;
+}
+.service-schedule-actions {
+  margin-top: 12px;
+}
+.vehicle-detail-grid > div,
+.vehicle-detail-grid > aside {
+  min-width: 0;
+}
+.service-schedule-actions .button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+}

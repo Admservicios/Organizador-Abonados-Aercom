@@ -29,6 +29,8 @@ import { Badge, Empty, Modal, PageTitle, Panel, VehicleArt } from '../components
 import { useData } from '../app/store';
 import { ServicePDFButton } from '../components/ServicePDFButton';
 import { PhotoGallery } from '../components/MaintenancePhotos';
+import { MaintenanceSchedules } from '../components/MaintenanceSchedules';
+import { nextVehiclePlan, planServiceURL } from '../lib/maintenancePlans';
 import { dateLabel, maintenanceStatus, money, number, type Vehicle } from '../lib/demo';
 
 export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: () => void }) {
@@ -47,6 +49,7 @@ export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: ()
       return;
     }
     const saved = saveVehicle({
+      ...vehicle,
       id: vehicle?.id ?? crypto.randomUUID(),
       customerId: String(data.get('customer')),
       plate,
@@ -320,6 +323,7 @@ export function VehicleDetail() {
         }
       />
     );
+  const next = nextVehiclePlan(vehicle, referenceDate);
   const customer = customers.find((c) => c.id === vehicle.customerId);
   return (
     <>
@@ -460,8 +464,8 @@ export function VehicleDetail() {
                 <div className="info-strip">
                   <Info size={18} />
                   <span>
-                    Próximo servicio: {dateLabel(vehicle.nextDate)} o {number(vehicle.nextKm)} km,
-                    lo que ocurra primero.
+                    Próximo servicio: {dateLabel(next.nextDate)} o {number(next.nextKm)} km, lo que
+                    ocurra primero.
                   </span>
                 </div>
               </Panel>
@@ -492,8 +496,8 @@ export function VehicleDetail() {
                   <FileText size={36} />
                   <h3>Los documentos, en un lugar seguro</h3>
                   <p>
-                    El almacenamiento de fotografías y documentos se incorporará en una próxima
-                    entrega.
+                    Los documentos adicionales se incorporarán en una próxima entrega. Las fotos de
+                    los mantenimientos están en la pestaña Fotos.
                   </p>
                   <button className="button" disabled>
                     Disponible en la etapa de persistencia
@@ -506,24 +510,7 @@ export function VehicleDetail() {
                 <PhotoGallery services={history} />
               </Panel>
             )}
-            {tab === 'Recordatorios' && (
-              <Panel title="Próximo mantenimiento" icon={CalendarDays}>
-                <div className="reminder-detail">
-                  <Badge>{maintenanceStatus(vehicle, referenceDate)}</Badge>
-                  <h3>{vehicle.recommendation}</h3>
-                  <p>
-                    {dateLabel(vehicle.nextDate)} o {number(vehicle.nextKm)} km
-                  </p>
-                  <div className="info-strip">
-                    <Info size={18} />
-                    Estimación basada en el último kilometraje registrado.
-                  </div>
-                  <Link className="button primary" to={`/mantenimientos/nuevo?vehiculo=${id}`}>
-                    Registrar servicio
-                  </Link>
-                </div>
-              </Panel>
-            )}
+            {tab === 'Recordatorios' && <MaintenanceSchedules vehicle={vehicle} />}
           </div>
         </div>
         <aside className="vehicle-aside">
@@ -531,24 +518,30 @@ export function VehicleDetail() {
             <div className="next-service-type">
               <Wrench size={22} />
               <span>
-                <strong>{vehicle.recommendation}</strong>
-                <small>Recomendación de mantenimiento</small>
+                <strong>{next.recommendation}</strong>
+                <small>{next.label}</small>
               </span>
             </div>
             <div className="next-service-values">
               <div>
                 <small>Fecha objetivo</small>
-                <strong>{dateLabel(vehicle.nextDate)}</strong>
+                <strong>{dateLabel(next.nextDate)}</strong>
               </div>
               <div>
                 <small>Kilometraje objetivo</small>
-                <strong>{number(vehicle.nextKm)} km</strong>
+                <strong>{number(next.nextKm)} km</strong>
               </div>
             </div>
-            <Link className="button primary full" to={`/mantenimientos/nuevo?vehiculo=${id}`}>
+            <Link className="button primary full" to={planServiceURL(vehicle, next)}>
               Registrar servicio ahora
             </Link>
-            <p className="fine-print">Estimación según el último kilometraje informado.</p>
+            <p className="fine-print">
+              Vencimiento prioritario según el kilometraje actual. Cada servicio conserva sus
+              propios límites.
+            </p>
+            <button className="button full" onClick={() => setTab('Recordatorios')}>
+              Ver todos los vencimientos
+            </button>
           </Panel>
           <Panel
             title="Datos del propietario"

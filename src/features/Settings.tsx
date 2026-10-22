@@ -700,7 +700,7 @@ export function SettingsPage() {
                   [
                     '04',
                     'Operación y archivos',
-                    'PDF, fotos permanentes y respaldo ZIP completo disponibles. Próximas entregas: documentos y recomendaciones múltiples.',
+                    'PDF, fotos permanentes y respaldo ZIP completo disponibles. Vencimientos por servicio disponibles. Próximas entregas: documentos adicionales.',
                   ],
                   [
                     '05',
