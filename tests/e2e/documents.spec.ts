@@ -203,6 +203,11 @@ test('rechaza PDF falso; la demo no escribe documentos locales ni los expone por
   await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('PDF válido');
   expect((await data(page)).documents).toBeUndefined();
+  // Descartar explícitamente el archivo inválido antes de cambiar de base.
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('cambios sin guardar');
+    await dialog.accept();
+  });
   await page.getByRole('button', { name: 'Explorar demo', exact: true }).click();
   await open(page);
   await save(page);
@@ -354,6 +359,11 @@ test('rechaza imágenes dañadas y mantiene la demostración de imágenes separa
   await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('dañada');
   expect(await data(page)).toEqual(before);
+  // Descartar explícitamente el archivo inválido antes de cambiar de base.
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('cambios sin guardar');
+    await dialog.accept();
+  });
   await page.getByRole('button', { name: 'Explorar demo', exact: true }).click();
   await open(page);
   await page

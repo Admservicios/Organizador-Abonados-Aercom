@@ -102,7 +102,9 @@ try {
         .click();
       const pdf = await readFile(await (await pending).path());
       assert.match(pdf.toString('latin1'), /^%PDF-/);
-      await page.goto(`${url}#/mantenimientos/nuevo?vehiculo=practica-v02`);
+      await page.goto(`${url}#/vehiculos/practica-v02`);
+      await page.reload();
+      await page.getByRole('link', { name: 'Registrar mantenimiento', exact: true }).click();
       await page.getByLabel(/Trabajos realizados/).fill('Mantenimiento estático con foto.');
       // El enrutador publicado usa hash: comprobar también enlaces y Atrás reales.
       for (const leave of [
@@ -117,6 +119,7 @@ try {
         assert.match(warning.message(), /cambios sin guardar/);
         await warning.dismiss();
         await action;
+        await page.waitForURL(/mantenimientos\/nuevo/);
         assert.match(page.url(), /mantenimientos\/nuevo/);
         assert.equal(
           await page.getByLabel(/Trabajos realizados/).inputValue(),
