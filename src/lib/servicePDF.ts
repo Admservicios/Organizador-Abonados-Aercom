@@ -18,6 +18,8 @@ export async function createServicePDF({
   workshop,
   demo,
 }: ServiceReceipt) {
+  if (service.annulment)
+    throw new Error('Recuperá el mantenimiento antes de emitir un comprobante.');
   if (service.vehicleId !== vehicle.id || vehicle.customerId !== customer.id)
     throw new Error('El servicio, el vehículo y el cliente no corresponden.');
   const { jsPDF } = await import('jspdf');

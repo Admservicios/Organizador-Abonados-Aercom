@@ -119,7 +119,7 @@ export function CustomerEditor({ customer, close }: { customer?: Customer; close
   );
 }
 export function Customers() {
-  const { customers, vehicles, services, mode } = useData();
+  const { customers, vehicles, activeServices: services, mode } = useData();
   const [params, setParams] = useSearchParams();
   const selected = customers.find((c) => c.id === (params.get('cliente') ?? customers[0]?.id));
   const [search, setSearch] = useState('');

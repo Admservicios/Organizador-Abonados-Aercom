@@ -7,7 +7,6 @@ import { editableServicePlan, editServiceData } from '../lib/serviceEditing';
 import { serviceSchema, serviceFieldsSchema } from '../lib/serviceValidation';
 import { nextServiceDate } from '../lib/localDatabase';
 import { downloadServicePDF } from '../lib/servicePDF';
-import { ServicePDFButton } from '../components/ServicePDFButton';
 import { PhotoPicker } from '../components/MaintenancePhotos';
 import type { PreparedPhoto } from '../lib/photos';
 import {
@@ -31,7 +30,6 @@ import {
   Info,
   NotebookPen,
   Plus,
-  Pencil,
   Save,
   Search,
   Settings2,
@@ -40,109 +38,9 @@ import {
 } from 'lucide-react';
 import { Badge, Empty, PageTitle, Panel, VehicleArt } from '../components/ui';
 import { useData } from '../app/store';
-import { dateLabel, money, number, type Service } from '../lib/demo';
+import { dateLabel, number, type Service } from '../lib/demo';
 
-export function MaintenanceList() {
-  const { services, vehicles, customers } = useData();
-  const [search, setSearch] = useState('');
-  const filtered = [...services]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .filter((s) => {
-      const v = vehicles.find((v) => v.id === s.vehicleId);
-      return `${s.type} ${s.work} ${v?.brand} ${v?.model} ${v?.plate}`
-        .toLocaleLowerCase('es')
-        .includes(search.toLocaleLowerCase('es'));
-    });
-  return (
-    <>
-      <PageTitle
-        title="Mantenimientos"
-        subtitle="El trabajo de tu taller, registrado visita a visita."
-        actions={
-          <Link className="button primary" to="/mantenimientos/nuevo">
-            <Plus size={17} />
-            Registrar mantenimiento
-          </Link>
-        }
-      />
-      <div className="filter-bar">
-        <div className="input-icon">
-          <Search size={17} />
-          <input
-            aria-label="Buscar mantenimientos"
-            placeholder="Buscar por patente, vehículo o trabajo…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <span className="results-count">{filtered.length} registros</span>
-      </div>
-      <Panel title="Historial del taller" icon={Wrench}>
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Vehículo</th>
-                <th>Cliente</th>
-                <th>Servicio</th>
-                <th>Kilometraje</th>
-                <th>Importe</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((s) => {
-                const v = vehicles.find((v) => v.id === s.vehicleId);
-                return (
-                  <tr key={s.id}>
-                    <td>{dateLabel(s.date)}</td>
-                    <td>
-                      <Link className="table-link" to={`/vehiculos/${s.vehicleId}`}>
-                        <strong>{v?.plate}</strong>
-                        <small>
-                          {v?.brand} {v?.model}
-                        </small>
-                      </Link>
-                    </td>
-                    <td>{customers.find((c) => c.id === v?.customerId)?.name}</td>
-                    <td>
-                      <span className="service-type">
-                        <Wrench size={15} />
-                        {s.type}
-                      </span>
-                    </td>
-                    <td>{number(s.km)} km</td>
-                    <td>{money(s.amount)}</td>
-                    <td>
-                      <Link
-                        className="button small"
-                        to={`/mantenimientos/${s.id}/editar`}
-                        aria-label={`Editar servicio de ${v?.plate} del ${s.date}`}
-                      >
-                        <Pencil size={14} />
-                        Editar
-                      </Link>
-                      <ServicePDFButton service={s} />
-                      <Link
-                        className="icon-button"
-                        to={`/vehiculos/${s.vehicleId}`}
-                        aria-label={`Ver servicio de ${v?.plate}`}
-                      >
-                        <ArrowRight size={16} />
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        {!filtered.length && <Empty text="No encontramos mantenimientos" />}
-      </Panel>
-    </>
-  );
-}
+export { MaintenanceList } from './MaintenanceHistory';
 export function MaintenanceForm() {
   const { id } = useParams();
   return <MaintenanceFormFields key={id ?? 'new'} />;
@@ -161,7 +59,7 @@ function MaintenanceFormFields() {
     referenceDate,
   } = store;
   const { id } = useParams();
-  const [original] = useState(() => services.find((s) => s.id === id));
+  const [original] = useState(() => services.find((s) => !s.annulment && s.id === id));
   const [initialPlan] = useState(() =>
     original ? editableServicePlan(original, store) : undefined,
   );
@@ -341,7 +239,13 @@ function MaintenanceFormFields() {
           customer,
           vehicle: original
             ? correctedVehicle
-            : recordServicePlan(vehicle, service, next, referenceDate, services),
+            : recordServicePlan(
+                vehicle,
+                service,
+                next,
+                referenceDate,
+                services.filter((s) => !s.annulment),
+              ),
           workshop,
           demo: mode === 'demo',
         });
@@ -361,6 +265,7 @@ function MaintenanceFormFields() {
     navigate(`/vehiculos/${vehicle.id}`);
   };
   const history = services
+    .filter((s) => !s.annulment)
     .filter((s) => s.vehicleId === vehicleId)
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 3);

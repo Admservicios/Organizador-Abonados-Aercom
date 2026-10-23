@@ -18,7 +18,7 @@ import { dateLabel, maintenanceStatus, number } from '../lib/demo';
 import { allPlanRows, planStatus } from '../lib/maintenancePlans';
 
 export function Dashboard() {
-  const { customers, vehicles, services, mode, referenceDate } = useData();
+  const { customers, vehicles, activeServices: services, mode, referenceDate } = useData();
   const monthCount = services.filter((s) => s.date.startsWith(referenceDate.slice(0, 7))).length;
   const schedule = allPlanRows(vehicles, referenceDate);
   const upcoming = schedule.filter(

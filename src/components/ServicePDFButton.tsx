@@ -13,10 +13,10 @@ export function ServicePDFButton({ service }: { service: Service }) {
     <button
       type="button"
       className="button small"
-      disabled={busy || !vehicle || !customer}
+      disabled={busy || !!service.annulment || !vehicle || !customer}
       aria-label={`Descargar PDF de ${service.type} del ${dateLabel(service.date)} · ${vehicle?.plate}`}
       onClick={async () => {
-        if (busy || !vehicle || !customer) return;
+        if (busy || service.annulment || !vehicle || !customer) return;
         setBusy(true);
         try {
           await downloadServicePDF({ service, vehicle, customer, workshop, demo: mode === 'demo' });

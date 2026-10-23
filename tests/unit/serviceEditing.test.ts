@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { changeServiceStatus, recordServiceChange } from '../../src/lib/serviceHistory';
 import {
   initialCustomers,
   initialServices,
@@ -214,5 +215,97 @@ describe('corrección de mantenimientos y relaciones', () => {
     expect(editableServicePlan(old, data)).toBeUndefined();
     const result = editServiceData(data, old, { ...old, amount: 12 }, today);
     expect(result.services[0].maintenance).toBeUndefined();
+  });
+});
+
+describe('anulación y recuperación de mantenimientos', () => {
+  it('anular la última visita de aceite recupera su vencimiento anterior sin tocar frenos', () => {
+    const data = fixture([first, brakes, second]);
+    const result = changeServiceStatus(data, second, 'Visita duplicada', today);
+    expect(result.vehicles[0].km).toBe(13000);
+    expect(vehiclePlans(result.vehicles[0])).toEqual([first.maintenance, brakes.maintenance]);
+    expect(result.services).toHaveLength(3);
+    expect(result.services[2].annulment?.reason).toBe('Visita duplicada');
+    expect(result.services[2].changes?.at(-1)?.action).toBe('annulled');
+    expect(data.services[2].annulment).toBeUndefined();
+    expect(parseBackup(JSON.stringify(makeBackup(result))).data).toEqual(result);
+    const recovered = changeServiceStatus(result, result.services[2], 'Visita confirmada', today);
+    expect(recovered.vehicles[0].km).toBe(18000);
+    expect(vehiclePlans(recovered.vehicles[0])).toEqual([second.maintenance, brakes.maintenance]);
+    expect(recovered.services[2].annulment).toBeUndefined();
+    expect(recovered.services[2].changes?.map((c) => c.action)).toEqual(['annulled', 'restored']);
+  });
+  it('anular un servicio anterior no reinicia el vencimiento más reciente de ese tipo', () => {
+    const result = changeServiceStatus(
+      fixture([first, brakes, second]),
+      first,
+      'Registro incorrecto',
+      today,
+    );
+    expect(result.vehicles[0].km).toBe(18000);
+    expect(result.vehicles[0].maintenancePlans?.[0]).toEqual(second.maintenance);
+    const restored = changeServiceStatus(result, result.services[0], 'Registro verificado', today);
+    expect(restored.vehicles[0].maintenancePlans).toEqual(result.vehicles[0].maintenancePlans);
+  });
+  it('anular el único servicio retira el vencimiento sin inventar uno y conserva la lectura manual', () => {
+    const data = fixture();
+    data.services = [brakes];
+    data.vehicles[0].maintenancePlans = [brakes.maintenance!];
+    data.vehicles[0].manualKm = 5000;
+    const result = changeServiceStatus(data, brakes, 'Carga equivocada', today);
+    expect(result.vehicles[0].km).toBe(5000);
+    expect(vehiclePlans(result.vehicles[0])).toEqual([]);
+    expect(maintenanceStatus(result.vehicles[0], today)).toBe('Sin datos');
+    expect(() => newDatabase(result)).not.toThrow(); // El archivo anulado conserva sus 13.000 km.
+  });
+  it('conserva el vencimiento y la lectura de un ajuste manual', () => {
+    const data = fixture();
+    data.vehicles[0].manualKm = 15000;
+    data.vehicles[0].km = 15000;
+    data.vehicles[0].maintenancePlans![1] = { ...brakes.maintenance!, manual: true, nextKm: 50000 };
+    const result = changeServiceStatus(data, brakes, 'Servicio duplicado', today);
+    expect(result.vehicles[0].km).toBe(15000);
+    expect(result.vehicles[0].maintenancePlans).toEqual(data.vehicles[0].maintenancePlans);
+    const recovered = changeServiceStatus(result, result.services[1], 'Servicio verificado', today);
+    expect(recovered.vehicles[0].maintenancePlans).toEqual(data.vehicles[0].maintenancePlans);
+  });
+  it('no usa registros anulados para rechazar una corrección y sí valida al recuperarlos', () => {
+    const data = changeServiceStatus(fixture(), brakes, 'Kilómetros incorrectos', today);
+    const edited = correction(first, { km: 14000 });
+    const corrected = editServiceData(data, first, edited, today);
+    const before = structuredClone(corrected);
+    expect(() =>
+      changeServiceStatus(corrected, corrected.services[1], 'Recuperar registro', today),
+    ).toThrow('contradice');
+    expect(corrected).toEqual(before);
+  });
+  it('rechaza motivos vacíos, estados obsoletos y metadatos dañados sin cambiar los datos', () => {
+    const data = fixture();
+    expect(() => changeServiceStatus(data, brakes, '  ', today)).toThrow('motivo');
+    const result = changeServiceStatus(data, brakes, 'Carga duplicada', today);
+    expect(() => changeServiceStatus(result, brakes, 'Carga duplicada', today)).toThrow(
+      'otra pestaña',
+    );
+    const invalid = structuredClone(result);
+    invalid.services[1].annulment!.at = 'ayer';
+    expect(() => newDatabase(invalid)).toThrow();
+  });
+  it('registra valores previos y nuevos y conserva toda la cadena al editar otra vez', () => {
+    const firstEdit = recordServiceChange(
+      first,
+      { ...first, amount: 123, notes: 'Nota corregida' },
+      'edited',
+    );
+    expect(firstEdit.changes?.[0].changes).toContainEqual({
+      field: 'Importe',
+      before: String(first.amount),
+      after: '123',
+    });
+    const secondEdit = recordServiceChange(firstEdit, { ...firstEdit, amount: 456 }, 'edited');
+    expect(secondEdit.changes).toHaveLength(2);
+    expect(secondEdit.changes?.[1].changes).toEqual([
+      { field: 'Importe', before: '123', after: '456' },
+    ]);
+    expect(first.changes).toBeUndefined();
   });
 });

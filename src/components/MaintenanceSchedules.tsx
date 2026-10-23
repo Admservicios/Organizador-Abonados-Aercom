@@ -24,7 +24,7 @@ function ScheduleEditor({
   plan?: MaintenancePlan;
   close: () => void;
 }) {
-  const { services, saveVehicle, notify, referenceDate, mode } = useData();
+  const { activeServices: services, saveVehicle, notify, referenceDate, mode } = useData();
   const plans = vehiclePlans(vehicle);
   const initialKind = plan
     ? (maintenanceTypes.find((k) => k.key === plan.category) ?? maintenanceKind(plan.label))
@@ -206,7 +206,7 @@ function ScheduleEditor({
 }
 
 export function MaintenanceSchedules({ vehicle }: { vehicle: Vehicle }) {
-  const { referenceDate, services } = useData();
+  const { referenceDate, activeServices: services } = useData();
   const [editing, setEditing] = useState<MaintenancePlan | 'new' | null>(null);
   return (
     <Panel

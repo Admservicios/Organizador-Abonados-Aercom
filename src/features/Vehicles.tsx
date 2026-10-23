@@ -46,7 +46,15 @@ import { nextVehiclePlan, planServiceURL } from '../lib/maintenancePlans';
 import { dateLabel, maintenanceStatus, money, number, type Vehicle } from '../lib/demo';
 
 export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: () => void }) {
-  const { customers, vehicles, services, saveVehicle, notify, mode, referenceDate } = useData();
+  const {
+    customers,
+    vehicles,
+    activeServices: services,
+    saveVehicle,
+    notify,
+    mode,
+    referenceDate,
+  } = useData();
   const [error, setError] = useState('');
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -343,7 +351,7 @@ export function VehicleQR({ id }: { id: string }) {
 export function VehicleDetail() {
   const confirmDiscard = useConfirmDiscard();
   const { id } = useParams();
-  const { vehicles, customers, services, photos, referenceDate } = useData();
+  const { vehicles, customers, activeServices: services, photos, referenceDate } = useData();
   const vehicle = vehicles.find((v) => v.id === id);
   const [tab, setTab] = useState('Historial de mantenimientos');
   const [editing, setEditing] = useState(false);

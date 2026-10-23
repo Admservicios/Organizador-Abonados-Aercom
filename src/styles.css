@@ -5149,3 +5149,112 @@ input[type='checkbox'] {
     padding: 16px;
   }
 }
+
+/* Historial y correcciones recuperables. */
+.history-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+  margin-bottom: 18px;
+  align-items: end;
+}
+.history-filters label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.history-filters input,
+.history-filters select {
+  width: 100%;
+  min-width: 0;
+}
+.history-search {
+  grid-column: span 2;
+  align-self: end;
+}
+.history-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 230px;
+}
+.history-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  color: var(--muted);
+}
+.history-pagination nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.history-pagination label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.service-audit {
+  overflow-wrap: anywhere;
+}
+.service-audit dl {
+  display: grid;
+  gap: 8px;
+}
+.service-audit dt {
+  font-weight: 600;
+}
+.service-audit dd {
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+}
+.service-audit-list {
+  padding-left: 22px;
+}
+.service-audit-list > li {
+  border-top: 1px solid var(--border);
+  padding: 16px 0;
+}
+.service-audit-list > li > small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+}
+.audit-change {
+  margin-top: 14px;
+  padding: 10px;
+  background: var(--bg);
+  border-radius: 8px;
+  white-space: pre-wrap;
+}
+.audit-change > div {
+  margin-top: 8px;
+}
+.audit-change small {
+  display: block;
+  color: var(--muted);
+}
+@media (max-width: 950px) {
+  .history-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 540px) {
+  .history-filters {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+  .history-search {
+    grid-column: auto;
+  }
+  .history-pagination {
+    padding: 14px 8px;
+  }
+  .history-pagination nav {
+    flex-wrap: wrap;
+  }
+}

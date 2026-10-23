@@ -55,6 +55,28 @@ const serviceSchema = z.strictObject({
   notes: text(500),
   public: z.boolean(),
   maintenance: maintenancePlanSchema.optional(),
+  annulment: z
+    .strictObject({ at: z.iso.datetime(), reason: z.string().trim().min(3).max(500) })
+    .optional(),
+  changes: z
+    .array(
+      z.strictObject({
+        at: z.iso.datetime(),
+        action: z.enum(['created', 'edited', 'annulled', 'restored']),
+        reason: z.string().max(500).optional(),
+        changes: z
+          .array(
+            z.strictObject({
+              field: z.string().max(100),
+              before: z.string().max(10000),
+              after: z.string().max(10000),
+            }),
+          )
+          .max(30),
+      }),
+    )
+    .max(1000)
+    .optional(),
 });
 export const workshopSchema = z.strictObject({
   name: z.string().trim().min(1).max(100),
@@ -152,7 +174,8 @@ export const dataSchema = z
     }
     if (
       data.services.some(
-        (s) => s.km > (data.vehicles.find((v) => v.id === s.vehicleId)?.km ?? Infinity),
+        (s) =>
+          !s.annulment && s.km > (data.vehicles.find((v) => v.id === s.vehicleId)?.km ?? Infinity),
       )
     ) {
       context.addIssue({

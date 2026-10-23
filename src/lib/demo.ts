@@ -27,7 +27,15 @@ export type Vehicle = {
   maintenancePlans?: MaintenancePlan[];
   manualKm?: number;
 };
+export type ServiceChange = {
+  at: string;
+  action: 'created' | 'edited' | 'annulled' | 'restored';
+  reason?: string;
+  changes: { field: string; before: string; after: string }[];
+};
 export type Service = {
+  annulment?: { at: string; reason: string };
+  changes?: ServiceChange[];
   id: string;
   vehicleId: string;
   date: string;

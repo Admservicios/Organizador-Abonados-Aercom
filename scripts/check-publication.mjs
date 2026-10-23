@@ -168,6 +168,27 @@ try {
         await readFile(await (await imageDownload).path()),
         await readFile(resolve(root, 'tests/fixtures/documento-imagen.png')),
       );
+      // El historial usa parámetros dentro del hash también en ambas publicaciones.
+      await page.goto(`${url}#/mantenimientos`);
+      await page.getByLabel('Buscar mantenimientos').fill('Mantenimiento estático con foto.');
+      await page.waitForFunction(() => document.querySelectorAll('tbody tr').length === 1);
+      assert.equal(await page.locator('tbody tr').count(), 1);
+      const serviceId = await page.locator('tbody tr').getAttribute('data-service-id');
+      await page.getByRole('button', { name: /^Anular servicio/ }).click();
+      await page.getByLabel('Motivo de anulación').fill('Prueba estática de anulación');
+      await page.getByRole('button', { name: 'Confirmar anulación', exact: true }).click();
+      await page.getByRole('dialog').waitFor({ state: 'hidden' });
+      await page.getByLabel('Estado del mantenimiento').selectOption('anulados');
+      await page.locator(`tr[data-service-id="${serviceId}"]`).waitFor();
+      await page.getByRole('button', { name: /^Recuperar servicio/ }).click();
+      await page.getByLabel('Motivo de recuperación').fill('Prueba estática de recuperación');
+      await page.getByRole('button', { name: 'Confirmar recuperación', exact: true }).click();
+      await page.getByRole('dialog').waitFor({ state: 'hidden' });
+      await page.getByRole('button', { name: 'Limpiar filtros' }).click();
+      await page.getByLabel('Registros por página').selectOption('25');
+      await page.locator(`tr[data-service-id="${serviceId}"]`).waitFor();
+      assert.ok(!page.url().includes('estado='));
+      assert.ok(!page.url().includes('buscar='));
       await page.goto(`${url}#/backups`);
       const archiveDownload = page.waitForEvent('download');
       await page.getByRole('button', { name: 'Descargar ZIP completo' }).click();
@@ -177,6 +198,13 @@ try {
       const entries = unzipSync(archive);
       assert.equal(Object.keys(entries).filter((name) => name.startsWith('documents/')).length, 2);
       assert.equal(Object.keys(entries).filter((name) => name.startsWith('photos/')).length, 1);
+      const backedUp = JSON.parse(new TextDecoder().decode(entries['backup.json']));
+      assert.deepEqual(
+        backedUp.data.services
+          .find((service) => service.id === serviceId)
+          .changes.map((entry) => entry.action),
+        ['created', 'annulled', 'restored'],
+      );
       assert.deepEqual(errors, [], `${name}: errores en el sitio servido sin Vite`);
       console.log(
         `${name}: rutas, persistencia, PDF, fotos, documentos locales y respaldo ZIP correctos.`,

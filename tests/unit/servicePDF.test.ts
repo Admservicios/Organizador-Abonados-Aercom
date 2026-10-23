@@ -59,4 +59,20 @@ describe('comprobantes PDF', () => {
     data.customer = initialCustomers[0];
     await expect(createServicePDF(data)).rejects.toThrow('no corresponden');
   });
+  it('rechaza emitir comprobantes de anulados y excluye el registro privado de cambios', async () => {
+    const data = receipt();
+    data.service.changes = [
+      {
+        at: '2026-10-23T15:00:00Z',
+        action: 'edited',
+        reason: 'MOTIVO-PRIVADO-789',
+        changes: [{ field: 'Notas', before: 'VALOR-PRIVADO-123', after: 'VALOR-PRIVADO-456' }],
+      },
+    ];
+    const pdf = Buffer.from((await createServicePDF(data)).bytes).toString('latin1');
+    expect(pdf).not.toContain('MOTIVO-PRIVADO-789');
+    expect(pdf).not.toContain('VALOR-PRIVADO-123');
+    data.service.annulment = { at: '2026-10-23T15:00:00Z', reason: 'Carga duplicada' };
+    await expect(createServicePDF(data)).rejects.toThrow('Recuperá');
+  });
 });

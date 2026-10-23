@@ -43,6 +43,7 @@ import {
   vehiclePlans,
 } from '../lib/maintenancePlans';
 import { editServiceData } from '../lib/serviceEditing';
+import { changeServiceStatus, recordServiceChange } from '../lib/serviceHistory';
 import type { DocumentReference } from '../lib/documents';
 import {
   discardDocuments,
@@ -54,6 +55,8 @@ import {
 } from '../lib/documents';
 
 type Store = LocalData & {
+  activeServices: Service[];
+  setServiceStatus: (original: Service, reason: string) => Promise<boolean>;
   mode: 'local' | 'demo';
   connected: boolean;
   referenceDate: string;
@@ -218,7 +221,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const previous = data.vehicles.find((v) => v.id === vehicle.id);
     const minimum = Math.max(
       0,
-      ...data.services.filter((s) => s.vehicleId === vehicle.id).map((s) => s.km),
+      ...data.services.filter((s) => !s.annulment && s.vehicleId === vehicle.id).map((s) => s.km),
       ...vehiclePlans(vehicle).map((p) => p.lastKm ?? 0),
     );
     if (vehicle.km < minimum) {
@@ -245,6 +248,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
     photos: PreparedPhoto[],
     removedPhotoIds: string[],
   ) => {
+    if (original.annulment) {
+      notify('Recuperá el mantenimiento antes de editarlo.');
+      return false;
+    }
+    service = recordServiceChange(
+      original,
+      service,
+      'edited',
+      undefined,
+      photos.length || removedPhotoIds.length
+        ? [
+            {
+              field: 'Fotos',
+              before: `${(data.photos ?? []).filter((p) => p.serviceId === service.id).length} archivos`,
+              after: `${photos.length} agregadas; ${removedPhotoIds.length} quitadas`,
+            },
+          ]
+        : [],
+    );
     let nextData: LocalData;
     try {
       nextData = editServiceData(
@@ -336,7 +358,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
   ): Promise<boolean> => {
     const nextData: LocalData = {
       ...data,
-      services: [{ ...service, maintenance: servicePlan(service, next) }, ...data.services],
+      services: [
+        recordServiceChange(
+          undefined,
+          { ...service, maintenance: servicePlan(service, next) },
+          'created',
+        ),
+        ...data.services,
+      ],
       vehicles: data.vehicles.map((v) =>
         v.id === service.vehicleId
           ? recordServicePlan(
@@ -344,7 +373,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
               service,
               next,
               mode === 'demo' ? demoDate : localToday(),
-              data.services,
+              data.services.filter((s) => !s.annulment),
             )
           : v,
       ),
@@ -427,6 +456,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
     <Context.Provider
       value={{
         ...data,
+        activeServices: data.services.filter((s) => !s.annulment),
+        setServiceStatus: async (original, reason) => {
+          try {
+            const next = changeServiceStatus(
+              data,
+              original,
+              reason,
+              mode === 'demo' ? demoDate : localToday(),
+            );
+            return await commit(next);
+          } catch (error) {
+            notify(error instanceof Error ? error.message : 'No se pudo cambiar el estado.');
+            return false;
+          }
+        },
         mode,
         connected,
         referenceDate: mode === 'demo' ? demoDate : localToday(),

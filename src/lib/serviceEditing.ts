@@ -10,11 +10,14 @@ import {
 
 const latest = (services: Service[], vehicleId: string, category: string) =>
   services
-    .filter((s) => s.vehicleId === vehicleId && maintenanceKind(s.type).key === category)
+    .filter(
+      (s) => !s.annulment && s.vehicleId === vehicleId && maintenanceKind(s.type).key === category,
+    )
     .sort((a, b) => b.date.localeCompare(a.date) || b.km - a.km)[0];
 
 function owns(plan: MaintenancePlan, service: Service, history: Service[]) {
-  if (plan.manual || plan.category !== maintenanceKind(service.type).key) return false;
+  if (service.annulment || plan.manual || plan.category !== maintenanceKind(service.type).key)
+    return false;
   if (plan.sourceServiceId) return plan.sourceServiceId === service.id;
   if (plan.lastDate !== undefined)
     return (
@@ -53,12 +56,15 @@ export function editServiceData(
     throw new Error('Elegí un vehículo válido.');
   if (edited.date > today) throw new Error('La fecha del servicio no puede ser futura.');
   if (
-    edited.km !== original.km ||
-    edited.date !== original.date ||
-    edited.vehicleId !== original.vehicleId
+    !edited.annulment &&
+    (!!original.annulment ||
+      edited.km !== original.km ||
+      edited.date !== original.date ||
+      edited.vehicleId !== original.vehicleId)
   ) {
     const conflict = data.services.find(
       (s) =>
+        !s.annulment &&
         s.id !== edited.id &&
         s.vehicleId === edited.vehicleId &&
         ((s.date < edited.date && s.km > edited.km) || (s.date > edited.date && s.km < edited.km)),
@@ -81,6 +87,7 @@ export function editServiceData(
     });
     if (
       vehicle.id === edited.vehicleId &&
+      !edited.annulment &&
       edited.maintenance &&
       latest(services, vehicle.id, newCategory)?.id === edited.id
     ) {
@@ -94,14 +101,14 @@ export function editServiceData(
     }
     const oldMax = Math.max(
       0,
-      ...data.services.filter((s) => s.vehicleId === vehicle.id).map((s) => s.km),
+      ...data.services.filter((s) => !s.annulment && s.vehicleId === vehicle.id).map((s) => s.km),
     );
     // Una lectura independiente no se reduce al corregir un mantenimiento.
     const historyMax = Math.max(
       0,
-      ...services.filter((s) => s.vehicleId === vehicle.id).map((s) => s.km),
+      ...services.filter((s) => !s.annulment && s.vehicleId === vehicle.id).map((s) => s.km),
     );
-    const hasRemainingHistory = services.some((s) => s.vehicleId === vehicle.id);
+    const hasRemainingHistory = services.some((s) => !s.annulment && s.vehicleId === vehicle.id);
     // En una base anterior sin lectura de origen, mover su única visita no permite deducir cero.
     const independent =
       vehicle.manualKm ?? (vehicle.km > oldMax || !hasRemainingHistory ? vehicle.km : 0);
