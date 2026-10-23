@@ -1,5 +1,6 @@
 import { isServerMode } from '../lib/serverClient';
 import { randomId } from '../lib/ids';
+import { useUnsavedChanges } from '../components/UnsavedChanges';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import {
   ArchiveRestore,
@@ -590,6 +591,8 @@ export function SettingsPage() {
   const { workshop, mode, saveWorkshop, notify } = useData();
   const [tab, setTab] = useState('Taller');
   const [saved, setSaved] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const { markClean, confirmDiscard } = useUnsavedChanges(dirty);
   const save = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
@@ -602,6 +605,8 @@ export function SettingsPage() {
       timezone: 'America/Argentina/Buenos_Aires',
     });
     if (ok) {
+      setDirty(false);
+      markClean();
       setSaved(true);
       notify(
         mode === 'demo'
@@ -624,7 +629,12 @@ export function SettingsPage() {
             <button
               key={title}
               className={tab === title ? 'active' : ''}
-              onClick={() => setTab(title)}
+              onClick={() => {
+                if (title === tab || confirmDiscard()) {
+                  setDirty(false);
+                  setTab(title);
+                }
+              }}
             >
               <Icon size={18} />
               {title}
@@ -639,7 +649,14 @@ export function SettingsPage() {
                   ? 'Información de ejemplo, separada de tus datos locales.'
                   : 'Estos datos se guardan en tu base local y se incluyen en el respaldo JSON.'}
               </p>
-              <form className="form-stack" onSubmit={save} onChange={() => setSaved(false)}>
+              <form
+                className="form-stack"
+                onSubmit={save}
+                onChange={() => {
+                  setSaved(false);
+                  setDirty(true);
+                }}
+              >
                 <div className="workshop-logo">
                   <span>
                     <Building2 size={36} />

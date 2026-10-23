@@ -1,7 +1,7 @@
 name: Verificar y publicar Taller Calamante
 on:
   push:
-    branches: [main]
+    branches: [main, 'quality-*']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -25,6 +25,13 @@ jobs:
       - run: npm run test:server
       - run: npm run test:publication
       - run: npm run test:offline
+      - name: Conservar diagnóstico de pruebas fallidas
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostico-navegador
+          path: test-results
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: taller-calamante-web

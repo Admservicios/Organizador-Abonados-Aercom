@@ -1,8 +1,9 @@
 import { isServerMode } from '../lib/serverClient';
+import { useUnsavedChanges } from './UnsavedChanges';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Download, FileText, Trash2, UploadCloud, Pencil } from 'lucide-react';
 import { useData } from '../app/store';
-import { Modal } from './ui';
+import { Modal, ModalCancelButton } from './ui';
 import { downloadBlob } from '../lib/photoBackup';
 import {
   documentCategories,
@@ -34,6 +35,7 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
   const refs = (documents ?? []).filter((d) => d.vehicleId === vehicleId);
   const [category, setCategory] = useState<DocumentReference['category']>('Cédula');
   const [file, setFile] = useState<File | null>(null);
+  const { markClean } = useUnsavedChanges(file !== null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<DocumentReference | null>(null);
@@ -60,6 +62,7 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
     try {
       const document = await prepareDocument(file, vehicleId, category);
       if (await addDocument(document)) {
+        markClean();
         setFile(null);
         setInputKey((key) => key + 1);
         notify(
@@ -328,9 +331,9 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
               </p>
             )}
             <div className="modal-actions">
-              <button type="button" className="button" onClick={() => setEditing(null)}>
+              <ModalCancelButton type="button" className="button" onClick={() => setEditing(null)}>
                 Cancelar
-              </button>
+              </ModalCancelButton>
               <button className="button primary">Guardar cambios del documento</button>
             </div>
           </form>

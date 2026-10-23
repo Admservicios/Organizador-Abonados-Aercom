@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarDays, Pencil, Plus } from 'lucide-react';
-import { Badge, Modal, Panel } from './ui';
+import { Badge, Modal, ModalCancelButton, Panel } from './ui';
 import { useData } from '../app/store';
 import { dateLabel, number, type Vehicle } from '../lib/demo';
 import { nextServiceDate } from '../lib/localDatabase';
@@ -193,9 +193,9 @@ function ScheduleEditor({
           </p>
         )}
         <div className="modal-actions">
-          <button className="button" type="button" onClick={close}>
+          <ModalCancelButton className="button" type="button" onClick={close}>
             Cancelar
-          </button>
+          </ModalCancelButton>
           <button className="button primary" type="submit">
             Guardar vencimiento
           </button>

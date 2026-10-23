@@ -1,4 +1,5 @@
 import { isServerMode, api } from '../lib/serverClient';
+import { useConfirmDiscard } from '../components/UnsavedChanges';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -42,6 +43,7 @@ const navigation = [
   { to: '/ajustes', label: 'Ajustes', icon: Settings },
 ];
 function Layout() {
+  const confirmDiscard = useConfirmDiscard();
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState('');
   const [notifications, setNotifications] = useState(false);
@@ -304,6 +306,7 @@ function Layout() {
           <button
             className="mode-switch"
             onClick={() => {
+              if (!confirmDiscard()) return;
               switchMode();
               navigate('/');
             }}

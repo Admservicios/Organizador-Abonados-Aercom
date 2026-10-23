@@ -104,6 +104,25 @@ try {
       assert.match(pdf.toString('latin1'), /^%PDF-/);
       await page.goto(`${url}#/mantenimientos/nuevo?vehiculo=practica-v02`);
       await page.getByLabel(/Trabajos realizados/).fill('Mantenimiento estático con foto.');
+      // El enrutador publicado usa hash: comprobar también enlaces y Atrás reales.
+      for (const leave of [
+        () =>
+          page.getByRole('navigation').getByRole('link', { name: 'Clientes', exact: true }).click(),
+        () => page.goBack(),
+      ]) {
+        const prompt = page.waitForEvent('dialog');
+        const action = leave();
+        const warning = await prompt;
+        assert.equal(warning.type(), 'confirm');
+        assert.match(warning.message(), /cambios sin guardar/);
+        await warning.dismiss();
+        await action;
+        assert.match(page.url(), /mantenimientos\/nuevo/);
+        assert.equal(
+          await page.getByLabel(/Trabajos realizados/).inputValue(),
+          'Mantenimiento estático con foto.',
+        );
+      }
       await page.getByLabel(/Importe total/).fill('45000');
       await page
         .getByLabel('Seleccionar fotos')

@@ -189,6 +189,8 @@ La carpeta elegida está fuera del almacenamiento del navegador, pero no protege
 
 ## Corregir datos cargados
 
+Los formularios de mantenimiento, ajustes y los diálogos de edición advierten antes de descartar cambios al navegar, usar Atrás, cancelar o cerrar. Rechazar la salida conserva lo escrito. Guardar correctamente libera esa protección. Un documento seleccionado también se protege al cambiar de pestaña o ficha; no se guarda automáticamente. El aviso al cerrar o recargar la página depende del navegador.
+
 En **Mantenimientos → Historial del taller → Editar**, en el historial del vehículo y en el del cliente se puede corregir una visita completa: vehículo, fecha, kilómetros, tipo, trabajos, insumos, importe, notas, vencimiento y fotos. Se conserva el ID del registro. Los historiales, estadísticas, próximos servicios y nuevos PDF usan los datos corregidos; los comprobantes y respaldos ya descargados no cambian.
 
 Al corregir fecha o kilómetros se conserva el intervalo de esa visita y se muestran los nuevos objetivos, que también pueden ajustarse. Solo el último servicio de una categoría gobierna su vencimiento vigente; los ajustes manuales de Recordatorios se conservan. Si se cambia de vehículo o categoría, se recalculan ambas fichas a partir del historial restante. Sin otro vencimiento registrado, la categoría queda sin programación: revisarla en **Recordatorios**. Las visitas antiguas sin vencimiento propio no reciben uno inventado.

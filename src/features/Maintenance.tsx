@@ -1,6 +1,7 @@
 import { isServerMode } from '../lib/serverClient';
 import { randomId } from '../lib/ids';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useUnsavedChanges } from '../components/UnsavedChanges';
+import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { editableServicePlan, editServiceData } from '../lib/serviceEditing';
 import { serviceSchema, serviceFieldsSchema } from '../lib/serviceValidation';
@@ -206,6 +207,7 @@ function MaintenanceFormFields() {
   const kind = maintenanceKind(actualType);
   const isAlignment = !original && serviceType === 'Alineación y balanceo';
   const [dirty, setDirty] = useState(false);
+  const { markClean, confirmDiscard } = useUnsavedChanges(dirty);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
@@ -218,13 +220,6 @@ function MaintenanceFormFields() {
   const [recommendation, setRecommendation] = useState(
     initialPlan?.recommendation ?? initialKind.recommendations[0],
   );
-  useEffect(() => {
-    const onUnload = (e: BeforeUnloadEvent) => {
-      if (dirty) e.preventDefault();
-    };
-    window.addEventListener('beforeunload', onUnload);
-    return () => window.removeEventListener('beforeunload', onUnload);
-  }, [dirty]);
   const changeVehicle = (id: string) => {
     setVehicleId(id);
     if (!original) {
@@ -235,8 +230,7 @@ function MaintenanceFormFields() {
     setDirty(true);
   };
   const cancel = () => {
-    if (!dirty || window.confirm('Hay cambios sin guardar. ¿Querés salir del formulario?'))
-      navigate('/mantenimientos');
+    if (confirmDiscard()) navigate('/mantenimientos');
   };
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -327,6 +321,7 @@ function MaintenanceFormFields() {
       return;
     }
     setDirty(false);
+    markClean();
     let message =
       mode === 'demo'
         ? 'Mantenimiento agregado a la sesión de demostración. Las fotos se conservan en esta sesión.'

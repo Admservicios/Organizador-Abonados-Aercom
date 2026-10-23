@@ -1,4 +1,13 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type ButtonHTMLAttributes,
+} from 'react';
+import { useUnsavedChanges } from './UnsavedChanges';
 import { CarFront, ChevronRight, Inbox, X, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -93,6 +102,19 @@ export function Empty({ text, action }: { text: string; action?: ReactNode }) {
     </div>
   );
 }
+const DiscardModal = createContext<() => boolean>(() => true);
+export function ModalCancelButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+  const confirmDiscard = useContext(DiscardModal);
+  return (
+    <button
+      {...props}
+      type="button"
+      onClick={(event) => {
+        if (confirmDiscard()) props.onClick?.(event);
+      }}
+    />
+  );
+}
 export function Modal({
   title,
   children,
@@ -103,35 +125,43 @@ export function Modal({
   close: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const [dirty, setDirty] = useState(false);
+  const { confirmDiscard } = useUnsavedChanges(dirty);
+  const guardedClose = () => {
+    if (confirmDiscard()) close();
+  };
   useEffect(() => {
     const dialog = ref.current;
     dialog?.showModal();
     return () => dialog?.close();
   }, []);
   return (
-    <dialog
-      ref={ref}
-      className="modal"
-      aria-label={title}
-      onCancel={(e) => {
-        e.preventDefault();
-        close();
-      }}
-    >
-      <div className="panel-heading">
-        <h2>{title}</h2>
-        <button
-          type="button"
-          autoFocus
-          className="icon-button"
-          onClick={close}
-          aria-label="Cerrar diálogo"
-        >
-          <X size={20} />
-        </button>
-      </div>
-      {children}
-    </dialog>
+    <DiscardModal.Provider value={confirmDiscard}>
+      <dialog
+        ref={ref}
+        className="modal"
+        aria-label={title}
+        onChangeCapture={() => setDirty(true)}
+        onCancel={(e) => {
+          e.preventDefault();
+          guardedClose();
+        }}
+      >
+        <div className="panel-heading">
+          <h2>{title}</h2>
+          <button
+            type="button"
+            autoFocus
+            className="icon-button"
+            onClick={guardedClose}
+            aria-label="Cerrar diálogo"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        {children}
+      </dialog>
+    </DiscardModal.Provider>
   );
 }
 export function VehicleArt({

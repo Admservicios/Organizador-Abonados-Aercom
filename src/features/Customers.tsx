@@ -20,7 +20,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { Avatar, Badge, Empty, Modal, PageTitle, Panel } from '../components/ui';
+import { Avatar, Badge, Empty, Modal, ModalCancelButton, PageTitle, Panel } from '../components/ui';
 import { useData } from '../app/store';
 import { customerCSV, dateLabel, download, money, type Customer } from '../lib/demo';
 
@@ -106,9 +106,9 @@ export function CustomerEditor({ customer, close }: { customer?: Customer; close
           Cliente activo
         </label>
         <div className="modal-actions">
-          <button className="button" type="button" onClick={close}>
+          <ModalCancelButton className="button" type="button" onClick={close}>
             Cancelar
-          </button>
+          </ModalCancelButton>
           <button className="button primary" type="submit">
             <Check size={16} />
             {mode === 'demo' ? 'Guardar en demo' : 'Guardar cliente'}

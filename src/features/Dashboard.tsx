@@ -24,6 +24,10 @@ export function Dashboard() {
   const upcoming = schedule.filter(
     ({ vehicle, plan }) => planStatus(plan, vehicle.km, referenceDate) !== 'Al día',
   );
+  const overdueCount = upcoming.filter(
+    ({ vehicle, plan }) => planStatus(plan, vehicle.km, referenceDate) === 'Vencido',
+  ).length;
+  const soonCount = upcoming.length - overdueCount;
   const distribution = ['Al día', 'Próximo', 'Vencido', 'Sin datos'].map((status) => ({
     status,
     count: vehicles.filter((v) => maintenanceStatus(v, referenceDate) === status).length,
@@ -91,11 +95,11 @@ export function Dashboard() {
             }),
           },
           {
-            label: 'Requieren atención',
+            label: 'Servicios por atender',
             value: upcoming.length,
             icon: CalendarDays,
             color: 'red',
-            note: `${distribution[2].count} vencido · ${distribution[1].count} próximos`,
+            note: `${overdueCount} ${overdueCount === 1 ? 'vencido' : 'vencidos'} · ${soonCount} ${soonCount === 1 ? 'próximo' : 'próximos'}`,
           },
         ].map(({ label, value, icon: Icon, color, note }) => (
           <div className="stat-card" key={label}>

@@ -184,7 +184,14 @@ function ConnectionBlocked({ error }: { error: string }) {
         Actualizá y revisá los registros antes de repetir una carga. Se descartarán los cambios que
         no se hayan guardado.
       </p>
-      <button autoFocus className="button primary" onClick={() => window.location.reload()}>
+      <button
+        autoFocus
+        className="button primary"
+        onClick={() => {
+          window.dispatchEvent(new Event('taller-discard-unsaved'));
+          window.location.reload();
+        }}
+      >
         Actualizar y continuar
       </button>
     </dialog>

@@ -1,4 +1,5 @@
 import { isServerMode } from '../lib/serverClient';
+import { useConfirmDiscard } from '../components/UnsavedChanges';
 import { randomId } from '../lib/ids';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -27,7 +28,15 @@ import {
   UserRound,
   Wrench,
 } from 'lucide-react';
-import { Badge, Empty, Modal, PageTitle, Panel, VehicleArt } from '../components/ui';
+import {
+  Badge,
+  Empty,
+  Modal,
+  ModalCancelButton,
+  PageTitle,
+  Panel,
+  VehicleArt,
+} from '../components/ui';
 import { useData } from '../app/store';
 import { ServicePDFButton } from '../components/ServicePDFButton';
 import { PhotoGallery } from '../components/MaintenancePhotos';
@@ -175,9 +184,9 @@ export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: ()
           </p>
         )}
         <div className="modal-actions">
-          <button type="button" className="button" onClick={close}>
+          <ModalCancelButton type="button" className="button" onClick={close}>
             Cancelar
-          </button>
+          </ModalCancelButton>
           <button className="button primary">
             <Check size={16} />
             {mode === 'demo' ? 'Guardar en demo' : 'Guardar vehículo'}
@@ -332,6 +341,7 @@ export function VehicleQR({ id }: { id: string }) {
   );
 }
 export function VehicleDetail() {
+  const confirmDiscard = useConfirmDiscard();
   const { id } = useParams();
   const { vehicles, customers, services, photos, referenceDate } = useData();
   const vehicle = vehicles.find((v) => v.id === id);
@@ -433,7 +443,9 @@ export function VehicleDetail() {
                 aria-selected={tab === title}
                 className={tab === title ? 'active' : ''}
                 key={title}
-                onClick={() => setTab(title)}
+                onClick={() => {
+                  if (title === tab || confirmDiscard()) setTab(title);
+                }}
               >
                 <Icon size={16} />
                 {title}
@@ -571,7 +583,12 @@ export function VehicleDetail() {
             ) : (
               <p>No hay vencimientos programados. Agregá uno desde Recordatorios.</p>
             )}
-            <button className="button full" onClick={() => setTab('Recordatorios')}>
+            <button
+              className="button full"
+              onClick={() => {
+                if (confirmDiscard()) setTab('Recordatorios');
+              }}
+            >
               Ver todos los vencimientos
             </button>
           </Panel>
@@ -610,7 +627,12 @@ export function VehicleDetail() {
               Registrá fotos junto al mantenimiento. Se conservan localmente y se incluyen en el
               respaldo ZIP completo.
             </p>
-            <button className="button full" onClick={() => setTab('Fotos')}>
+            <button
+              className="button full"
+              onClick={() => {
+                if (confirmDiscard()) setTab('Fotos');
+              }}
+            >
               Ver fotos
             </button>
           </Panel>

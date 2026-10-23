@@ -2,9 +2,11 @@
 
 ## Decisión vigente
 
-El usuario autorizó preparar una aplicación instalable para la PC del taller, con base SQLite y acceso privado desde celulares. Esta modalidad centraliza registros y adjuntos en la PC y se desarrolla en GitHub; no necesita GitHub para funcionar una vez instalada.
+La prioridad vigente es desarrollar y probar la aplicación web desde GitHub Pages, sin instalar nada en la PC de trabajo. Primero se consolidan los circuitos existentes, la adaptación móvil y las verificaciones automáticas; después se retoman las mejoras visuales y funcionales.
 
-Se conserva además la modalidad de GitHub Pages, que guarda sus registros en el navegador. La migración a la PC se realiza explícitamente mediante un ZIP completo y no borra la base original. El acceso real de clientes desde internet y los QR revocables se implementarán después de configurar el acceso externo seguro. Ver [instalación en PC](INSTALACION-PC.md).
+La modalidad PC con SQLite y el empaquetado Windows ya están preparados y se conservan para la instalación futura en la PC del taller. Compartirán las mejoras de la interfaz. No se migra ninguna base ni se instala nada en esta etapa. El acceso externo seguro y el historial público real por QR siguen pendientes.
+
+GitHub Pages guarda los registros en cada navegador. La migración futura a la PC se realizará explícitamente mediante un ZIP completo, sin borrar la base original. Ver [instalación en PC](INSTALACION-PC.md).
 
 ## Entregas
 

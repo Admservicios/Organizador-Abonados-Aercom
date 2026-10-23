@@ -168,6 +168,8 @@ a:focus-visible {
 }
 .sr-only {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   padding: 0;
@@ -1094,6 +1096,7 @@ main {
   color: #9bb4d3;
 }
 .table-scroll {
+  position: relative;
   width: 100%;
   overflow-x: auto;
   scrollbar-width: thin;
@@ -3268,6 +3271,9 @@ tbody tr.selected-row {
   }
 }
 @media (max-width: 950px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .customers-layout {
     grid-template-columns: 1fr;
   }
