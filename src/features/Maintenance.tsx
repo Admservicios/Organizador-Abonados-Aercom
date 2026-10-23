@@ -388,6 +388,67 @@ function MaintenanceFormFields() {
         }
       />
       <form className="maintenance-layout" onSubmit={submit} onChange={() => setDirty(true)}>
+        <div className="maintenance-actions" role="region" aria-label="Guardar mantenimiento">
+          <div className="maintenance-action-context">
+            <strong>
+              {vehicle
+                ? `${vehicle.plate} · ${vehicle.brand} ${vehicle.model}`
+                : 'Seleccioná un vehículo'}
+            </strong>
+            <span>{dirty ? 'Cambios sin guardar' : 'Completá los campos obligatorios (*)'}</span>
+          </div>
+          <div className="maintenance-save-buttons">
+            <button
+              className="button primary"
+              aria-label={
+                saving
+                  ? 'Guardando…'
+                  : mode === 'demo'
+                    ? 'Guardar en demo'
+                    : original
+                      ? 'Guardar cambios'
+                      : 'Guardar mantenimiento'
+              }
+              type="submit"
+              disabled={!vehicle || saving || preparingPhotos}
+            >
+              <Save size={17} />
+              <span className="save-label-full">
+                {saving
+                  ? 'Guardando…'
+                  : mode === 'demo'
+                    ? 'Guardar en demo'
+                    : original
+                      ? 'Guardar cambios'
+                      : 'Guardar mantenimiento'}
+              </span>
+              <span className="save-label-short" aria-hidden="true">
+                {saving ? 'Guardando…' : mode === 'demo' ? 'Guardar demo' : 'Guardar'}
+              </span>
+            </button>
+            <button
+              className="button"
+              aria-label={generatingPDF ? 'Generando PDF…' : 'Guardar y generar PDF'}
+              type="submit"
+              name="intent"
+              value="pdf"
+              disabled={!vehicle || saving || preparingPhotos}
+            >
+              <FileDown size={17} />
+              <span className="save-label-full">
+                {generatingPDF ? 'Generando PDF…' : 'Guardar y generar PDF'}
+              </span>
+              <span className="save-label-short" aria-hidden="true">
+                {generatingPDF ? 'Generando…' : 'Guardar + PDF'}
+              </span>
+            </button>
+          </div>
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
         <div className="form-main" inert={saving}>
           {original && (
             <div className="info-strip">
@@ -491,6 +552,7 @@ function MaintenanceFormFields() {
                     key={vehicleId}
                     type="number"
                     name="km"
+                    inputMode="numeric"
                     required
                     min={original ? 0 : (vehicle?.km ?? 0)}
                     max="9999999"
@@ -738,6 +800,7 @@ function MaintenanceFormFields() {
                   <input
                     type="number"
                     name="amount"
+                    inputMode="decimal"
                     defaultValue={original?.amount}
                     required
                     min="0"
@@ -835,35 +898,6 @@ function MaintenanceFormFields() {
                 ? 'Mostrar este servicio en el historial público de prueba'
                 : 'Historial público pendiente de implementar'}
             </label>
-            {error && (
-              <p className="form-error" role="alert">
-                {error}
-              </p>
-            )}
-            <button
-              className="button primary full"
-              type="submit"
-              disabled={!vehicle || saving || preparingPhotos}
-            >
-              <Save size={17} />
-              {saving
-                ? 'Guardando…'
-                : mode === 'demo'
-                  ? 'Guardar en demo'
-                  : original
-                    ? 'Guardar cambios'
-                    : 'Guardar mantenimiento'}
-            </button>
-            <button
-              className="button full"
-              type="submit"
-              name="intent"
-              value="pdf"
-              disabled={!vehicle || saving || preparingPhotos}
-            >
-              <FileDown size={17} />
-              {generatingPDF ? 'Generando PDF…' : 'Guardar y generar PDF'}
-            </button>
             <button
               className="button ghost full"
               type="button"

@@ -189,6 +189,10 @@ La carpeta elegida está fuera del almacenamiento del navegador, pero no protege
 
 ## Corregir datos cargados
 
+La carga de mantenimientos tiene una barra de guardado que permanece visible al desplazarse, con **Guardar** y **Guardar + PDF**. Conserva una sola acción de cada tipo y los mismos datos del formulario. Los avisos de validación del sistema se muestran junto a la barra; el navegador enfoca los campos obligatorios y mantiene espacio para verlos debajo de ella. En celular se usan campos de 16 px y controles de al menos 44 px en las acciones principales.
+
+Las tablas, fichas y ayudas tienen tamaños de lectura mayores y estados con más contraste. En pantallas pequeñas, seleccionar un cliente desplaza la vista a su ficha y lleva allí el foco; cerrarla devuelve al cliente del listado o al buscador.
+
 Los formularios de mantenimiento, ajustes y los diálogos de edición advierten antes de descartar cambios al navegar, usar Atrás, cancelar o cerrar. Rechazar la salida conserva lo escrito. Guardar correctamente libera esa protección. Un documento seleccionado también se protege al cambiar de pestaña o ficha; no se guarda automáticamente. El aviso al cerrar o recargar la página depende del navegador.
 
 En **Mantenimientos → Historial del taller → Editar**, en el historial del vehículo y en el del cliente se puede corregir una visita completa: vehículo, fecha, kilómetros, tipo, trabajos, insumos, importe, notas, vencimiento y fotos. Se conserva el ID del registro. Los historiales, estadísticas, próximos servicios y nuevos PDF usan los datos corregidos; los comprobantes y respaldos ya descargados no cambian.

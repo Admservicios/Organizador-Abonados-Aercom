@@ -1,6 +1,6 @@
 import { isServerMode } from '../lib/serverClient';
 import { randomId } from '../lib/ids';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   CalendarDays,
@@ -127,6 +127,20 @@ export function Customers() {
   const [tab, setTab] = useState('Información');
   const [editing, setEditing] = useState<Customer | 'new' | null>(null);
   const [page, setPage] = useState(1);
+  const detailRef = useRef<HTMLElement>(null);
+  const selectedButton = useRef<HTMLButtonElement | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [detailRequest, setDetailRequest] = useState(0);
+  const explicitCustomer = params.get('cliente');
+  useEffect(() => {
+    if (!selected || !explicitCustomer || !window.matchMedia('(max-width: 950px)').matches) return;
+    const frame = requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      detailRef.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selected?.id, explicitCustomer, detailRequest]);
+
   const pageSize = 6;
   const filtered = customers.filter(
     (c) =>
@@ -206,6 +220,7 @@ export function Customers() {
             <div className="input-icon">
               <Search size={17} />
               <input
+                ref={searchRef}
                 aria-label="Buscar clientes"
                 placeholder="Buscar por nombre, DNI, teléfono o email…"
                 value={search}
@@ -259,7 +274,9 @@ export function Customers() {
                       <td>
                         <button
                           className="customer-name"
-                          onClick={() => {
+                          onClick={(event) => {
+                            selectedButton.current = event.currentTarget;
+                            setDetailRequest((request) => request + 1);
                             setParams({ cliente: c.id });
                             setTab('Información');
                           }}
@@ -342,11 +359,24 @@ export function Customers() {
           </div>
         </div>
         {selected && (
-          <aside className="panel customer-detail">
+          <aside
+            ref={detailRef}
+            tabIndex={-1}
+            aria-label={`Ficha de ${selected.name}`}
+            className="panel customer-detail"
+          >
             <button
               className="detail-close icon-button"
               aria-label="Cerrar ficha del cliente"
-              onClick={() => setParams({ cliente: 'ninguno' })}
+              onClick={() => {
+                setParams({ cliente: 'ninguno' });
+                const target = selectedButton.current?.isConnected
+                  ? selectedButton.current
+                  : searchRef.current;
+                target?.focus({ preventScroll: true });
+                if (window.matchMedia('(max-width: 950px)').matches)
+                  target?.scrollIntoView({ block: 'center', behavior: 'instant' });
+              }}
             >
               <X size={17} />
             </button>
