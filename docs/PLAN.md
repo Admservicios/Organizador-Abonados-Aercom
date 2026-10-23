@@ -2,9 +2,9 @@
 
 ## Decisión vigente
 
-El usuario pidió una base local como el CRM de Aercom. El historial del repositorio confirma que ese CRM usaba `localStorage`. Taller Calamante adopta persistencia en el navegador y deja Supabase fuera de esta versión.
+El usuario autorizó preparar una aplicación instalable para la PC del taller, con base SQLite y acceso privado desde celulares. Esta modalidad centraliza registros y adjuntos en la PC y se desarrolla en GitHub; no necesita GitHub para funcionar una vez instalada.
 
-GitHub versiona código, esquemas y pruebas. Los registros personales del taller permanecen en cada navegador y se trasladan mediante respaldos descargados. Este modelo no proporciona autenticación, colaboración ni sincronización.
+Se conserva además la modalidad de GitHub Pages, que guarda sus registros en el navegador. La migración a la PC se realiza explícitamente mediante un ZIP completo y no borra la base original. El acceso real de clientes desde internet y los QR revocables se implementarán después de configurar el acceso externo seguro. Ver [instalación en PC](INSTALACION-PC.md).
 
 ## Entregas
 
@@ -26,7 +26,7 @@ La base visual, la persistencia local y la recuperación JSON están implementad
 - Validación de identificadores, relaciones, patentes y kilometraje antes de guardar o restaurar.
 - Revisión para detectar escrituras basadas en un estado anterior.
 - Modo local vacío y demostración separada.
-- Sin migraciones SQL, secretos administrativos ni servicios contratados.
+- La modalidad navegador sigue sin requerir servicios contratados. La modalidad PC utiliza SQLite, contraseña privada, sesiones, guardados con revisión y copias completas.
 
 ## Reglas funcionales
 
@@ -47,4 +47,12 @@ La copia anterior a una restauración permanece en el mismo navegador y puede pe
 
 ## Autorización
 
-El usuario autorizó implementar la base local y subir la estructura a GitHub para mejorarla progresivamente. Después informó una pantalla en blanco en su sitio de GitHub Pages. Se publican `dist` desde Actions y una copia compilada en la raíz de `main`, manteniendo el mismo origen web. Ambas variantes se prueban en un navegador con un servidor estático sin Vite; antes de subir código se ejecuta `npm run publish:static`. Esto cubre la configuración existente de Pages desde la rama, incluso cuando el token de Actions no puede cambiar su origen. Las nuevas funciones compartidas requieren una autorización específica. No se modificarán otros proyectos ni se subirán registros reales al repositorio.
+El usuario autorizó implementar la base local y subir la estructura a GitHub para mejorarla progresivamente. Después informó una pantalla en blanco en su sitio de GitHub Pages. Se publican `dist` desde Actions y una copia compilada en la raíz de `main`, manteniendo el mismo origen web. Ambas variantes se prueban en un navegador con un servidor estático sin Vite; antes de subir código se ejecuta `npm run publish:static`. Esto cubre la configuración existente de Pages desde la rama, incluso cuando el token de Actions no puede cambiar su origen. El usuario autorizó la preparación de la modalidad PC, SQLite, acceso privado desde celulares y empaquetado Windows. El despliegue de un acceso por internet y los enlaces públicos reales se harán en una etapa posterior. No se modificarán otros proyectos ni se subirán registros reales al repositorio.
+
+## Modalidad PC incorporada
+
+- Servidor privado con SQLite y archivos incluidos en transacciones, sesiones y habilitación de la red desde la PC.
+- Misma interfaz, con confirmación del guardado en el servidor, controles de conflictos y sin sustitución por una base vacía si no hay conexión.
+- Importación de ZIP existentes, descarga de copias completas y copia previa. Copias automáticas verificadas en la carpeta de datos.
+- Compilación independiente del servidor, carpeta portable y workflow de instalador Windows con runtime incluido. Datos fuera de la carpeta del programa.
+- Pendiente: instalación interactiva y verificación del firewall en la PC real; acceso externo HTTPS, QR reales para clientes y cuentas individuales con roles.

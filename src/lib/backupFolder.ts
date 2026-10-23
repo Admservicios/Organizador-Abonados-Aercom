@@ -1,3 +1,4 @@
+import { randomId } from './ids';
 import { z } from 'zod';
 import { createPhotoBackup } from './photoBackup';
 import { loadDatabase, type StoragePort } from './localDatabase';
@@ -125,7 +126,7 @@ export function automaticBackupName(date: Date) {
   })
     .format(date)
     .replace(/[^0-9-]/g, '');
-  return `taller-calamante-auto-${stamp}-${crypto.randomUUID().slice(0, 8)}.zip`;
+  return `taller-calamante-auto-${stamp}-${randomId().slice(0, 8)}.zip`;
 }
 // Un nombre nuevo por copia. Nunca se listan, reemplazan ni eliminan copias anteriores.
 export async function writeVerifiedBackup(directory: BackupDirectory, blob: Blob, name: string) {

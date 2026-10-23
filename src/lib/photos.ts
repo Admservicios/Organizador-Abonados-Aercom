@@ -1,3 +1,10 @@
+import {
+  isServerMode,
+  stageServerFiles,
+  discardServerFiles,
+  loadServerFiles,
+} from './serverClient';
+import { randomId } from './ids';
 import { z } from 'zod';
 
 export const PHOTO_DATABASE = 'motortrack-photos-v1';
@@ -24,7 +31,10 @@ const storedPhotoSchema = photoReferenceSchema.extend({
 });
 
 export async function photoHash(data: Blob) {
-  const hash = await crypto.subtle.digest('SHA-256', await data.arrayBuffer());
+  const bytes = await data.arrayBuffer();
+  const hash = crypto.subtle
+    ? await crypto.subtle.digest('SHA-256', bytes)
+    : (await import('@noble/hashes/sha256')).sha256(new Uint8Array(bytes));
   return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
@@ -139,7 +149,10 @@ export async function loadReferencedPhotos(collection: {
 }) {
   const refs = collection.photos ?? [];
   if (!refs.length) return [];
-  const stored = new Map((await readPhotos(collection.photoSet)).map((photo) => [photo.id, photo]));
+  const rows = isServerMode()
+    ? ((await loadServerFiles('photos', collection.photoSet!, refs)) as StoredPhoto[])
+    : await readPhotos(collection.photoSet);
+  const stored = new Map(rows.map((photo) => [photo.id, photo]));
   const result: StoredPhoto[] = [];
   for (const ref of refs) {
     const photo = stored.get(ref.id);
@@ -190,6 +203,10 @@ export async function validatePhoto(photo: PreparedPhoto) {
 }
 
 export async function storePhotos(photos: StoredPhoto[]) {
+  if (isServerMode()) {
+    stageServerFiles('photos', photos);
+    return;
+  }
   for (const photo of photos) await validatePhoto(photo);
   if (!photos.length) return;
   await transaction<void>('readwrite', (store) => {
@@ -199,6 +216,10 @@ export async function storePhotos(photos: StoredPhoto[]) {
 
 // Solo se retiran los archivos nuevos de una operación fallida. Nunca los de la copia previa.
 export async function discardPhotos(ids: string[]) {
+  if (isServerMode()) {
+    discardServerFiles(ids);
+    return;
+  }
   if (!ids.length) return;
   await transaction<void>('readwrite', (store) => {
     ids.forEach((id) => store.delete(id));
@@ -246,7 +267,7 @@ export async function preparePhoto(file: File): Promise<PreparedPhoto> {
       canvas.width = canvas.height = 0;
       if (data.size <= MAX_PHOTO_BYTES)
         return {
-          id: crypto.randomUUID(),
+          id: randomId(),
           name: `${file.name.replace(/\.[^.]*$/, '').slice(0, 180) || 'foto'}.jpg`,
           data,
           width,

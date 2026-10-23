@@ -1,3 +1,10 @@
+import {
+  isServerMode,
+  stageServerFiles,
+  discardServerFiles,
+  loadServerFiles,
+} from './serverClient';
+import { randomId } from './ids';
 import { z } from 'zod';
 import { photoHash } from './photos';
 
@@ -200,7 +207,7 @@ export async function prepareDocument(
   const data = new Blob([await file.arrayBuffer()], { type: mime });
   const document = {
     ...(mime !== 'application/pdf' ? { mime } : {}),
-    id: crypto.randomUUID(),
+    id: randomId(),
     vehicleId,
     category,
     name: file.name
@@ -273,6 +280,10 @@ async function transaction<T>(
   });
 }
 export async function storeDocuments(documents: StoredDocument[]) {
+  if (isServerMode()) {
+    stageServerFiles('documents', documents);
+    return;
+  }
   for (const document of documents) await validateDocument(document);
   if (!documents.length) return;
   await transaction<void>('readwrite', (store) =>
@@ -281,6 +292,10 @@ export async function storeDocuments(documents: StoredDocument[]) {
 }
 // La copia previa puede seguir usando los archivos retirados de la vista: solo se limpian altas fallidas.
 export async function discardDocuments(ids: string[]) {
+  if (isServerMode()) {
+    discardServerFiles(ids);
+    return;
+  }
   if (!ids.length) return;
   await transaction<void>('readwrite', (store) => ids.forEach((id) => store.delete(id)));
 }
@@ -290,10 +305,12 @@ export async function loadReferencedDocuments(collection: {
 }) {
   if (!collection.documents?.length) return [];
   if (!collection.documentSet) throw new Error('Falta la colección de documentos.');
-  const rows = await transaction<unknown[]>('readonly', (store, done) => {
-    const request = store.index('setId').getAll(collection.documentSet!);
-    request.onsuccess = () => done(request.result);
-  });
+  const rows = isServerMode()
+    ? await loadServerFiles('documents', collection.documentSet, collection.documents)
+    : await transaction<unknown[]>('readonly', (store, done) => {
+        const request = store.index('setId').getAll(collection.documentSet!);
+        request.onsuccess = () => done(request.result);
+      });
   const stored = new Map(
     rows.map((row) => {
       const document = storedSchema.parse(row);

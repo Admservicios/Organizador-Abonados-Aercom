@@ -50,7 +50,7 @@ function ScheduleEditor({
     plan?.recommendation ?? initialKind.recommendations[0],
   );
   const [error, setError] = useState('');
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const result = maintenancePlanSchema.safeParse({
       manual: true,
@@ -83,7 +83,7 @@ function ScheduleEditor({
     const next = plan
       ? plans.map((p) => (p.category === plan.category ? result.data : p))
       : [...plans, result.data];
-    if (!saveVehicle({ ...vehicle, maintenancePlans: next })) return;
+    if (!(await saveVehicle({ ...vehicle, maintenancePlans: next }))) return;
     notify(
       mode === 'demo'
         ? 'Vencimiento actualizado en la demo.'

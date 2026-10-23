@@ -1,0 +1,20 @@
+TALLER CALAMANTE - PC DEL TALLER
+
+Windows: abrir Taller Calamante.vbs. El runtime necesario está incluido.
+Acceso: http://127.0.0.1:4310
+En el primer inicio se crea una contraseña de entre 12 y 128 caracteres.
+
+Datos: %LOCALAPPDATA%\TallerCalamante\taller.sqlite
+Copias completas: %LOCALAPPDATA%\TallerCalamante\backups
+
+Para migrar, descargar un ZIP completo desde la aplicación anterior y
+restaurarlo en Backups. Revisar los datos antes de empezar a trabajar.
+El acceso desde celulares se habilita en Backups, desde la PC, y requiere
+la misma red privada y la contraseña del taller.
+El acceso por internet y los QR de clientes se configurarán después.
+
+No borrar la carpeta de datos al actualizar. No ejecutar dos versiones a la vez.
+El servidor sigue funcionando al cerrar la ventana de la aplicación.
+El instalador permite elegir inicio automático al ingresar a Windows.
+Las licencias de las dependencias se incluyen en THIRD-PARTY-NOTICES.txt;
+la distribución Windows también incluye la licencia del runtime en runtime.

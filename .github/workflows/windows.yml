@@ -1,0 +1,51 @@
+name: Preparar aplicación Windows
+on:
+  push:
+    branches: [main, 'pc-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  instalador:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run build:server
+      - run: npm run package:pc
+      - name: Comprobar el servidor incluido
+        shell: pwsh
+        run: |
+          $env:TALLER_DATA_DIR = Join-Path $env:RUNNER_TEMP "calamante-smoke"
+          $server = Start-Process "release/pc/runtime/node.exe" -ArgumentList "release/pc/server/main.mjs" -PassThru
+          try {
+            $ready = $false
+            for ($i=0; $i -lt 30; $i++) {
+              try {
+                $config = Invoke-RestMethod "http://127.0.0.1:4310/api/config"
+                if ($config.application -eq "taller-calamante-pc") { $ready = $true; break }
+              } catch { Start-Sleep -Seconds 1 }
+            }
+            if (-not $ready) { throw "El servidor empaquetado no inició." }
+          } finally { Stop-Process -Id $server.Id -ErrorAction SilentlyContinue }
+      - name: Instalar compilador del instalador
+        run: choco install innosetup --yes --no-progress
+      - name: Generar instalador
+        shell: pwsh
+        run: |
+          $compiler = Get-ChildItem -Path "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe", "$env:ProgramFiles\Inno Setup*\ISCC.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $compiler) { throw "No se encontró el compilador de Inno Setup." }
+          & $compiler.FullName deployment/windows.iss
+          if ($LASTEXITCODE -ne 0) { throw "Falló la creación del instalador." }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Taller-Calamante-Windows
+          path: |
+            release/Taller-Calamante-Instalar-Windows.exe
+            release/Taller-Calamante-Portable-win32-x64.zip
+          if-no-files-found: error

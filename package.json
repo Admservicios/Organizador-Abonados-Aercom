@@ -1,7 +1,7 @@
 {
   "name": "taller-calamante",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
@@ -16,9 +16,14 @@
     "format:check": "prettier --check .",
     "publish:static": "npm run build && node scripts/stage-static.mjs",
     "test:publication": "node scripts/check-publication.mjs",
-    "test:offline": "node scripts/check-offline.mjs"
+    "test:offline": "node scripts/check-offline.mjs",
+    "build:server": "vite build --config vite.server.config.ts",
+    "start:server": "node dist-server/main.mjs",
+    "package:pc": "node scripts/package-pc.mjs",
+    "test:server": "node scripts/check-server.mjs"
   },
   "dependencies": {
+    "@noble/hashes": "1.8.0",
     "fflate": "0.8.3",
     "jspdf": "4.2.1",
     "lucide-react": "1.61.0",

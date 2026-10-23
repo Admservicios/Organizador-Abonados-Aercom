@@ -1,3 +1,5 @@
+import { isServerMode } from '../lib/serverClient';
+import { ServerPanel } from './ServerPanel';
 import {
   createContext,
   useCallback,
@@ -48,7 +50,11 @@ export function AutomaticBackupsProvider({ children }: { children: ReactNode }) 
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
   const local = useRef(false);
-  local.current = mode === 'local' && !storageError && !location.pathname.startsWith('/publico/');
+  local.current =
+    !isServerMode() &&
+    mode === 'local' &&
+    !storageError &&
+    !location.pathname.startsWith('/publico/');
   const running = useRef(false);
   const blocked = useRef(false);
   const channel = useRef<BroadcastChannel | null>(null);
@@ -264,6 +270,7 @@ export function AutomaticBackupNotice() {
   const { mode } = useData();
   const auto = useAutomaticBackups();
   if (
+    isServerMode() ||
     mode !== 'local' ||
     !auto.settings?.enabled ||
     (auto.status !== 'error' && auto.status !== 'permission')
@@ -280,6 +287,9 @@ export function AutomaticBackupNotice() {
   );
 }
 export function AutomaticBackupPanel() {
+  return isServerMode() ? <ServerPanel /> : <BrowserAutomaticBackupPanel />;
+}
+function BrowserAutomaticBackupPanel() {
   const { mode, storageError } = useData();
   const auto = useAutomaticBackups();
   const settings = auto.settings;

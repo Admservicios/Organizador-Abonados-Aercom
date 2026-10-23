@@ -1,3 +1,4 @@
+import { isServerMode } from '../lib/serverClient';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Download, FileText, Trash2, UploadCloud, Pencil } from 'lucide-react';
 import { useData } from '../app/store';
@@ -228,7 +229,9 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
       <p className="fine-print">
         {mode === 'demo'
           ? 'Demostración en memoria: los documentos se pierden al recargar.'
-          : 'Los archivos quedan en este navegador. Usá el ZIP completo para trasladarlos o recuperarlos en otro equipo.'}
+          : isServerMode()
+            ? 'Los archivos quedan en la PC del taller y se incluyen en sus copias completas.'
+            : 'Los archivos quedan en este navegador. Usá el ZIP completo para trasladarlos o recuperarlos en otro equipo.'}
       </p>
       {preview && (
         <Modal title={`Vista previa: ${preview.name}`} close={() => setPreview(null)}>
@@ -246,7 +249,8 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
             />
           )}
           <p className="fine-print">
-            {preview.category} · Archivo original guardado en este navegador.
+            {preview.category} · Archivo original guardado{' '}
+            {isServerMode() ? 'en la PC del taller' : 'en este navegador'}.
           </p>
           <div className="modal-actions">
             <button className="button" onClick={() => setPreview(null)}>
@@ -265,7 +269,7 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
         <Modal title="Editar documento" close={() => setEditing(null)}>
           <form
             className="form-stack"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               const values = new FormData(e.currentTarget);
               const name = String(values.get('name')).trim();
@@ -280,7 +284,7 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
                 return;
               }
               if (
-                saveDocument(editing, {
+                await saveDocument(editing, {
                   ...editing,
                   name,
                   category: String(values.get('category')) as DocumentReference['category'],
@@ -344,8 +348,8 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
             </button>
             <button
               className="button primary"
-              onClick={() => {
-                if (removeDocument(removing.id)) {
+              onClick={async () => {
+                if (await removeDocument(removing.id)) {
                   setRemoving(null);
                   notify('Documento quitado de la ficha.');
                 }

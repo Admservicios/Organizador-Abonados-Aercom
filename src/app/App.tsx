@@ -1,3 +1,4 @@
+import { isServerMode, api } from '../lib/serverClient';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -173,8 +174,12 @@ function Layout() {
         </div>
         <div className="sidebar-footer">
           <span className="online-dot" />{' '}
-          {mode === 'demo' ? 'Entorno de demostración' : 'Datos en este navegador'}{' '}
-          <span>v0.2</span>
+          {mode === 'demo'
+            ? 'Entorno de demostración'
+            : isServerMode()
+              ? 'Conectado a la PC del taller'
+              : 'Datos en este navegador'}{' '}
+          <span>v0.3</span>
         </div>
       </aside>
       <div className="main-shell">
@@ -253,7 +258,11 @@ function Layout() {
               <span>
                 <strong>{mode === 'demo' ? 'Matías López' : workshop.name}</strong>
                 <small>
-                  {mode === 'demo' ? 'Taller Calamante · Demo' : 'Este navegador · Local'}
+                  {mode === 'demo'
+                    ? 'Taller Calamante · Demo'
+                    : isServerMode()
+                      ? 'PC del taller · Compartida'
+                      : 'Este navegador · Local'}
                 </small>
               </span>
               <ChevronDown size={15} />
@@ -261,16 +270,36 @@ function Layout() {
           </div>
         </header>
         <OfflineNotice />
+        {isServerMode() && (
+          <div className="local-mode-bar">
+            <span>Conectado a la PC del taller</span>
+            <button
+              className="button small"
+              onClick={async () => {
+                await api('/logout', { method: 'POST' });
+                window.location.reload();
+              }}
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        )}
         <AutomaticBackupNotice />
         <div className="demo-banner">
           <span>
             <span className="online-dot" />{' '}
-            {mode === 'demo' ? 'Vista de demostración' : 'Base local'}
+            {mode === 'demo'
+              ? 'Vista de demostración'
+              : isServerMode()
+                ? 'PC del taller'
+                : 'Base local'}
           </span>
           <p>
             {mode === 'demo'
               ? 'Datos ficticios. Los cambios duran hasta recargar la página.'
-              : 'Los datos quedan en este navegador. Descargá respaldos periódicamente.'}
+              : isServerMode()
+                ? 'Los datos se guardan en la PC del taller.'
+                : 'Los datos quedan en este navegador. Descargá respaldos periódicamente.'}
           </p>
           <button
             className="mode-switch"
@@ -299,7 +328,10 @@ function Layout() {
             Taller Calamante <span>·</span> Gestión hoy. Kilómetros mañana.
           </span>
           <span>
-            <CircleHelp size={14} /> Almacenamiento local · Sin sincronización entre equipos
+            <CircleHelp size={14} />{' '}
+            {isServerMode()
+              ? 'Base en la PC del taller · Dispositivos autorizados'
+              : 'Almacenamiento local · Sin sincronización entre equipos'}
           </span>
         </footer>
       </div>

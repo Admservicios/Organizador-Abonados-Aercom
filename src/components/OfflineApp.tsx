@@ -1,9 +1,13 @@
+import { isServerMode } from '../lib/serverClient';
 import { useState } from 'react';
 import { Download, RefreshCw, WifiOff } from 'lucide-react';
 import { Modal, Panel } from './ui';
 import { applyAppUpdate, checkAppUpdate, installApp, useOfflineApp } from '../lib/offlineApp';
 
 export function OfflineNotice() {
+  return isServerMode() ? null : <BrowserOfflineNotice />;
+}
+function BrowserOfflineNotice() {
   const app = useOfflineApp();
   const [confirming, setConfirming] = useState(false);
   return (
@@ -58,6 +62,21 @@ export function OfflineNotice() {
   );
 }
 export function OfflineSettings() {
+  return isServerMode() ? (
+    <section className="panel" style={{ padding: 24 }}>
+      <h2>Aplicación en la PC del taller</h2>
+      <p>
+        Esta modalidad funciona desde la PC instalada y comparte su base con los dispositivos
+        autorizados. Dentro del taller puede funcionar sin internet mientras haya conexión con la
+        PC.
+      </p>
+      <p>La configuración de acceso desde celulares y las copias automáticas están en Backups.</p>
+    </section>
+  ) : (
+    <BrowserOfflineSettings />
+  );
+}
+function BrowserOfflineSettings() {
   const app = useOfflineApp();
   const [checking, setChecking] = useState(false);
   const [message, setMessage] = useState('');

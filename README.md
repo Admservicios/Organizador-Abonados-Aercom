@@ -4,11 +4,17 @@ La aplicación se llama **Taller Calamante** desde la versión 0.2.1. Se conserv
 
 Gestión de clientes, vehículos y mantenimiento para talleres y lubricentros. Interfaz basada en los bocetos acordados: azul, menú lateral grafito, tarjetas claras y adaptación móvil.
 
+## Versión 0.3: modalidad PC del taller
+
+Se incorpora una modalidad instalable con SQLite, acceso con contraseña y la misma interfaz compartida entre dispositivos de la red privada. La PC guarda los registros y adjuntos y genera copias ZIP completas. El workflow Windows prepara una carpeta portable y un instalador con runtime incluido. Ver [instalación, migración y pruebas](docs/INSTALACION-PC.md). El acceso externo y los QR públicos reales siguen pendientes.
+
+La modalidad de GitHub Pages sigue disponible con su persistencia en el navegador. La migración a la PC es explícita mediante un ZIP completo; publicar código no traslada datos personales.
+
 ## Versión 0.2: base local
 
 Los datos se guardan en **el navegador del usuario**, usando `localStorage` para los registros e IndexedDB para las fotos y documentos, como ampliación del modelo local del CRM de Aercom. No requiere Supabase, cuentas externas ni un servidor de base de datos.
 
-**GitHub guarda el código. Los datos de tus clientes no se suben a GitHub.** Cada perfil de navegador tiene una base independiente. No existe sincronización entre dispositivos ni inicio de sesión.
+**GitHub guarda el código. Los datos de tus clientes no se suben a GitHub.** En la modalidad de GitHub Pages, cada perfil de navegador tiene una base independiente. No existe sincronización entre dispositivos ni inicio de sesión.
 
 Disponible:
 

@@ -13,3 +13,9 @@ backups/
 taller-calamante-respaldo-*.json
 taller-calamante-copia-local-*.json
 taller-calamante-clientes*.csv
+
+dist-server/
+release/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

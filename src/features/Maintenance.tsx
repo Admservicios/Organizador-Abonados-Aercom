@@ -1,3 +1,5 @@
+import { isServerMode } from '../lib/serverClient';
+import { randomId } from '../lib/ids';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { editableServicePlan, editServiceData } from '../lib/serviceEditing';
@@ -285,7 +287,7 @@ function MaintenanceFormFields() {
           .filter(Boolean)
           .join(' · ');
     const service: Service = {
-      id: original?.id ?? crypto.randomUUID(),
+      id: original?.id ?? randomId(),
       vehicleId: vehicle.id,
       date: result.data.date,
       km: result.data.km,
@@ -878,7 +880,9 @@ function MaintenanceFormFields() {
             <p className="fine-print">
               {mode === 'demo'
                 ? 'Registro de demostración: dura hasta recargar.'
-                : 'El registro se conserva en este navegador. Descargá respaldos periódicamente.'}
+                : isServerMode()
+                  ? 'El registro se guarda en la PC del taller.'
+                  : 'El registro se conserva en este navegador. Descargá respaldos periódicamente.'}
             </p>
           </Panel>
         </aside>

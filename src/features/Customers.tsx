@@ -1,3 +1,5 @@
+import { isServerMode } from '../lib/serverClient';
+import { randomId } from '../lib/ids';
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
@@ -24,13 +26,13 @@ import { customerCSV, dateLabel, download, money, type Customer } from '../lib/d
 
 export function CustomerEditor({ customer, close }: { customer?: Customer; close: () => void }) {
   const { saveCustomer, notify, mode } = useData();
-  const submit = (e: FormEvent<HTMLFormElement>) => {
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const name = String(data.get('name')).trim();
     if (!name) return;
-    const saved = saveCustomer({
-      id: customer?.id ?? crypto.randomUUID(),
+    const saved = await saveCustomer({
+      id: customer?.id ?? randomId(),
       name,
       document: String(data.get('document')).trim(),
       email: String(data.get('email')).trim(),
@@ -51,7 +53,9 @@ export function CustomerEditor({ customer, close }: { customer?: Customer; close
         <p className="muted">
           {mode === 'demo'
             ? 'Registro de prueba: los cambios se pierden al recargar.'
-            : 'Los cambios se guardan en este navegador.'}
+            : isServerMode()
+              ? 'Los cambios se guardan en la PC del taller.'
+              : 'Los cambios se guardan en este navegador.'}
         </p>
         <div className="form-grid">
           <label>

@@ -1,3 +1,5 @@
+import { isServerMode } from '../lib/serverClient';
+import { randomId } from '../lib/ids';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import QRCode from 'qrcode';
@@ -37,7 +39,7 @@ import { dateLabel, maintenanceStatus, money, number, type Vehicle } from '../li
 export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: () => void }) {
   const { customers, vehicles, services, saveVehicle, notify, mode, referenceDate } = useData();
   const [error, setError] = useState('');
-  const submit = (e: FormEvent<HTMLFormElement>) => {
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const plate = String(data.get('plate')).trim().toUpperCase().replace(/\s+/g, ' ');
@@ -61,9 +63,9 @@ export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: ()
       );
       return;
     }
-    const saved = saveVehicle({
+    const saved = await saveVehicle({
       ...vehicle,
-      id: vehicle?.id ?? crypto.randomUUID(),
+      id: vehicle?.id ?? randomId(),
       customerId: String(data.get('customer')),
       plate,
       brand: String(data.get('brand')).trim(),
@@ -91,7 +93,9 @@ export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: ()
         <p className="muted">
           {mode === 'demo'
             ? 'Datos de prueba, sin persistencia.'
-            : 'Los datos quedan guardados en este navegador.'}
+            : isServerMode()
+              ? 'Los datos quedan guardados en la PC del taller.'
+              : 'Los datos quedan guardados en este navegador.'}
         </p>
         <div className="form-grid">
           <label>
@@ -298,8 +302,9 @@ export function VehicleQR({ id }: { id: string }) {
       <Panel title="Historial por QR" icon={QrCode} className="qr-panel">
         <QrCode size={52} />
         <p>
-          Los datos de este vehículo están solo en este navegador. Un QR público requerirá un
-          servicio para compartir la información autorizada.
+          Los datos de este vehículo están{' '}
+          {isServerMode() ? 'en la PC del taller' : 'solo en este navegador'}. Un QR público
+          requerirá un servicio para compartir la información autorizada.
         </p>
         <Link className="button full" to="/publico/demo/v2">
           Ver ejemplo ficticio

@@ -1,3 +1,5 @@
+import { isServerMode } from '../lib/serverClient';
+import { randomId } from '../lib/ids';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import {
   ArchiveRestore,
@@ -129,6 +131,10 @@ export function Backups() {
     );
   };
   const downloadRaw = (key: string) => {
+    if (isServerMode()) {
+      window.location.href = '/api/backup?previous=1';
+      return;
+    }
     try {
       const raw = localStorage.getItem(key);
       if (!raw) {
@@ -181,8 +187,8 @@ export function Backups() {
       const data = { ...candidate.data };
       if (candidatePhotos !== null) {
         if (candidatePhotos.length) {
-          const setId = crypto.randomUUID();
-          staged = candidatePhotos.map((photo) => ({ ...photo, id: crypto.randomUUID(), setId }));
+          const setId = randomId();
+          staged = candidatePhotos.map((photo) => ({ ...photo, id: randomId(), setId }));
           await storePhotos(staged);
           data.photoSet = setId;
           data.photos = staged.map(({ data: _blob, setId: _set, ...ref }) => ref);
@@ -193,10 +199,10 @@ export function Backups() {
       }
       if (candidateDocuments !== null) {
         if (candidateDocuments.length) {
-          const setId = crypto.randomUUID();
+          const setId = randomId();
           stagedDocuments = candidateDocuments.map((document) => ({
             ...document,
-            id: crypto.randomUUID(),
+            id: randomId(),
             setId,
           }));
           await storeDocuments(stagedDocuments);
@@ -207,7 +213,7 @@ export function Backups() {
           delete data.documents;
         }
       }
-      if (!restoreBackup({ ...candidate, data }))
+      if (!(await restoreBackup({ ...candidate, data })))
         throw new Error('No se pudo restaurar. La base actual se conserva.');
       staged = [];
       stagedDocuments = [];
@@ -216,9 +222,7 @@ export function Backups() {
       setCandidateDocuments(null);
       setConfirming(false);
       setError('');
-      notify(
-        'Respaldo restaurado en este navegador. Se conservó una copia previa cuando existían datos.',
-      );
+      notify('Respaldo restaurado. Se conservó una copia previa cuando existían datos.');
     } catch {
       await discardPhotos(staged.map((p) => p.id)).catch(() => {});
       await discardDocuments(stagedDocuments.map((d) => d.id)).catch(() => {});
@@ -251,7 +255,9 @@ export function Backups() {
         <span>
           {mode === 'demo'
             ? 'Estás en la demostración. Las exportaciones son ficticias y no son restaurables. Volvé a tus datos para usar respaldos locales.'
-            : 'Los datos están solo en este navegador. Borrar los datos del sitio o cambiar de dirección web puede dejarte sin acceso a ellos: descargá respaldos periódicamente. GitHub no guarda tu base local.'}
+            : isServerMode()
+              ? 'Los datos y archivos se guardan en la PC del taller. El ZIP completo permite trasladarlos o recuperarlos.'
+              : 'Los datos están solo en este navegador. Borrar los datos del sitio o cambiar de dirección web puede dejarte sin acceso a ellos: descargá respaldos periódicamente. GitHub no guarda tu base local.'}
         </span>
       </div>
       <div className="backup-layout">
@@ -441,8 +447,9 @@ export function Backups() {
           {mode === 'local' && (
             <Panel title="Copias de recuperación" icon={ArchiveRestore}>
               <p className="panel-description">
-                La copia previa se conserva en este navegador antes de una restauración. No
-                reemplaza un respaldo descargado.
+                La copia previa se conserva{' '}
+                {isServerMode() ? 'en la PC del taller' : 'en este navegador'} antes de una
+                restauración. No reemplaza un respaldo descargado.
               </p>
               <div className="recovery-buttons">
                 <button className="button" onClick={() => downloadRaw(SAFETY_COPY_KEY)}>
@@ -583,10 +590,10 @@ export function SettingsPage() {
   const { workshop, mode, saveWorkshop, notify } = useData();
   const [tab, setTab] = useState('Taller');
   const [saved, setSaved] = useState(false);
-  const save = (e: FormEvent<HTMLFormElement>) => {
+  const save = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    const ok = saveWorkshop({
+    const ok = await saveWorkshop({
       name: String(data.get('workshop')).trim(),
       phone: String(data.get('phone')).trim(),
       email: String(data.get('email')).trim(),
@@ -722,8 +729,9 @@ export function SettingsPage() {
                 <span className="subtle-chip">Futuro</span>
               </div>
               <p className="fine-print">
-                Cada navegador tiene una base independiente. No existe separación segura entre
-                usuarios que comparten el mismo perfil del navegador.
+                {isServerMode()
+                  ? 'La PC comparte una base privada con contraseña para el personal autorizado. Las cuentas individuales y los permisos por rol se incorporarán en una etapa posterior.'
+                  : 'Cada navegador tiene una base independiente. No existe separación segura entre usuarios que comparten el mismo perfil del navegador.'}
               </p>
             </Panel>
           )}
@@ -739,7 +747,9 @@ export function SettingsPage() {
                   [
                     '02',
                     'Base local',
-                    'Clientes, vehículos, mantenimientos y taller persistentes en este navegador.',
+                    isServerMode()
+                      ? 'Clientes, vehículos, mantenimientos y archivos guardados en la PC del taller.'
+                      : 'Clientes, vehículos, mantenimientos y taller persistentes en este navegador.',
                   ],
                   [
                     '03',

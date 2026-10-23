@@ -1,3 +1,11 @@
+import { useRef } from 'react';
+import {
+  isServerMode,
+  serverBootstrap,
+  readServerState,
+  saveServerState,
+} from '../lib/serverClient';
+import { randomId } from '../lib/ids';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import {
   demoDate,
@@ -47,13 +55,14 @@ import {
 
 type Store = LocalData & {
   mode: 'local' | 'demo';
+  connected: boolean;
   referenceDate: string;
   storageError: string | null;
   updatedAt: string;
   switchMode: () => void;
-  saveCustomer: (customer: Customer) => boolean;
-  saveVehicle: (vehicle: Vehicle) => boolean;
-  saveWorkshop: (workshop: Workshop) => boolean;
+  saveCustomer: (customer: Customer) => Promise<boolean>;
+  saveVehicle: (vehicle: Vehicle) => Promise<boolean>;
+  saveWorkshop: (workshop: Workshop) => Promise<boolean>;
   addService: (
     service: Service,
     next: { date: string; km: number; recommendation: string },
@@ -65,18 +74,22 @@ type Store = LocalData & {
     photos: PreparedPhoto[],
     removedPhotoIds: string[],
   ) => Promise<boolean>;
-  saveDocument: (original: DocumentReference, document: DocumentReference) => boolean;
+  saveDocument: (original: DocumentReference, document: DocumentReference) => Promise<boolean>;
   demoPhotos: StoredPhoto[];
   demoDocuments: StoredDocument[];
   addDocument: (document: PreparedDocument) => Promise<boolean>;
-  removeDocument: (id: string) => boolean;
-  restoreBackup: (backup: LocalBackup) => boolean;
+  removeDocument: (id: string) => Promise<boolean>;
+  restoreBackup: (backup: LocalBackup) => Promise<boolean>;
   notify: (message: string) => void;
   toast: string;
   clearToast: () => void;
 };
 const Context = createContext<Store | null>(null);
 function readLocal(): DatabaseState {
+  if (isServerMode()) {
+    const database = serverBootstrap();
+    return { database, raw: JSON.stringify(database), error: null };
+  }
   try {
     return loadDatabase(window.localStorage);
   } catch {
@@ -90,8 +103,36 @@ function readLocal(): DatabaseState {
 }
 export function DataProvider({ children }: { children: ReactNode }) {
   const [local, setLocal] = useState(readLocal);
+  const connected = isServerMode();
+  const writing = useRef(false);
+  useEffect(() => {
+    if (!connected) return;
+    let stopped = false;
+    const refresh = async () => {
+      if (writing.current || document.querySelector('form,dialog[open]')) return;
+      try {
+        const database = await readServerState();
+        if (!stopped && !writing.current && !document.querySelector('form,dialog[open]'))
+          setLocal((previous) =>
+            database.revision > previous.database.revision
+              ? { database, raw: JSON.stringify(database), error: null }
+              : previous,
+          );
+      } catch {
+        /* La conexión se informa sin pasar a una base vacía. */
+      }
+    };
+    const timer = setInterval(refresh, 5000);
+    window.addEventListener('focus', refresh);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [connected]);
   const [mode, setMode] = useState<'local' | 'demo'>(() => {
     try {
+      if (isServerMode()) return 'local';
       return localStorage.getItem(VIEW_MODE_KEY) === 'demo' ? 'demo' : 'local';
     } catch {
       return 'local';
@@ -115,6 +156,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const notify = useCallback((message: string) => setToast(message), []);
   const clearToast = useCallback(() => setToast(''), []);
   useEffect(() => {
+    if (connected) return;
     const refresh = (event: StorageEvent) => {
       if (event.key === DATABASE_KEY || event.key === null) {
         setLocal(readLocal());
@@ -123,9 +165,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener('storage', refresh);
     return () => window.removeEventListener('storage', refresh);
-  }, [notify]);
+  }, [notify, connected]);
   const data = mode === 'demo' ? demo : local.database.data;
-  const commit = (next: LocalData, restore = false): boolean => {
+  const commit = async (next: LocalData, restore = false): Promise<boolean> => {
     if (mode === 'demo') {
       setDemo(next);
       return true;
@@ -133,6 +175,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (local.error && !restore) {
       notify(local.error);
       return false;
+    }
+    if (connected) {
+      if (writing.current) {
+        notify('Hay un guardado en curso. Esperá un momento.');
+        return false;
+      }
+      writing.current = true;
+      try {
+        const database = await saveServerState(next, local.database.revision, restore);
+        setLocal({ database, raw: JSON.stringify(database), error: null });
+        return true;
+      } catch (error) {
+        notify(error instanceof Error ? error.message : 'No se pudo guardar en la PC.');
+        return false;
+      } finally {
+        writing.current = false;
+      }
     }
     try {
       setLocal(
@@ -155,7 +214,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         ? data.customers.map((c) => (c.id === customer.id ? customer : c))
         : [...data.customers, customer],
     });
-  const saveVehicle = (vehicle: Vehicle) => {
+  const saveVehicle = async (vehicle: Vehicle) => {
     const previous = data.vehicles.find((v) => v.id === vehicle.id);
     const minimum = Math.max(
       0,
@@ -198,7 +257,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       notify(error instanceof Error ? error.message : 'No se pudo corregir el servicio.');
       return false;
     }
-    const setId = data.photoSet ?? crypto.randomUUID();
+    const setId = data.photoSet ?? randomId();
     const files = photos.map((photo) => ({ ...photo, serviceId: service.id, setId }));
     const retained = (data.photos ?? []).filter(
       (p) => p.serviceId !== service.id || !removedPhotoIds.includes(p.id),
@@ -217,7 +276,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     try {
       newDatabase(nextData);
       if (mode === 'local' && files.length) await storePhotos(files);
-      if (commit(nextData)) {
+      if (await commit(nextData)) {
         if (mode === 'demo')
           setDemoPhotos((previous) => [
             ...previous.filter((p) => !removedPhotoIds.includes(p.id)),
@@ -232,7 +291,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await discardPhotos(files.map((p) => p.id)).catch(() => {});
     return false;
   };
-  const saveDocument = (original: DocumentReference, document: DocumentReference) => {
+  const saveDocument = async (original: DocumentReference, document: DocumentReference) => {
     const current = (data.documents ?? []).find((d) => d.id === original.id);
     if (JSON.stringify(current) !== JSON.stringify(original)) {
       notify('El documento cambió. Volvé a abrir Editar.');
@@ -242,7 +301,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       notify('Conservá la extensión del formato original al renombrar el documento.');
       return false;
     }
-    const saved = commit({
+    const saved = await commit({
       ...data,
       documents: (data.documents ?? []).map((d) =>
         d.id === original.id
@@ -291,7 +350,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ),
     };
     if (!photos.length) return commit(nextData);
-    const setId = data.photoSet ?? crypto.randomUUID();
+    const setId = data.photoSet ?? randomId();
     const files = photos.map((photo) => ({ ...photo, serviceId: service.id, setId }));
     try {
       if (photos.length > MAX_SERVICE_PHOTOS) throw new Error('Máximo 6 fotos por mantenimiento.');
@@ -302,12 +361,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ];
       newDatabase(nextData);
       if (mode === 'demo') {
-        const saved = commit(nextData);
+        const saved = await commit(nextData);
         if (saved) setDemoPhotos((previous) => [...previous, ...files]);
         return saved;
       }
       await storePhotos(files);
-      if (commit(nextData)) return true;
+      if (await commit(nextData)) return true;
     } catch {
       notify(
         'No se pudo guardar el mantenimiento con sus fotos. Revisá el espacio disponible o elegí menos imágenes. La base anterior se conserva.',
@@ -317,19 +376,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return false;
   };
   const addDocument = async (document: PreparedDocument): Promise<boolean> => {
-    const setId = data.documentSet ?? crypto.randomUUID();
+    const setId = data.documentSet ?? randomId();
     const file = { ...document, setId };
     const { data: _blob, ...ref } = document;
     const next = { ...data, documentSet: setId, documents: [...(data.documents ?? []), ref] };
     try {
       newDatabase(next);
       if (mode === 'demo') {
-        const saved = commit(next);
+        const saved = await commit(next);
         if (saved) setDemoDocuments((previous) => [...previous, file]);
         return saved;
       }
       await storeDocuments([file]);
-      if (commit(next)) return true;
+      if (await commit(next)) return true;
     } catch {
       notify(
         'No se pudo guardar el documento. Revisá el archivo y el espacio disponible. La base anterior se conserva.',
@@ -338,8 +397,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (mode === 'local') await discardDocuments([document.id]).catch(() => {});
     return false;
   };
-  const removeDocument = (id: string) => {
-    const saved = commit({ ...data, documents: (data.documents ?? []).filter((d) => d.id !== id) });
+  const removeDocument = async (id: string) => {
+    const saved = await commit({
+      ...data,
+      documents: (data.documents ?? []).filter((d) => d.id !== id),
+    });
     if (saved && mode === 'demo')
       setDemoDocuments((previous) => previous.filter((d) => d.id !== id));
     return saved;
@@ -354,7 +416,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setMode(next);
     setToast('');
   };
-  const restoreBackup = (backup: LocalBackup) => {
+  const restoreBackup = async (backup: LocalBackup) => {
     if (mode !== 'local') {
       notify('Volvé al modo local para restaurar un respaldo.');
       return false;
@@ -366,6 +428,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       value={{
         ...data,
         mode,
+        connected,
         referenceDate: mode === 'demo' ? demoDate : localToday(),
         storageError: mode === 'local' ? local.error : null,
         updatedAt: local.raw && !local.error ? local.database.updatedAt : '',
