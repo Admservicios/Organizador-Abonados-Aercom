@@ -9,7 +9,7 @@ El workflow **Preparar aplicación Windows** genera dos archivos dentro del arte
 - `Taller-Calamante-Instalar-Windows.exe`: instalador para Windows de 64 bits, con acceso directo e inicio al ingresar a Windows como opción desmarcada inicialmente.
 - `Taller-Calamante-Portable-win32-x64.zip`: carpeta completa, con el runtime de Node incluido. Se descomprime y se abre `Taller Calamante.vbs`.
 
-No se necesita instalar Node, npm ni herramientas de desarrollo en el taller. Se abre una ventana de aplicación de Edge cuando está disponible; en otros equipos se usa el navegador predeterminado. El servidor permanece funcionando al cerrar la ventana, para atender otros dispositivos y crear copias. No deben ejecutarse dos versiones al mismo tiempo. La validación automática comprueba el servidor empaquetado en Windows; la instalación interactiva, el firewall y el inicio de sesión de Windows se deben verificar después en la PC real.
+No se necesita instalar Node, npm ni herramientas de desarrollo en el taller. Se abre una ventana de aplicación de Edge cuando está disponible; en otros equipos se usa el navegador predeterminado. El servidor permanece funcionando al cerrar la ventana, para atender otros dispositivos y crear copias. No deben ejecutarse dos versiones al mismo tiempo. La validación automática comprueba el servidor empaquetado, instala, guarda un registro de prueba, desinstala y reinstala verificando que conserve sus datos; la instalación interactiva, el firewall y el inicio de sesión de Windows se deben verificar después en la PC real.
 
 ## Datos fuera del programa
 
