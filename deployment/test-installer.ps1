@@ -30,6 +30,7 @@ function Stop-Taller {
   }
 }
 try {
+  Write-Output 'Instalando e iniciando la aplicación.'
   Install-Taller
   Start-Taller
   $headers = @{ Origin = $url }
@@ -38,16 +39,21 @@ try {
   $state.data.customers = @(@{id='cliente-prueba-windows'; name='Cliente conservado al reinstalar'; document=''; phone=''; email=''; address=''; active=$true; notes=''})
   $body = @{data=$state.data; uploads=@(); restore=$false} | ConvertTo-Json -Depth 30 -Compress
   Invoke-RestMethod "$url/api/state" -Method Put -Headers @{Origin=$url; 'If-Match'='0'} -WebSession $session -ContentType 'application/json' -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null
+  Write-Output 'Registro confirmado en SQLite; probando desinstalación.'
   Stop-Taller
   $uninstaller = Join-Path $installDir 'unins000.exe'
   $result = Start-Process $uninstaller -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
   if ($result.ExitCode -ne 0) { throw 'La desinstalación de prueba falló.' }
   if (-not (Test-Path (Join-Path $dataDir 'taller.sqlite'))) { throw 'La desinstalación eliminó la carpeta de datos.' }
+  Write-Output 'Datos conservados; reinstalando.'
   Install-Taller
   Start-Taller
   $recovered = Invoke-RestMethod "$url/api/state" -WebSession $session
   if ($recovered.data.customers[0].name -ne 'Cliente conservado al reinstalar') { throw 'Los datos no se conservaron al reinstalar.' }
   Write-Output 'Windows: instalación, acceso privado, guardado SQLite, desinstalación y reinstalación con datos conservados correctos.'
+} catch {
+  Write-Output ('::error::' + $_.Exception.Message.Replace("`r", '').Replace("`n", ' ') + ' Línea: ' + $_.InvocationInfo.ScriptLineNumber)
+  throw
 } finally {
   Stop-Taller
 }
