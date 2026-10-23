@@ -21,7 +21,12 @@ jobs:
       - run: npm run build
       - run: npm run build:server
       - run: npm test
-      - run: npx playwright install --with-deps chromium
+      - name: Reutilizar navegador de pruebas
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-ubuntu24-${{ hashFiles('package-lock.json') }}
+      - run: npx playwright install --with-deps --only-shell chromium
         timeout-minutes: 5
       - run: npm run test:e2e
       - run: npm run test:server
