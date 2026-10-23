@@ -630,7 +630,8 @@ export function SettingsPage() {
               key={title}
               className={tab === title ? 'active' : ''}
               onClick={() => {
-                if (title === tab || confirmDiscard()) {
+                if (title === tab) return;
+                if (confirmDiscard()) {
                   setDirty(false);
                   setTab(title);
                 }

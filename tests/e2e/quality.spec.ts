@@ -81,6 +81,8 @@ test('ajustes: proteger cambios al cambiar pestaña y liberar la navegación des
   await page.goto('/ajustes');
   const name = page.locator('input[name="workshop"]');
   await name.fill('Taller corregido');
+  // Pulsar la pestaña activa conserva tanto los campos como su protección.
+  await page.getByRole('button', { name: 'Taller', exact: true }).click();
   await answer(page, false, () =>
     page.getByRole('button', { name: 'Aplicación', exact: true }).click(),
   );

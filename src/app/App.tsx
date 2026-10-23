@@ -278,6 +278,7 @@ function Layout() {
             <button
               className="button small"
               onClick={async () => {
+                if (!confirmDiscard()) return;
                 await api('/logout', { method: 'POST' });
                 window.location.reload();
               }}
