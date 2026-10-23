@@ -39,6 +39,8 @@ try {
   $state.data.customers = @(@{id='cliente-prueba-windows'; name='Cliente conservado al reinstalar'; document=''; phone=''; email=''; address=''; active=$true; notes=''})
   $body = @{data=$state.data; uploads=@(); restore=$false} | ConvertTo-Json -Depth 30 -Compress
   Invoke-RestMethod "$url/api/state" -Method Put -SkipHeaderValidation -Headers @{Origin=$url; 'If-Match'=[string]$state.revision} -WebSession $session -ContentType 'application/json' -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null
+  # Invoke-RestMethod conserva los encabezados adicionales en WebSession.
+  $session.Headers.Remove('If-Match') | Out-Null
   Write-Output 'Registro confirmado en SQLite; probando desinstalación.'
   Stop-Taller
   $uninstaller = Join-Path $installDir 'unins000.exe'
