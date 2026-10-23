@@ -86,7 +86,7 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({
   executablePath:
     process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
-    (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined),
+    (!process.env.CI && existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined),
 });
 async function restore(page, url, file) {
   await page.goto(`${url}#/backups`);

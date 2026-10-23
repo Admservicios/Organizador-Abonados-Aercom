@@ -48,7 +48,7 @@ async function stop() {
 const browser = await chromium.launch({
   executablePath:
     process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
-    (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined),
+    (!process.env.CI && existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined),
 });
 const contexts = [];
 const password = 'Taller-Calamante-2026-test';

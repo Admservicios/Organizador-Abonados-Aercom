@@ -55,7 +55,7 @@ try {
   browser = await chromium.launch({
     executablePath:
       process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
-      (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined),
+      (!process.env.CI && existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined),
   });
   const port = server.address().port;
   for (const [name, path] of [

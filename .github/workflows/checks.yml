@@ -8,7 +8,8 @@ permissions:
   contents: read
 jobs:
   verificar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,6 +22,7 @@ jobs:
       - run: npm run build:server
       - run: npm test
       - run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
       - run: npm run test:e2e
       - run: npm run test:server
       - run: npm run test:publication
@@ -45,7 +47,7 @@ jobs:
   publicar:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: verificar
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pages: write
