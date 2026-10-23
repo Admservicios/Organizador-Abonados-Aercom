@@ -207,17 +207,26 @@ try {
       await page.getByRole('button', { name: /^Ver foto foto-prueba.jpg/ }).waitFor();
       await page.getByRole('tab', { name: 'Documentación', exact: true }).click();
       await page
-        .getByLabel('Archivo PDF', { exact: true })
+        .getByLabel('Archivo PDF o imagen', { exact: true })
         .setInputFiles(resolve(root, 'tests/fixtures/documento-prueba.pdf'));
       await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
       await page.getByRole('article', { name: 'documento-prueba.pdf', exact: true }).waitFor();
+      await page
+        .getByLabel('Archivo PDF o imagen', { exact: true })
+        .setInputFiles(resolve(root, 'tests/fixtures/documento-imagen.webp'));
+      await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
+      await page
+        .getByRole('button', { name: 'Ver documento documento-imagen.webp', exact: true })
+        .click();
+      await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
+      await page.getByRole('dialog').getByRole('button', { name: 'Cerrar vista previa' }).click();
       const saved = await readData(page);
       await page.goto(`${url}#/backups`);
       pending = page.waitForEvent('download');
       await page.getByRole('button', { name: 'Descargar ZIP completo' }).click();
       const zip = await readFile(await (await pending).path());
       const entries = unzipSync(zip);
-      assert.equal(Object.keys(entries).filter((name) => name.startsWith('documents/')).length, 1);
+      assert.equal(Object.keys(entries).filter((name) => name.startsWith('documents/')).length, 2);
       assert.equal(Object.keys(entries).filter((name) => name.startsWith('photos/')).length, 1);
       await restore(page, url, { name: 'offline.zip', mimeType: 'application/zip', buffer: zip });
       const recovered = await readData(page);
@@ -286,6 +295,14 @@ try {
       assert.deepEqual(
         await readFile(await (await pending).path()),
         await readFile(resolve(root, 'tests/fixtures/documento-prueba.pdf')),
+      );
+      pending = page.waitForEvent('download');
+      await page
+        .getByRole('button', { name: 'Descargar documento documento-imagen.webp', exact: true })
+        .click();
+      assert.deepEqual(
+        await readFile(await (await pending).path()),
+        await readFile(resolve(root, 'tests/fixtures/documento-imagen.webp')),
       );
       assert.equal(
         await page.evaluate(

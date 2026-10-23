@@ -38,6 +38,8 @@ import { editServiceData } from '../lib/serviceEditing';
 import type { DocumentReference } from '../lib/documents';
 import {
   discardDocuments,
+  documentFileMime,
+  documentMime,
   storeDocuments,
   type PreparedDocument,
   type StoredDocument,
@@ -234,6 +236,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const current = (data.documents ?? []).find((d) => d.id === original.id);
     if (JSON.stringify(current) !== JSON.stringify(original)) {
       notify('El documento cambió. Volvé a abrir Editar.');
+      return false;
+    }
+    if (documentFileMime(document.name) !== documentMime(original)) {
+      notify('Conservá la extensión del formato original al renombrar el documento.');
       return false;
     }
     const saved = commit({

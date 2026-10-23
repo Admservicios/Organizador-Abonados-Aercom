@@ -92,3 +92,74 @@ describe('documentos PDF locales', () => {
     ).rejects.toThrow('tamaño permitido');
   });
 });
+
+describe('imágenes como documentos, sin modificar los originales', () => {
+  const examples = [
+    ['foto-prueba.jpg', 'image/jpeg'],
+    ['documento-rotado.jpg', 'image/jpeg'],
+    ['documento-imagen.png', 'image/png'],
+    ['documento-imagen.webp', 'image/webp'],
+    ['documento-lossless.webp', 'image/webp'],
+    ['documento-alpha.webp', 'image/webp'],
+  ] as const;
+  for (const [name, mime] of examples)
+    it(`conserva ${name} y recupera exactamente sus bytes desde el ZIP`, async () => {
+      const bytes = await readFile(new URL(`../fixtures/${name}`, import.meta.url));
+      const image = await prepareDocument(new File([bytes], name, { type: mime }), 'v2', 'Cédula');
+      expect(image.mime).toBe(mime);
+      expect(await image.data.arrayBuffer()).toEqual(
+        bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+      );
+      const { document: pdf, data } = await sample();
+      const { data: _blob, ...ref } = image;
+      const mixed = { ...data, documents: [...data.documents, ref] };
+      const zip = new Uint8Array(
+        await (
+          await createPhotoBackup(mixed, [], [pdf, { ...image, setId: data.documentSet }])
+        ).arrayBuffer(),
+      );
+      const parsed = await parsePhotoBackup(zip);
+      expect(parsed.backup.data).toEqual(mixed);
+      expect(parsed.documents[1].mime).toBe(mime);
+      expect(await parsed.documents[1].data.arrayBuffer()).toEqual(await image.data.arrayBuffer());
+      const entries = unzipSync(zip);
+      const path = Object.keys(entries).find((p) => p.startsWith(`documents/${image.id}.`))!;
+      entries[path][entries[path].length - 1] ^= 1;
+      await expect(parsePhotoBackup(zipSync(entries))).rejects.toThrow('integridad');
+    });
+  it('rechaza imágenes falsas, truncadas y formatos no admitidos sin confiar en nombre o MIME del navegador', async () => {
+    const bytes = await readFile(new URL('../fixtures/documento-imagen.png', import.meta.url));
+    for (const name of ['falso.jpg', 'falso.webp', 'archivo.svg', 'archivo.html', 'png']) {
+      await expect(
+        prepareDocument(new File([bytes], name, { type: 'image/png' }), 'v2', 'Otro'),
+      ).rejects.toThrow();
+    }
+    await expect(
+      prepareDocument(new File([bytes.subarray(0, -4)], 'roto.png'), 'v2', 'Otro'),
+    ).rejects.toThrow('incompleta');
+    const valid = await prepareDocument(
+      new File([bytes], 'imagen.png', { type: '' }),
+      'v2',
+      'Otro',
+    );
+    await expect(validateDocument({ ...valid, name: 'imagen.pdf' })).rejects.toThrow('extensión');
+    await expect(
+      validateDocument({ ...valid, data: new Blob([bytes], { type: 'image/jpeg' }) }),
+    ).rejects.toThrow('5 MB');
+    expect(valid.mime).toBe('image/png');
+  });
+  it('limita las dimensiones antes de decodificar y preserva la extensión al acortar nombres', async () => {
+    const bytes = new Uint8Array(
+      await readFile(new URL('../fixtures/documento-imagen.png', import.meta.url)),
+    );
+    const big = new Uint8Array(bytes);
+    new DataView(big.buffer).setUint32(16, 12000);
+    new DataView(big.buffer).setUint32(20, 12000);
+    await expect(prepareDocument(new File([big], 'grande.png'), 'v2', 'Otro')).rejects.toThrow(
+      '20 megapíxeles',
+    );
+    const file = await prepareDocument(new File([bytes], `${'a'.repeat(220)}.PNG`), 'v2', 'Otro');
+    expect(file.name).toHaveLength(200);
+    expect(file.name.endsWith('.PNG')).toBe(true);
+  });
+});

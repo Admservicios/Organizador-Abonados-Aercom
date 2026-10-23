@@ -117,10 +117,19 @@ try {
       await page.getByRole('tab', { name: 'Documentación', exact: true }).click();
       await page.getByLabel('Tipo de documento').selectOption('Factura');
       await page
-        .getByLabel('Archivo PDF', { exact: true })
+        .getByLabel('Archivo PDF o imagen', { exact: true })
         .setInputFiles(resolve(root, 'tests/fixtures/documento-prueba.pdf'));
       await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
       await page.getByRole('article', { name: 'documento-prueba.pdf', exact: true }).waitFor();
+      await page
+        .getByLabel('Archivo PDF o imagen', { exact: true })
+        .setInputFiles(resolve(root, 'tests/fixtures/documento-imagen.png'));
+      await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
+      await page
+        .getByRole('button', { name: 'Ver documento documento-imagen.png', exact: true })
+        .click();
+      await page.getByRole('dialog').getByRole('img').waitFor();
+      await page.getByRole('dialog').getByRole('button', { name: 'Cerrar vista previa' }).click();
       await page.reload();
       await page.getByRole('tab', { name: 'Documentación', exact: true }).click();
       const documentDownload = page.waitForEvent('download');
@@ -129,6 +138,14 @@ try {
         await readFile(await (await documentDownload).path()),
         await readFile(resolve(root, 'tests/fixtures/documento-prueba.pdf')),
       );
+      const imageDownload = page.waitForEvent('download');
+      await page
+        .getByRole('button', { name: 'Descargar documento documento-imagen.png', exact: true })
+        .click();
+      assert.deepEqual(
+        await readFile(await (await imageDownload).path()),
+        await readFile(resolve(root, 'tests/fixtures/documento-imagen.png')),
+      );
       await page.goto(`${url}#/backups`);
       const archiveDownload = page.waitForEvent('download');
       await page.getByRole('button', { name: 'Descargar ZIP completo' }).click();
@@ -136,7 +153,7 @@ try {
       assert.equal(archive.subarray(0, 2).toString(), 'PK');
       const { unzipSync } = await import('fflate');
       const entries = unzipSync(archive);
-      assert.equal(Object.keys(entries).filter((name) => name.startsWith('documents/')).length, 1);
+      assert.equal(Object.keys(entries).filter((name) => name.startsWith('documents/')).length, 2);
       assert.equal(Object.keys(entries).filter((name) => name.startsWith('photos/')).length, 1);
       assert.deepEqual(errors, [], `${name}: errores en el sitio servido sin Vite`);
       console.log(

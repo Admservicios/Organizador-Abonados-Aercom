@@ -228,7 +228,7 @@ test('corrige nombre, categoría y vehículo de un documento conservando exactam
   await page.getByRole('tab', { name: 'Documentación', exact: true }).click();
   const bytes = await readFile(new URL('../fixtures/documento-prueba.pdf', import.meta.url));
   await page
-    .getByLabel('Archivo PDF', { exact: true })
+    .getByLabel('Archivo PDF o imagen', { exact: true })
     .setInputFiles({ name: 'mal.pdf', mimeType: 'application/pdf', buffer: bytes });
   await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
   await page.getByRole('button', { name: 'Editar documento mal.pdf' }).click();

@@ -749,7 +749,7 @@ export function SettingsPage() {
                   [
                     '04',
                     'Operación y archivos',
-                    'PDF, fotos, documentos del vehículo y respaldo ZIP completo disponibles. Vencimientos independientes por servicio e instalación con uso sin conexión disponibles.',
+                    'PDF, fotos, documentos PDF e imágenes del vehículo y respaldo ZIP completo disponibles. Vencimientos independientes por servicio e instalación con uso sin conexión disponibles.',
                   ],
                   [
                     '05',

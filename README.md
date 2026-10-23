@@ -22,7 +22,7 @@ Disponible:
 - Copia previa antes de restaurar cuando ya existe una base.
 - Exportación de clientes a CSV.
 - Fotos de mantenimiento persistentes y galería por vehículo.
-- Documentos PDF por vehículo: cédula, seguro, VTV / RTO, facturas y otros.
+- Documentos PDF e imágenes por vehículo: cédula, seguro, VTV / RTO, facturas y otros.
 - Respaldo ZIP completo con registros, fotografías y documentos verificados.
 - Modo claro/oscuro y navegación móvil.
 
@@ -112,7 +112,7 @@ El repositorio ahora se llama **Admservicios/Taller-Calamante**. La dirección a
 - Sin autenticación, roles efectivos ni aislamiento entre personas que usan el mismo perfil del navegador. El panel de roles es una propuesta visual futura.
 - Sin sincronización ni historial público de datos reales. El QR de demostración no es un mecanismo de acceso seguro o revocable.
 - Fotografías: se conserva la versión optimizada; los originales deben guardarse por separado.
-- Documentos: PDF de hasta 5 MB, 20 por vehículo y 200 en total. Otros formatos quedan pendientes. Las copias automáticas en carpeta requieren Chrome o Edge de escritorio compatible y la aplicación abierta.
+- Documentos: PDF, JPG, PNG y WebP de hasta 5 MB, 20 por vehículo y 200 en total. Imágenes de hasta 20 megapíxeles y 12.000 píxeles por lado. Otros formatos quedan pendientes. Las copias automáticas en carpeta requieren Chrome o Edge de escritorio compatible y la aplicación abierta.
 - Vencimientos por tipo de servicio, con fecha, kilometraje y último trabajo independientes. No se reconstruyen intervalos que el sistema anterior ya había sobrescrito.
 - Aplicación instalable y uso sin conexión disponibles después de la primera preparación con internet. La instalación depende del navegador; no sincroniza bases entre dispositivos.
 - Para editar, usar una pestaña a la vez. Se detectan revisiones desactualizadas al escribir y se reciben avisos de cambios de otras pestañas; no hay edición colaborativa.
@@ -152,11 +152,11 @@ Las bases y respaldos anteriores siguen siendo compatibles. Su único vencimient
 
 ## Documentación del vehículo
 
-En **Vehículos → ficha → Documentación** se puede seleccionar el tipo (Cédula, Seguro, VTV / RTO, Factura u Otro), elegir un PDF y pulsar **Guardar documento**. Se conserva el archivo original: hasta 5 MB por PDF, 20 documentos por vehículo y 200 en toda la base. Cada documento muestra nombre, categoría, fecha de carga y tamaño; se puede descargar o quitar de la ficha con confirmación.
+En **Vehículos → ficha → Documentación** se puede seleccionar el tipo (Cédula, Seguro, VTV / RTO, Factura u Otro), elegir un PDF, JPG / JPEG, PNG o WebP y pulsar **Guardar documento**. Se conserva el archivo original: hasta 5 MB por archivo, 20 documentos por vehículo y 200 en toda la base. Las imágenes tienen un límite de 20 megapíxeles y 12.000 píxeles por lado. Cada documento muestra nombre, formato, categoría, fecha de carga y tamaño; se puede editar, descargar o quitar de la ficha con confirmación. **Ver imagen** abre una vista previa local; la descarga conserva sus bytes originales, sin comprimir ni convertir. Al renombrar un adjunto se debe conservar su formato.
 
 Son archivos locales privados del taller: no se incluyen en el historial público de demostración. La demo guarda sus documentos solo en memoria y los pierde al recargar. No se evalúa la vigencia de los documentos ni se genera una alerta de vencimiento de seguro o VTV.
 
-El **ZIP completo** incluye `documents/<id>.pdf` junto con las fotos y los registros. Al restaurarlo se verifican tamaños, formato básico e integridad antes de confirmar la base. Los JSON contienen referencias, **no los PDF**; para trasladar archivos a otro navegador hay que usar el ZIP. Las copias anteriores siguen siendo compatibles. Quitar un documento retira su referencia de la ficha, sin borrar archivos que todavía podría necesitar una copia previa; no es una eliminación física garantizada del dispositivo.
+El **ZIP completo**, incluidas las copias automáticas, incluye `documents/<id>.pdf`, `.jpg`, `.png` o `.webp` junto con las fotos y los registros. Al restaurarlo se verifican tamaños, formato básico e integridad antes de confirmar la base. Los JSON contienen referencias, **no los archivos adjuntos**; para trasladar archivos a otro navegador hay que usar el ZIP. Las copias anteriores siguen siendo compatibles. Quitar un documento retira su referencia de la ficha, sin borrar archivos que todavía podría necesitar una copia previa; no es una eliminación física garantizada del dispositivo.
 
 ## Instalar y trabajar sin conexión
 
@@ -189,6 +189,6 @@ Al corregir fecha o kilómetros se conserva el intervalo de esa visita y se mues
 
 El odómetro se calcula con los servicios restantes y las lecturas independientes de la ficha o de los recordatorios manuales. Se pueden corregir kilómetros hacia abajo, pero no por debajo de registros que todavía afirmen una lectura mayor: el mensaje indica qué dato revisar primero. Las fechas y kilómetros corregidos no pueden contradecir visitas de fechas anteriores o posteriores.
 
-**Editar cliente** actualiza los datos donde aparece ese cliente. **Editar vehículo** permite corregir también propietario y color. El historial de clientes corresponde al propietario actual del vehículo; no se conservan propietarios por visita. En **Recordatorios → Editar** se puede corregir también la categoría, sin duplicar una que ya exista. En **Documentación → Editar** se corrigen nombre, categoría y vehículo asociado conservando el PDF original. Para cambiar su contenido se carga el PDF correcto y se quita el anterior.
+**Editar cliente** actualiza los datos donde aparece ese cliente. **Editar vehículo** permite corregir también propietario y color. El historial de clientes corresponde al propietario actual del vehículo; no se conservan propietarios por visita. En **Recordatorios → Editar** se puede corregir también la categoría, sin duplicar una que ya exista. En **Documentación → Editar** se corrigen nombre, categoría y vehículo asociado conservando el archivo original. Para cambiar su contenido se carga el archivo correcto y se quita el anterior.
 
 Las fotos desmarcadas se quitan de la referencia actual; sus archivos anteriores se conservan para recuperar copias previas. Si falla el guardado, no se reemplaza la base anterior. Un mantenimiento o documento modificado en otra pestaña obliga a reabrir su edición para evitar sobrescribir esa corrección.

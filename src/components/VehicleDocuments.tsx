@@ -1,10 +1,15 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Download, FileText, Trash2, UploadCloud, Pencil } from 'lucide-react';
 import { useData } from '../app/store';
 import { Modal } from './ui';
 import { downloadBlob } from '../lib/photoBackup';
 import {
   documentCategories,
+  DOCUMENT_ACCEPT,
+  documentMime,
+  documentFileMime,
+  documentExtension,
+  type StoredDocument,
   loadReferencedDocuments,
   MAX_VEHICLE_DOCUMENTS,
   MAX_DOCUMENTS,
@@ -32,6 +37,17 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<DocumentReference | null>(null);
   const [removing, setRemoving] = useState<DocumentReference | null>(null);
+  const [preview, setPreview] = useState<StoredDocument | null>(null);
+  const [previewURL, setPreviewURL] = useState('');
+  useEffect(() => {
+    if (!preview) {
+      setPreviewURL('');
+      return;
+    }
+    const url = URL.createObjectURL(preview.data);
+    setPreviewURL(url);
+    return () => URL.revokeObjectURL(url);
+  }, [preview]);
   const [inputKey, setInputKey] = useState(0);
   const fullVehicle = refs.length >= MAX_VEHICLE_DOCUMENTS;
   const full = fullVehicle || (documents?.length ?? 0) >= MAX_DOCUMENTS;
@@ -60,7 +76,7 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
       setBusy(false);
     }
   };
-  const download = async (ref: DocumentReference) => {
+  const download = async (ref: DocumentReference, showPreview = false) => {
     if (busy) return;
     setBusy(true);
     setError('');
@@ -71,7 +87,8 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
           : (await loadReferencedDocuments({ documentSet, documents: [ref] }))[0];
       if (!document)
         throw new Error('El archivo no está disponible. Restaurá un respaldo ZIP completo.');
-      downloadBlob(document.data, ref.name);
+      if (showPreview) setPreview({ ...document, ...ref });
+      else downloadBlob(document.data, ref.name);
     } catch {
       setError(
         'No se pudo recuperar el archivo. Reintentá o restaurá un respaldo ZIP completo con sus documentos.',
@@ -100,11 +117,11 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
           </select>
         </label>
         <label>
-          Archivo PDF
+          Archivo PDF o imagen
           <input
             key={inputKey}
             type="file"
-            accept="application/pdf,.pdf"
+            accept={DOCUMENT_ACCEPT}
             required
             disabled={busy || full || !!storageError}
             onChange={(event) => {
@@ -114,8 +131,8 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
           />
         </label>
         <p className="fine-print">
-          PDF de hasta 5 MB · Hasta 20 documentos por vehículo y 200 en total. Se conserva el
-          archivo original.
+          PDF, JPG, PNG o WebP de hasta 5 MB · Imágenes de hasta 20 megapíxeles. Hasta 20 documentos
+          por vehículo y 200 en total. Se conserva el archivo original.
         </p>
         <button
           className="button primary"
@@ -148,7 +165,7 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
                 <div className="vehicle-document-info">
                   <strong>{ref.name}</strong>
                   <span>
-                    {ref.category} ·{' '}
+                    {ref.category} · {documentExtension(ref).toUpperCase()} ·{' '}
                     {(ref.size / 1024).toLocaleString('es-AR', { maximumFractionDigits: 1 })} KB
                   </span>
                   <small>
@@ -159,6 +176,16 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
                   </small>
                 </div>
                 <div className="vehicle-document-actions">
+                  {documentMime(ref) !== 'application/pdf' && (
+                    <button
+                      className="button small"
+                      disabled={busy}
+                      aria-label={`Ver documento ${ref.name}`}
+                      onClick={() => download(ref, true)}
+                    >
+                      Ver imagen
+                    </button>
+                  )}
                   <button
                     className="button small"
                     disabled={busy}
@@ -203,6 +230,37 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
           ? 'Demostración en memoria: los documentos se pierden al recargar.'
           : 'Los archivos quedan en este navegador. Usá el ZIP completo para trasladarlos o recuperarlos en otro equipo.'}
       </p>
+      {preview && (
+        <Modal title={`Vista previa: ${preview.name}`} close={() => setPreview(null)}>
+          {previewURL && (
+            <img
+              src={previewURL}
+              alt={preview.name}
+              style={{
+                display: 'block',
+                maxWidth: '100%',
+                maxHeight: '65vh',
+                objectFit: 'contain',
+                margin: '0 auto',
+              }}
+            />
+          )}
+          <p className="fine-print">
+            {preview.category} · Archivo original guardado en este navegador.
+          </p>
+          <div className="modal-actions">
+            <button className="button" onClick={() => setPreview(null)}>
+              Cerrar vista previa
+            </button>
+            <button
+              className="button primary"
+              onClick={() => downloadBlob(preview.data, preview.name)}
+            >
+              Descargar imagen
+            </button>
+          </div>
+        </Modal>
+      )}
       {editing && (
         <Modal title="Editar documento" close={() => setEditing(null)}>
           <form
@@ -211,8 +269,14 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
               e.preventDefault();
               const values = new FormData(e.currentTarget);
               const name = String(values.get('name')).trim();
-              if (!name || !/\.pdf$/i.test(name) || /[\\/\u0000-\u001f]/.test(name)) {
-                setError('Ingresá un nombre de archivo válido terminado en .pdf.');
+              if (
+                !name ||
+                documentFileMime(name) !== documentMime(editing) ||
+                /[\\/\u0000-\u001f]/.test(name)
+              ) {
+                setError(
+                  `Ingresá un nombre válido conservando el formato ${documentExtension(editing).toUpperCase()} original.`,
+                );
                 return;
               }
               if (
@@ -224,13 +288,13 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
                 })
               ) {
                 setEditing(null);
-                notify('Datos del documento corregidos. Se conserva el archivo PDF original.');
+                notify('Datos del documento corregidos. Se conserva el archivo original.');
               }
             }}
           >
             <p className="fine-print">
-              Podés corregir el nombre, tipo y vehículo asociado. El contenido del PDF original se
-              conserva. Para reemplazarlo, cargá el archivo correcto y quitá el anterior.
+              Podés corregir el nombre, tipo y vehículo asociado. El contenido del archivo original
+              se conserva. Para reemplazarlo, cargá el archivo correcto y quitá el anterior.
             </p>
             <label>
               Nombre del archivo

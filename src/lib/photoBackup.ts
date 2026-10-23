@@ -16,6 +16,8 @@ import {
 } from './photos';
 import {
   loadReferencedDocuments,
+  documentArchivePath,
+  documentMime,
   MAX_DOCUMENT_BYTES,
   MAX_DOCUMENTS,
   validateDocument,
@@ -73,7 +75,7 @@ export async function createPhotoBackup(
     await validateDocument(verified);
     size += verified.data.size;
     if (size > MAX_PHOTO_ARCHIVE_BYTES) throw new Error('El respaldo completo supera los 100 MB.');
-    entries[`documents/${ref.id}.pdf`] = [
+    entries[documentArchivePath(ref)] = [
       new Uint8Array(await verified.data.arrayBuffer()),
       { level: 0 },
     ];
@@ -96,7 +98,7 @@ export async function parsePhotoBackup(bytes: Uint8Array): Promise<PhotoBackupCa
       names.add(entry.name);
       const json = /^[\w.-]+\.json$/.test(entry.name);
       const photo = /^photos\/[a-fA-F0-9-]{36}\.jpg$/.test(entry.name);
-      const document = /^documents\/[a-fA-F0-9-]{36}\.pdf$/.test(entry.name);
+      const document = /^documents\/[a-fA-F0-9-]{36}\.(?:pdf|jpg|png|webp)$/.test(entry.name);
       if (!json && !photo && !document) throw new Error('El ZIP contiene archivos no admitidos.');
       if (
         entry.originalSize >
@@ -131,9 +133,9 @@ export async function parsePhotoBackup(bytes: Uint8Array): Promise<PhotoBackupCa
   }
   const documents: PreparedDocument[] = [];
   for (const ref of documentRefs) {
-    const raw = entries[`documents/${ref.id}.pdf`];
+    const raw = entries[documentArchivePath(ref)];
     if (!raw) throw new Error('Falta un documento en el ZIP.');
-    const document = { ...ref, data: new Blob([new Uint8Array(raw)], { type: 'application/pdf' }) };
+    const document = { ...ref, data: new Blob([new Uint8Array(raw)], { type: documentMime(ref) }) };
     await validateDocument(document);
     documents.push(document);
   }

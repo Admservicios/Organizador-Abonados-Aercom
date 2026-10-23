@@ -27,7 +27,7 @@ async function open(page: Page) {
 }
 async function select(page: Page) {
   await page.getByLabel('Tipo de documento').selectOption('Seguro');
-  await page.getByLabel('Archivo PDF', { exact: true }).setInputFiles({
+  await page.getByLabel('Archivo PDF o imagen', { exact: true }).setInputFiles({
     name: 'seguro.pdf',
     mimeType: 'application/pdf',
     buffer: await readFile(fixture),
@@ -195,7 +195,7 @@ test('rechaza PDF falso; la demo no escribe documentos locales ni los expone por
 }) => {
   await seed(page);
   await open(page);
-  await page.getByLabel('Archivo PDF', { exact: true }).setInputFiles({
+  await page.getByLabel('Archivo PDF o imagen', { exact: true }).setInputFiles({
     name: 'falso.pdf',
     mimeType: 'application/pdf',
     buffer: Buffer.from('no es PDF'),
@@ -252,4 +252,121 @@ test('restauración fallida elimina solo los archivos nuevos; conserva el docume
   expect(await storedCount(page)).toBe(1);
   await open(page);
   expect(await download(page)).toEqual(await readFile(fixture));
+});
+
+test('imágenes privadas: vista previa, edición, originales y ZIP restaurado en otro navegador', async ({
+  page,
+  browser,
+}) => {
+  await seed(page);
+  await open(page);
+  await save(page);
+  const examples = [
+    ['cedula.jpg', 'documento-rotado.jpg'],
+    ['seguro.png', 'documento-imagen.png'],
+    ['vtv.webp', 'documento-imagen.webp'],
+  ] as const;
+  for (const [name, fixtureName] of examples) {
+    const bytes = await readFile(new URL(`../fixtures/${fixtureName}`, import.meta.url));
+    await page
+      .getByLabel('Archivo PDF o imagen', { exact: true })
+      .setInputFiles({ name, mimeType: 'application/octet-stream', buffer: bytes });
+    await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
+    await page.getByRole('button', { name: `Ver documento ${name}`, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('img', { name, exact: true })).toBeVisible();
+    expect(
+      await dialog.getByRole('img').evaluate((img) => (img as HTMLImageElement).naturalWidth),
+    ).toBeGreaterThan(0);
+    await dialog.getByRole('button', { name: 'Cerrar vista previa' }).click();
+  }
+  await page.getByRole('button', { name: 'Editar documento seguro.png', exact: true }).click();
+  let dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Nombre del archivo').fill('seguro.pdf');
+  await dialog.getByRole('button', { name: 'Guardar cambios del documento' }).click();
+  await expect(dialog.getByRole('alert')).toContainText('formato PNG original');
+  await dialog.getByLabel('Nombre del archivo').fill('seguro-corregido.png');
+  await dialog.getByLabel('Tipo de documento').selectOption('Seguro');
+  await dialog.getByRole('button', { name: 'Guardar cambios del documento' }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.reload();
+  await page.getByRole('tab', { name: 'Documentación', exact: true }).click();
+  await expect(page.getByRole('article')).toHaveCount(4);
+  await page.goto('/backups');
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Descargar ZIP completo' }).click();
+  const zip = await readFile((await (await pending).path())!);
+  const context = await browser.newContext({ baseURL: 'http://127.0.0.1:4173' });
+  try {
+    const other = await context.newPage();
+    await restore(other, 'documentos.zip', zip);
+    await open(other);
+    for (const [name, fixtureName] of examples) {
+      const download = other.waitForEvent('download');
+      await other
+        .getByRole('button', {
+          name: `Descargar documento ${name === 'seguro.png' ? 'seguro-corregido.png' : name}`,
+          exact: true,
+        })
+        .click();
+      expect(await readFile((await (await download).path())!)).toEqual(
+        await readFile(new URL(`../fixtures/${fixtureName}`, import.meta.url)),
+      );
+    }
+    expect(
+      await (
+        await data(other)
+      ).documents.filter((d: { mime?: string }) => d.mime?.startsWith('image/')),
+    ).toHaveLength(3);
+  } finally {
+    await context.close();
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await open(page);
+  await page
+    .getByRole('button', { name: 'Ver documento seguro-corregido.png', exact: true })
+    .click();
+  await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('rechaza imágenes dañadas y mantiene la demostración de imágenes separada de los datos locales', async ({
+  page,
+}) => {
+  await seed(page);
+  await open(page);
+  const before = await data(page);
+  await page.getByLabel('Archivo PDF o imagen', { exact: true }).setInputFiles({
+    name: 'falso.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('imagen falsa'),
+  });
+  await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('dañada');
+  expect(await data(page)).toEqual(before);
+  const corrupt = Buffer.from(
+    await readFile(new URL('../fixtures/documento-imagen.png', import.meta.url)),
+  );
+  corrupt.fill(0, 45, corrupt.length - 12);
+  await page
+    .getByLabel('Archivo PDF o imagen', { exact: true })
+    .setInputFiles({ name: 'dañada.png', mimeType: 'image/png', buffer: corrupt });
+  await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('dañada');
+  expect(await data(page)).toEqual(before);
+  await page.getByRole('button', { name: 'Explorar demo', exact: true }).click();
+  await open(page);
+  await page
+    .getByLabel('Archivo PDF o imagen', { exact: true })
+    .setInputFiles(new URL('../fixtures/documento-alpha.webp', import.meta.url).pathname);
+  await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Ver documento documento-alpha.webp', exact: true })
+    .click();
+  await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cerrar vista previa' }).click();
+  expect(await data(page)).toEqual(before);
+  await page.getByRole('button', { name: 'Volver a mis datos', exact: true }).click();
+  await open(page);
+  await expect(page.getByRole('article')).toHaveCount(0);
 });

@@ -117,7 +117,7 @@ test('carpeta persistente, ZIP con foto y documento, copia manual y pausa sin bo
   await expect(page).toHaveURL(/vehiculos\/v2$/);
   await page.getByRole('tab', { name: 'Documentación', exact: true }).click();
   await page
-    .getByLabel('Archivo PDF', { exact: true })
+    .getByLabel('Archivo PDF o imagen', { exact: true })
     .setInputFiles(resolve('tests/fixtures/documento-prueba.pdf'));
   await page.getByRole('button', { name: 'Guardar documento', exact: true }).click();
   await page.getByRole('article', { name: 'documento-prueba.pdf', exact: true }).waitFor();
