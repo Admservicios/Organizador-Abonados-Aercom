@@ -40,7 +40,8 @@ const vehicleSchema = z.strictObject({
   nextDate: z.iso.date(),
   nextKm: z.number().int().min(1).max(9999999),
   recommendation: text(150),
-  maintenancePlans: z.array(maintenancePlanSchema).min(1).max(100).optional(),
+  maintenancePlans: z.array(maintenancePlanSchema).max(100).optional(),
+  manualKm: z.number().int().min(0).max(9999999).optional(),
 });
 const serviceSchema = z.strictObject({
   id,

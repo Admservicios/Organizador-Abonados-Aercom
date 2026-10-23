@@ -65,9 +65,11 @@ export function Badge({ children }: { children: ReactNode }) {
   const tone =
     children === 'Vencido' || children === 'Inactivo'
       ? 'red'
-      : children === 'Próximo'
-        ? 'amber'
-        : 'green';
+      : children === 'Sin datos'
+        ? 'neutral'
+        : children === 'Próximo'
+          ? 'amber'
+          : 'green';
   return <span className={`badge ${tone}`}>{children}</span>;
 }
 export function Avatar({ name, size = '' }: { name: string; size?: string }) {

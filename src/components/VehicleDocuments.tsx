@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Download, FileText, Trash2, UploadCloud } from 'lucide-react';
+import { Download, FileText, Trash2, UploadCloud, Pencil } from 'lucide-react';
 import { useData } from '../app/store';
 import { Modal } from './ui';
 import { downloadBlob } from '../lib/photoBackup';
@@ -14,6 +14,8 @@ import {
 
 export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
   const {
+    vehicles,
+    saveDocument,
     documents,
     documentSet,
     demoDocuments,
@@ -28,6 +30,7 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [editing, setEditing] = useState<DocumentReference | null>(null);
   const [removing, setRemoving] = useState<DocumentReference | null>(null);
   const [inputKey, setInputKey] = useState(0);
   const fullVehicle = refs.length >= MAX_VEHICLE_DOCUMENTS;
@@ -166,6 +169,18 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
                     Descargar
                   </button>
                   <button
+                    className="button small"
+                    disabled={busy || !!storageError}
+                    aria-label={`Editar documento ${ref.name}`}
+                    onClick={() => {
+                      setError('');
+                      setEditing(ref);
+                    }}
+                  >
+                    <Pencil size={15} />
+                    Editar
+                  </button>
+                  <button
                     className="icon-button"
                     disabled={busy || !!storageError}
                     aria-label={`Quitar documento ${ref.name}`}
@@ -188,6 +203,71 @@ export function VehicleDocuments({ vehicleId }: { vehicleId: string }) {
           ? 'Demostración en memoria: los documentos se pierden al recargar.'
           : 'Los archivos quedan en este navegador. Usá el ZIP completo para trasladarlos o recuperarlos en otro equipo.'}
       </p>
+      {editing && (
+        <Modal title="Editar documento" close={() => setEditing(null)}>
+          <form
+            className="form-stack"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const values = new FormData(e.currentTarget);
+              const name = String(values.get('name')).trim();
+              if (!name || !/\.pdf$/i.test(name) || /[\\/\u0000-\u001f]/.test(name)) {
+                setError('Ingresá un nombre de archivo válido terminado en .pdf.');
+                return;
+              }
+              if (
+                saveDocument(editing, {
+                  ...editing,
+                  name,
+                  category: String(values.get('category')) as DocumentReference['category'],
+                  vehicleId: String(values.get('vehicle')),
+                })
+              ) {
+                setEditing(null);
+                notify('Datos del documento corregidos. Se conserva el archivo PDF original.');
+              }
+            }}
+          >
+            <p className="fine-print">
+              Podés corregir el nombre, tipo y vehículo asociado. El contenido del PDF original se
+              conserva. Para reemplazarlo, cargá el archivo correcto y quitá el anterior.
+            </p>
+            <label>
+              Nombre del archivo
+              <input name="name" required maxLength={200} defaultValue={editing.name} />
+            </label>
+            <label>
+              Tipo de documento
+              <select name="category" defaultValue={editing.category}>
+                {documentCategories.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Vehículo asociado
+              <select name="vehicle" defaultValue={editing.vehicleId}>
+                {vehicles.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.plate} · {v.brand} {v.model}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {error && (
+              <p role="alert" className="form-error">
+                {error}
+              </p>
+            )}
+            <div className="modal-actions">
+              <button type="button" className="button" onClick={() => setEditing(null)}>
+                Cancelar
+              </button>
+              <button className="button primary">Guardar cambios del documento</button>
+            </div>
+          </form>
+        </Modal>
+      )}
       {removing && (
         <Modal title="Quitar documento" close={() => setRemoving(null)}>
           <p>

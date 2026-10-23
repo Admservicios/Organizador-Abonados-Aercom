@@ -738,6 +738,10 @@ main {
   color: #9865e9;
   background: #f3edff;
 }
+.badge.neutral {
+  color: var(--muted);
+  background: var(--surface-soft);
+}
 .badge.green {
   color: #149b6e;
   background: #e0f8ed;

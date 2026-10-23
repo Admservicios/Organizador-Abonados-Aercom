@@ -339,7 +339,8 @@ export default function App() {
             <Route path="vehiculos" element={<Vehicles />} />
             <Route path="vehiculos/:id" element={<VehicleDetail />} />
             <Route path="mantenimientos" element={<MaintenanceList />} />
-            <Route path="mantenimientos/nuevo" element={<MaintenanceForm />} />
+            <Route path="mantenimientos/nuevo" element={<MaintenanceForm key="new" />} />
+            <Route path="mantenimientos/:id/editar" element={<MaintenanceForm />} />
             <Route path="proximos-servicios" element={<Reminders />} />
             <Route path="backups" element={<Backups />} />
             <Route path="ajustes" element={<SettingsPage />} />

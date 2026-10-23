@@ -53,8 +53,9 @@ function ScheduleEditor({
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const result = maintenancePlanSchema.safeParse({
-      category: plan?.category ?? kind.key,
-      label: plan?.label ?? kind.label,
+      manual: true,
+      category: kind.key,
+      label: kind.label,
       nextDate,
       nextKm: Number(nextKm),
       recommendation,
@@ -75,7 +76,7 @@ function ScheduleEditor({
       );
       return;
     }
-    if (!plan && plans.some((p) => p.category === result.data.category)) {
+    if (plans.some((p) => p.category !== plan?.category && p.category === result.data.category)) {
       setError('Este servicio ya tiene un vencimiento. Usá Editar para corregirlo.');
       return;
     }
@@ -100,7 +101,6 @@ function ScheduleEditor({
           Tipo de servicio
           <select
             value={type}
-            disabled={!!plan}
             onChange={(e) => {
               setType(e.target.value);
               const nextKind = maintenanceKind(
@@ -123,7 +123,6 @@ function ScheduleEditor({
             Nombre del servicio
             <input
               value={name}
-              disabled={!!plan}
               required
               minLength={3}
               maxLength={70}

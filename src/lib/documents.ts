@@ -152,7 +152,7 @@ export async function loadReferencedDocuments(collection: {
   const result: StoredDocument[] = [];
   for (const ref of collection.documents) {
     const document = stored.get(ref.id);
-    if (!document || document.vehicleId !== ref.vehicleId)
+    if (!document || document.sha256 !== ref.sha256)
       throw new Error('Faltan documentos. Recuperalos desde un respaldo ZIP completo.');
     const verified = { ...ref, data: document.data, setId: document.setId };
     await validateDocument(verified);

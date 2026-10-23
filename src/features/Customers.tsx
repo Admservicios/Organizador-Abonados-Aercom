@@ -445,16 +445,22 @@ export function Customers() {
               {tab === 'Historial' &&
                 (selectedServices.length ? (
                   selectedServices.map((s) => (
-                    <Link className="history-mini" key={s.id} to={`/vehiculos/${s.vehicleId}`}>
-                      <CalendarDays size={18} />
-                      <span>
-                        <strong>{s.type}</strong>
-                        <small>
-                          {dateLabel(s.date)} · {money(s.amount)}
-                        </small>
-                      </span>
-                      <ChevronRight size={15} />
-                    </Link>
+                    <div key={s.id}>
+                      <Link className="history-mini" to={`/vehiculos/${s.vehicleId}`}>
+                        <CalendarDays size={18} />
+                        <span>
+                          <strong>{s.type}</strong>
+                          <small>
+                            {dateLabel(s.date)} · {money(s.amount)}
+                          </small>
+                        </span>
+                        <ChevronRight size={15} />
+                      </Link>
+                      <Link className="button small" to={`/mantenimientos/${s.id}/editar`}>
+                        <Pencil size={14} />
+                        Editar mantenimiento
+                      </Link>
+                    </div>
                   ))
                 ) : (
                   <Empty text="Sin mantenimientos registrados" />

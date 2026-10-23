@@ -35,7 +35,7 @@ import { nextVehiclePlan, planServiceURL } from '../lib/maintenancePlans';
 import { dateLabel, maintenanceStatus, money, number, type Vehicle } from '../lib/demo';
 
 export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: () => void }) {
-  const { customers, vehicles, saveVehicle, notify, mode, referenceDate } = useData();
+  const { customers, vehicles, services, saveVehicle, notify, mode, referenceDate } = useData();
   const [error, setError] = useState('');
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -49,6 +49,18 @@ export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: ()
       setError('Ya existe un vehículo con esta patente.');
       return;
     }
+    const km = Number(data.get('km'));
+    const minimum = Math.max(
+      0,
+      ...services.filter((s) => s.vehicleId === vehicle?.id).map((s) => s.km),
+      ...(vehicle?.maintenancePlans ?? []).map((p) => p.lastKm ?? 0),
+    );
+    if (km < minimum) {
+      setError(
+        `Hay un mantenimiento o vencimiento con ${number(minimum)} km. Corregí primero ese registro para poder bajar el kilometraje del vehículo.`,
+      );
+      return;
+    }
     const saved = saveVehicle({
       ...vehicle,
       id: vehicle?.id ?? crypto.randomUUID(),
@@ -60,7 +72,7 @@ export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: ()
       fuel: String(data.get('fuel')),
       engine: String(data.get('engine')).trim(),
       km: Number(data.get('km')),
-      color: vehicle?.color ?? 'silver',
+      color: String(data.get('color')),
       nextDate: vehicle?.nextDate ?? nextServiceDate(referenceDate),
       nextKm: vehicle?.nextKm ?? Number(data.get('km')) + 10000,
       recommendation: vehicle?.recommendation ?? 'Service general',
@@ -121,11 +133,15 @@ export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: ()
             <input
               name="km"
               type="number"
-              min={vehicle?.km ?? 0}
+              min="0"
               max="9999999"
               required
               defaultValue={vehicle?.km ?? 0}
             />
+          </label>
+          <label>
+            Color
+            <input name="color" maxLength={30} defaultValue={vehicle?.color ?? 'silver'} />
           </label>
           <label>
             Motor
@@ -142,6 +158,13 @@ export function VehicleEditor({ vehicle, close }: { vehicle?: Vehicle; close: ()
             </select>
           </label>
         </div>
+        {vehicle && (
+          <p className="fine-print">
+            Cambiar el propietario mueve la ficha y su historial al cliente seleccionado. Corregir
+            kilómetros actualiza los estados de todos sus vencimientos, conservando sus fechas y
+            objetivos.
+          </p>
+        )}
         {error && (
           <p className="form-error" role="alert">
             {error}
@@ -203,6 +226,7 @@ export function Vehicles() {
           <option>Al día</option>
           <option>Próximo</option>
           <option>Vencido</option>
+          <option>Sin datos</option>
         </select>
         <span className="results-count">{filtered.length} vehículos</span>
       </div>
@@ -454,6 +478,10 @@ export function VehicleDetail() {
                             <span className="subtle-chip">{s.public ? 'Público' : 'Privado'}</span>
                           </td>
                           <td>
+                            <Link className="button small" to={`/mantenimientos/${s.id}/editar`}>
+                              <Pencil size={14} />
+                              Editar
+                            </Link>
                             <ServicePDFButton service={s} />
                           </td>
                         </tr>
@@ -465,8 +493,9 @@ export function VehicleDetail() {
                 <div className="info-strip">
                   <Info size={18} />
                   <span>
-                    Próximo servicio: {dateLabel(next.nextDate)} o {number(next.nextKm)} km, lo que
-                    ocurra primero.
+                    {next
+                      ? `Próximo servicio: ${dateLabel(next.nextDate)} o ${number(next.nextKm)} km, lo que ocurra primero.`
+                      : 'Sin vencimientos programados. Agregá uno desde Recordatorios.'}
                   </span>
                 </div>
               </Panel>
@@ -480,6 +509,7 @@ export function VehicleDetail() {
                     ['Año', vehicle.year],
                     ['Patente', vehicle.plate],
                     ['Motor', vehicle.engine],
+                    ['Color', vehicle.color],
                     ['Combustible', vehicle.fuel],
                     ['Último kilometraje registrado', `${number(vehicle.km)} km`],
                   ].map(([label, value]) => (
@@ -506,30 +536,36 @@ export function VehicleDetail() {
         </div>
         <aside className="vehicle-aside">
           <Panel title="Próximo servicio" icon={CalendarDays}>
-            <div className="next-service-type">
-              <Wrench size={22} />
-              <span>
-                <strong>{next.recommendation}</strong>
-                <small>{next.label}</small>
-              </span>
-            </div>
-            <div className="next-service-values">
-              <div>
-                <small>Fecha objetivo</small>
-                <strong>{dateLabel(next.nextDate)}</strong>
-              </div>
-              <div>
-                <small>Kilometraje objetivo</small>
-                <strong>{number(next.nextKm)} km</strong>
-              </div>
-            </div>
-            <Link className="button primary full" to={planServiceURL(vehicle, next)}>
-              Registrar servicio ahora
-            </Link>
-            <p className="fine-print">
-              Vencimiento prioritario según el kilometraje actual. Cada servicio conserva sus
-              propios límites.
-            </p>
+            {next ? (
+              <>
+                <div className="next-service-type">
+                  <Wrench size={22} />
+                  <span>
+                    <strong>{next.recommendation}</strong>
+                    <small>{next.label}</small>
+                  </span>
+                </div>
+                <div className="next-service-values">
+                  <div>
+                    <small>Fecha objetivo</small>
+                    <strong>{dateLabel(next.nextDate)}</strong>
+                  </div>
+                  <div>
+                    <small>Kilometraje objetivo</small>
+                    <strong>{number(next.nextKm)} km</strong>
+                  </div>
+                </div>
+                <Link className="button primary full" to={planServiceURL(vehicle, next)}>
+                  Registrar servicio ahora
+                </Link>
+                <p className="fine-print">
+                  Vencimiento prioritario según el kilometraje actual. Cada servicio conserva sus
+                  propios límites.
+                </p>
+              </>
+            ) : (
+              <p>No hay vencimientos programados. Agregá uno desde Recordatorios.</p>
+            )}
             <button className="button full" onClick={() => setTab('Recordatorios')}>
               Ver todos los vencimientos
             </button>

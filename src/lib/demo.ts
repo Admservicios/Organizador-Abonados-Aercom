@@ -25,6 +25,7 @@ export type Vehicle = {
   nextKm: number;
   recommendation: string;
   maintenancePlans?: MaintenancePlan[];
+  manualKm?: number;
 };
 export type Service = {
   id: string;
@@ -312,7 +313,7 @@ export const initialServices: Service[] = [
     public: true,
   },
 ];
-export type MaintenanceStatus = 'Al día' | 'Próximo' | 'Vencido';
+export type MaintenanceStatus = 'Al día' | 'Próximo' | 'Vencido' | 'Sin datos';
 export function maintenanceStatus(vehicle: Vehicle, today = demoDate): MaintenanceStatus {
   return vehiclePlanStatus(vehicle, today);
 }

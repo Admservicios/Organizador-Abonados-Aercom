@@ -28,7 +28,14 @@ import {
   type PreparedPhoto,
   type StoredPhoto,
 } from '../lib/photos';
-import { recordServicePlan, servicePlan, withPlanSummary } from '../lib/maintenancePlans';
+import {
+  recordServicePlan,
+  servicePlan,
+  withPlanSummary,
+  vehiclePlans,
+} from '../lib/maintenancePlans';
+import { editServiceData } from '../lib/serviceEditing';
+import type { DocumentReference } from '../lib/documents';
 import {
   discardDocuments,
   storeDocuments,
@@ -50,6 +57,13 @@ type Store = LocalData & {
     next: { date: string; km: number; recommendation: string },
     photos?: PreparedPhoto[],
   ) => Promise<boolean>;
+  updateService: (
+    original: Service,
+    service: Service,
+    photos: PreparedPhoto[],
+    removedPhotoIds: string[],
+  ) => Promise<boolean>;
+  saveDocument: (original: DocumentReference, document: DocumentReference) => boolean;
   demoPhotos: StoredPhoto[];
   demoDocuments: StoredDocument[];
   addDocument: (document: PreparedDocument) => Promise<boolean>;
@@ -139,8 +153,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
         ? data.customers.map((c) => (c.id === customer.id ? customer : c))
         : [...data.customers, customer],
     });
-  const saveVehicle = (vehicle: Vehicle) =>
-    commit({
+  const saveVehicle = (vehicle: Vehicle) => {
+    const previous = data.vehicles.find((v) => v.id === vehicle.id);
+    const minimum = Math.max(
+      0,
+      ...data.services.filter((s) => s.vehicleId === vehicle.id).map((s) => s.km),
+      ...vehiclePlans(vehicle).map((p) => p.lastKm ?? 0),
+    );
+    if (vehicle.km < minimum) {
+      notify(
+        `No se puede bajar de ${minimum.toLocaleString('es-AR')} km: hay un mantenimiento o vencimiento con esa lectura. Corregí primero ese registro.`,
+      );
+      return false;
+    }
+    if (!previous || previous.km !== vehicle.km) vehicle = { ...vehicle, manualKm: vehicle.km };
+    return commit({
       ...data,
       vehicles: data.vehicles.some((v) => v.id === vehicle.id)
         ? data.vehicles.map((v) =>
@@ -150,6 +177,93 @@ export function DataProvider({ children }: { children: ReactNode }) {
           )
         : [...data.vehicles, vehicle],
     });
+  };
+  const updateService = async (
+    original: Service,
+    service: Service,
+    photos: PreparedPhoto[],
+    removedPhotoIds: string[],
+  ) => {
+    let nextData: LocalData;
+    try {
+      nextData = editServiceData(
+        data,
+        original,
+        service,
+        mode === 'demo' ? demoDate : localToday(),
+      );
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'No se pudo corregir el servicio.');
+      return false;
+    }
+    const setId = data.photoSet ?? crypto.randomUUID();
+    const files = photos.map((photo) => ({ ...photo, serviceId: service.id, setId }));
+    const retained = (data.photos ?? []).filter(
+      (p) => p.serviceId !== service.id || !removedPhotoIds.includes(p.id),
+    );
+    if (
+      retained.filter((p) => p.serviceId === service.id).length + files.length >
+      MAX_SERVICE_PHOTOS
+    ) {
+      notify('Máximo 6 fotos por mantenimiento, contando las que ya estaban guardadas.');
+      return false;
+    }
+    if (files.length || data.photos) {
+      nextData.photoSet = setId;
+      nextData.photos = [...retained, ...files.map(({ data: _blob, setId: _set, ...ref }) => ref)];
+    }
+    try {
+      newDatabase(nextData);
+      if (mode === 'local' && files.length) await storePhotos(files);
+      if (commit(nextData)) {
+        if (mode === 'demo')
+          setDemoPhotos((previous) => [
+            ...previous.filter((p) => !removedPhotoIds.includes(p.id)),
+            ...files,
+          ]);
+        return true;
+      }
+    } catch {
+      notify('No se pudo guardar la corrección con sus fotos. La base anterior se conserva.');
+    }
+    if (mode === 'local' && files.length)
+      await discardPhotos(files.map((p) => p.id)).catch(() => {});
+    return false;
+  };
+  const saveDocument = (original: DocumentReference, document: DocumentReference) => {
+    const current = (data.documents ?? []).find((d) => d.id === original.id);
+    if (JSON.stringify(current) !== JSON.stringify(original)) {
+      notify('El documento cambió. Volvé a abrir Editar.');
+      return false;
+    }
+    const saved = commit({
+      ...data,
+      documents: (data.documents ?? []).map((d) =>
+        d.id === original.id
+          ? {
+              ...d,
+              name: document.name,
+              category: document.category,
+              vehicleId: document.vehicleId,
+            }
+          : d,
+      ),
+    });
+    if (saved && mode === 'demo')
+      setDemoDocuments((previous) =>
+        previous.map((d) =>
+          d.id === original.id
+            ? {
+                ...d,
+                name: document.name,
+                category: document.category,
+                vehicleId: document.vehicleId,
+              }
+            : d,
+        ),
+      );
+    return saved;
+  };
   const addService = async (
     service: Service,
     next: { date: string; km: number; recommendation: string },
@@ -253,6 +367,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         saveCustomer,
         saveVehicle,
         addService,
+        updateService,
+        saveDocument,
         demoPhotos,
         demoDocuments,
         addDocument,

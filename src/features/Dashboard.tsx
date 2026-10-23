@@ -24,12 +24,13 @@ export function Dashboard() {
   const upcoming = schedule.filter(
     ({ vehicle, plan }) => planStatus(plan, vehicle.km, referenceDate) !== 'Al día',
   );
-  const distribution = ['Al día', 'Próximo', 'Vencido'].map((status) => ({
+  const distribution = ['Al día', 'Próximo', 'Vencido', 'Sin datos'].map((status) => ({
     status,
     count: vehicles.filter((v) => maintenanceStatus(v, referenceDate) === status).length,
   }));
   const greenEnd = (distribution[0].count / (vehicles.length || 1)) * 100;
   const yellowEnd = greenEnd + (distribution[1].count / (vehicles.length || 1)) * 100;
+  const redEnd = yellowEnd + (distribution[2].count / (vehicles.length || 1)) * 100;
   const chartMonths = Array.from({ length: 12 }, (_, i) => {
     const d = new Date(
       Date.UTC(Number(referenceDate.slice(0, 4)), Number(referenceDate.slice(5, 7)) - 12 + i, 1),
@@ -193,7 +194,7 @@ export function Dashboard() {
               <div
                 className="donut"
                 style={{
-                  background: `conic-gradient(#19bb86 0 ${greenEnd}%, #ffbb36 ${greenEnd}% ${yellowEnd}%, #f16372 ${yellowEnd}% 100%)`,
+                  background: `conic-gradient(#19bb86 0 ${greenEnd}%, #ffbb36 ${greenEnd}% ${yellowEnd}%, #f16372 ${yellowEnd}% ${redEnd}%, #a3afc0 ${redEnd}% 100%)`,
                 }}
                 role="img"
                 aria-label={distribution.map((d) => `${d.status}: ${d.count}`).join(', ')}
@@ -207,7 +208,7 @@ export function Dashboard() {
                 {distribution.map((d, i) => (
                   <div key={d.status}>
                     <span>
-                      <i style={{ background: ['#19bb86', '#ffbb36', '#f16372'][i] }} />
+                      <i style={{ background: ['#19bb86', '#ffbb36', '#f16372', '#a3afc0'][i] }} />
                       {d.status}
                     </span>
                     <strong>

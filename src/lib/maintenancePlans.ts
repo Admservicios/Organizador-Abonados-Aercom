@@ -11,6 +11,8 @@ export const maintenancePlanSchema = z
     lastDate: z.iso.date().optional(),
     lastKm: z.number().int().min(0).max(9999999).optional(),
     legacy: z.boolean().optional(),
+    sourceServiceId: z.string().min(1).max(100).optional(),
+    manual: z.boolean().optional(),
   })
   .superRefine((plan, context) => {
     if (
@@ -107,7 +109,7 @@ export function maintenanceKind(type: string) {
 
 // Un archivo anterior conserva su único vencimiento real; no se inventan intervalos perdidos.
 export function vehiclePlans(vehicle: Vehicle): MaintenancePlan[] {
-  if (vehicle.maintenancePlans?.length) return vehicle.maintenancePlans;
+  if (vehicle.maintenancePlans) return vehicle.maintenancePlans;
   const kind = maintenanceKind(vehicle.recommendation);
   return [
     {
@@ -147,10 +149,11 @@ export function nextVehiclePlan(vehicle: Vehicle, today: string) {
   return sortPlanRows(
     vehiclePlans(vehicle).map((plan) => ({ vehicle, plan })),
     today,
-  )[0].plan;
+  )[0]?.plan;
 }
-export function vehiclePlanStatus(vehicle: Vehicle, today: string): PlanStatus {
-  return planStatus(nextVehiclePlan(vehicle, today), vehicle.km, today);
+export function vehiclePlanStatus(vehicle: Vehicle, today: string): PlanStatus | 'Sin datos' {
+  const plan = nextVehiclePlan(vehicle, today);
+  return plan ? planStatus(plan, vehicle.km, today) : 'Sin datos';
 }
 export function allPlanRows(vehicles: Vehicle[], today: string) {
   return sortPlanRows(
@@ -168,10 +171,12 @@ export function servicePlan(service: Service, next: MaintenanceNext): Maintenanc
     nextKm: next.km,
     lastDate: service.date,
     lastKm: service.km,
+    sourceServiceId: service.id,
   });
 }
 export function withPlanSummary(vehicle: Vehicle, today: string): Vehicle {
   const plan = nextVehiclePlan(vehicle, today);
+  if (!plan) return vehicle;
   return {
     ...vehicle,
     nextDate: plan.nextDate,
@@ -199,7 +204,20 @@ export function recordServicePlan(
   const maintained = plans.some((p) => p.category === updated.category)
     ? plans.map((p) => (p.category === updated.category ? updated : p))
     : [...plans, updated];
-  return withPlanSummary({ ...vehicle, km: service.km, maintenancePlans: maintained }, today);
+  return withPlanSummary(
+    {
+      ...vehicle,
+      manualKm:
+        vehicle.manualKm ??
+        (vehicle.km >
+        Math.max(0, ...history.filter((s) => s.vehicleId === vehicle.id).map((s) => s.km))
+          ? vehicle.km
+          : 0),
+      km: service.km,
+      maintenancePlans: maintained,
+    },
+    today,
+  );
 }
 
 export function planServiceURL(vehicle: Vehicle, plan: MaintenancePlan) {
