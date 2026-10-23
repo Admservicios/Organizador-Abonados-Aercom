@@ -4902,6 +4902,18 @@ label > .input-suffix input {
 table {
   font-size: 13px;
 }
+.table-scroll td,
+.table-scroll td strong,
+.table-scroll .service-type {
+  font-size: 13px;
+}
+.table-scroll th,
+.table-scroll td small {
+  font-size: 12px;
+}
+.table-scroll .customer-name strong {
+  font-size: 14px;
+}
 table th,
 table td small,
 .customer-name small {

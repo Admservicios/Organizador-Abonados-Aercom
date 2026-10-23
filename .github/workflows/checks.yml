@@ -8,6 +8,9 @@ permissions:
   contents: read
 jobs:
   verificar:
+    concurrency:
+      group: verificar-web-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -26,7 +29,9 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-ubuntu24-${{ hashFiles('package-lock.json') }}
-      - run: npx playwright install --with-deps --only-shell chromium
+      # Ubuntu 24.04 alojado ya incluye las bibliotecas de Chrome.
+      # Descargar solo el navegador de Playwright evita reinstalar paquetes del sistema.
+      - run: npx playwright install --only-shell chromium
         timeout-minutes: 5
       - run: npm run test:e2e
       - run: npm run test:server
